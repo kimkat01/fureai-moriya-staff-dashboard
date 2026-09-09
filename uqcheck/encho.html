@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<!-- ★ アプリ名を変更する場合はこの<title>と、直下のhd-titleを変更してください -->
+<title>UQチェッカー - 園長承認画面</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#4169e1;--bl:#eef2fd;--bld:#2d4fba;--blm:#5a7ee8;
+  --green:#1a7a4a;--gl:#e8f5ef;--gb:#a0d8b8;
+  --red:#b83232;--rl:#fef0f0;--rb:#f5b0b0;
+  --warn:#a05a00;--wl:#fff8e6;--wb:#f0c050;
+  --t:#1a1a1a;--ts:#5a5a5a;--tm:#999;
+  --bd:#e5e5e3;--bg:#f5f5f2;--w:#fff;--sb:#f0f0ec;
+  --r:10px;--rs:6px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI',sans-serif;background:var(--bg);color:var(--t);font-size:14px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--blue);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:0.03em}
+.topbar-sub{font-size:12px;color:rgba(255,255,255,0.7)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.badge-pending{background:rgba(255,220,50,0.35);color:#fff;border:1px solid rgba(255,220,50,0.5);padding:3px 12px;border-radius:100px;font-size:12px;font-weight:600}
+.refresh-btn{background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-family:inherit;cursor:pointer}
+.refresh-btn:hover{background:rgba(255,255,255,0.25)}
+.layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - 52px)}
+.sidebar{width:220px;background:var(--sb);border-right:1px solid var(--bd);flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;padding:12px 0}
+.sidebar-label{font-size:11px;color:var(--tm);font-weight:600;padding:0 16px 6px;letter-spacing:0.06em;text-transform:uppercase}
+.sidebar-item{display:flex;align-items:center;gap:9px;padding:9px 16px;font-size:13px;color:var(--ts);cursor:pointer}
+.sidebar-item:hover{background:rgba(0,0,0,0.04);color:var(--t)}
+.sidebar-item.active{background:var(--bl);color:var(--blue);font-weight:600}
+.sidebar-item .icon{font-size:16px;width:20px;text-align:center}
+.sidebar-divider{height:1px;background:var(--bd);margin:8px 12px}
+.pending-cnt{margin-left:auto;background:var(--wl);color:var(--warn);font-size:11px;font-weight:700;padding:1px 7px;border-radius:100px;border:1px solid var(--wb)}
+.main{flex:1;overflow-y:auto;padding:20px}
+/* stat */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.stat{background:var(--w);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px}
+.stat-lbl{font-size:12px;color:var(--tm);margin-bottom:5px}
+.stat-val{font-size:26px;font-weight:700;color:var(--t)}
+.stat-sub{font-size:12px;color:var(--tm);margin-top:3px}
+.stat.warn .stat-val{color:var(--warn)}
+/* alert */
+.alert-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--wl);border:1px solid var(--wb);border-radius:var(--rs);margin-bottom:16px;font-size:13px;color:var(--warn);display:none}
+.alert-bar.show{display:flex}
+/* toolbar */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.srch{position:relative}
+.srch input{padding:7px 10px 7px 30px;border:1px solid var(--bd);border-radius:var(--rs);font-size:13px;font-family:inherit;background:var(--w);color:var(--t);width:200px}
+.srch input:focus{outline:none;border-color:var(--blm)}
+.srch-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--tm);font-size:14px;pointer-events:none}
+.filter-sel{padding:7px 10px;border:1px solid var(--bd);border-radius:var(--rs);font-size:13px;font-family:inherit;background:var(--w);color:var(--t);cursor:pointer}
+/* table */
+.tbl-wrap{background:var(--w);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:12px;font-weight:600;color:var(--tm);padding:10px 12px;text-align:left;background:var(--sb);border-bottom:1px solid var(--bd);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--bd)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#fafaf8}
+tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
+.sbadge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600}
+.s-pend{background:var(--wl);color:var(--warn)}
+.s-ok{background:var(--gl);color:var(--green)}
+.s-ng{background:var(--rl);color:var(--red)}
+.s-gray{background:var(--bg);color:var(--ts);border:1px solid var(--bd)}
+.s-summer{background:#fff0f7;color:#ff69b4}
+.action-row{display:flex;gap:6px}
+.abtn{padding:5px 12px;border-radius:var(--rs);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border:none;transition:opacity 0.15s}
+.abtn:active{opacity:0.8}
+.abtn-ok{background:var(--blue);color:#fff}
+.abtn-ng{background:var(--rl);color:var(--red);border:1px solid var(--rb)}
+.abtn:disabled{opacity:0.3;cursor:not-allowed}
+/* modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.25);z-index:100;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--w);border-radius:14px;padding:24px;width:420px;max-width:90vw}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:16px;color:var(--t)}
+.modal-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}
+.modal-row:last-of-type{border-bottom:none;margin-bottom:12px}
+.modal-key{color:var(--ts)}
+.modal-val{font-weight:500}
+.modal-label{font-size:12px;color:var(--tm);margin:12px 0 5px;font-weight:500}
+.modal-input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:var(--rs);font-size:14px;font-family:inherit;background:var(--bg);color:var(--t)}
+.modal-input:focus{outline:none;border-color:var(--blm)}
+.modal-btns{display:flex;gap:8px;margin-top:16px}
+.modal-btn{flex:1;padding:11px;border:1px solid var(--bd);border-radius:var(--rs);font-size:14px;font-family:inherit;cursor:pointer;font-weight:600}
+.modal-btn-ok{background:var(--blue);color:#fff;border-color:var(--blue)}
+.modal-btn-ok:hover{background:var(--bld)}
+.modal-btn-ng{background:var(--rl);color:var(--red);border-color:var(--rb)}
+.modal-btn-cancel{background:var(--w);color:var(--ts)}
+.modal-btn-cancel:hover{background:var(--bg)}
+/* page */
+.page{display:none}
+.page.active{display:block}
+.empty{padding:40px;text-align:center;font-size:13px;color:var(--tm)}
+.page-title{font-size:15px;font-weight:600;color:var(--t);margin-bottom:16px}
+</style>
+</head>
+<body>
+<div id="gardenErrorView" style="display:none;min-height:100vh;display:none;align-items:center;justify-content:center;background:var(--bg,#f5f6fa);padding:24px">
+  <div style="max-width:360px;text-align:center;background:#fff;border-radius:12px;padding:32px 24px;box-shadow:0 2px 12px rgba(0,0,0,.08)">
+    <div style="font-size:18px;font-weight:700;color:var(--t,#222);margin-bottom:12px">UQチェッカー｜園長承認</div>
+    <div style="font-size:14px;color:#c0392b;line-height:1.7">このURLからはアクセスできません。<br>園ごとに配布されている専用のリンクをご利用ください。</div>
+    <div style="margin-top:10px;font-size:12px;color:#999">リンクが分からない場合は、本部にご確認ください。</div>
+  </div>
+</div>
+<div id="appRoot" style="display:none">
+<div class="topbar">
+  <div>
+    <div class="topbar-title">UQチェッカー｜園長承認</div>
+    <div class="topbar-sub" id="hdSub">柴学園 有給管理システム</div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge-pending" id="topPending">承認待ち 0件</span>
+    <button class="refresh-btn" onclick="refreshAll()">🔄 更新</button>
+  </div>
+</div>
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-label">メニュー</div>
+    <div class="sidebar-item active" onclick="showPage('pending',this)"><span class="icon">⏳</span>承認待ち<span class="pending-cnt" id="sidebarCnt">0</span></div>
+    <div class="sidebar-item" onclick="showPage('all',this)"><span class="icon">📋</span>全申請履歴</div>
+    <div class="sidebar-item" onclick="showPage('staff',this)"><span class="icon">👥</span>職員の残日数</div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-label">設定</div>
+    <div class="sidebar-item" onclick="document.getElementById('approverModal').classList.add('open')"><span class="icon">⚙️</span>承認者名の設定</div>
+  </div>
+  <div class="main">
+    <!-- 承認待ち -->
+    <div id="page-pending" class="page active">
+      <div class="page-title">承認待ちの申請</div>
+      <div class="alert-bar" id="alertBar">⚠️ <span id="alertText"></span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>氏名</th><th>取得希望日</th><th>種別</th><th>基準日</th><th>失効まで</th><th>申請日時</th><th>メモ</th><th>操作</th></tr></thead>
+          <tbody id="pendingBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- 全履歴 -->
+    <div id="page-all" class="page">
+      <div class="page-title">全申請履歴</div>
+      <div class="toolbar">
+        <div class="srch"><span class="srch-icon">🔍</span><input type="text" placeholder="名前で検索" id="histSearch" oninput="renderAll()"></div>
+        <select class="filter-sel" id="histStatus" onchange="renderAll()">
+          <option value="">全ステータス</option>
+          <option value="申請中">申請中</option>
+          <option value="承認済">承認済</option>
+          <option value="却下">却下</option>
+        </select>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>氏名</th><th>取得日</th><th>種別</th><th>申請日時</th><th>承認者</th><th>ステータス</th></tr></thead>
+          <tbody id="allBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- 職員残日数 -->
+    <div id="page-staff" class="page">
+      <div class="page-title">職員の残日数一覧</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>氏名</th><th>雇用形態</th><th>有給付与</th><th>繰越</th><th>取得済</th><th>有給残</th><th>基準日</th><th>失効まで</th><th>夏期休暇</th><th>5日義務</th></tr></thead>
+          <tbody id="staffBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- 承認/却下モーダル -->
+<div class="modal-overlay" id="actionModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">申請内容の確認</div>
+    <div id="modalBody"></div>
+    <div class="modal-btns" id="modalBtns"></div>
+  </div>
+</div>
+<!-- 承認者設定モーダル -->
+<div class="modal-overlay" id="approverModal">
+  <div class="modal">
+    <div class="modal-title">承認者名の設定</div>
+    <div class="modal-label">承認者名（园長のお名前）</div>
+    <input type="text" class="modal-input" id="approverInput" placeholder="例：園長 鈴木">
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="document.getElementById('approverModal').classList.remove('open')">キャンセル</button>
+      <button class="modal-btn modal-btn-ok" onclick="saveApprover()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="_shared.js?v=3"></script>
+<script>
+// ページを開くたびに、過去の本番同期などで残っているローカルデータを初回だけ一掃し、
+// 以降は園長用・職員用で共有するデモデータとして扱う（=職員の申請が園長画面にも反映される）
+DB.ensureDemoData();
+let currentReqId = null;
+let currentAction = null;
+
+// ★デモ固定：このページは常にデモ園・ダミー職員のみを表示し、実データ（GAS本番スプレッドシート）は一切取得しない
+const MY_GARDEN = 'ふれあいしおどめ保育園';
+
+// ============================================================
+// デモ専用GAS連携（別端末間でデータを共有するため）
+// demo_gas_code.js をデプロイしたウェブアプリのURLをここに貼る。
+// 未設定（プレースホルダのまま）の間は通信に失敗するだけで、
+// 従来どおりこの端末のlocalStorageだけで動く（壊れない）。
+// ============================================================
+const DEMO_GAS_URL = 'https://script.google.com/macros/s/AKfycbwAuE1lk7Co-VrQYVabf0VFBEVHkhD1jj58aKV-qVSLkvqh-PXLcgKtj_x7GBNOWVmoRQ/exec';
+
+const DEMO_API = {
+  async request(params){
+    try{ return await this._fetchText(params); }
+    catch(e){ return await this.jsonp(params); }
+  },
+  async _fetchText(params){
+    const query = new URLSearchParams({...params, callback:'cb'}).toString();
+    const res = await fetch(DEMO_GAS_URL + '?' + query, { method:'GET', redirect:'follow' });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text = await res.text();
+    const m = text.trim().match(/^[\w$]+\s*\(([\s\S]*)\)\s*;?$/);
+    return JSON.parse(m ? m[1] : text);
+  },
+  jsonp(params){
+    return new Promise((resolve,reject)=>{
+      const cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*100000);
+      const script=document.createElement('script');
+      const query=new URLSearchParams({...params, callback:cb}).toString();
+      script.src=DEMO_GAS_URL+'?'+query;
+      script.onerror=()=>{ delete window[cb]; reject(new Error('JSONP error')); };
+      window[cb]=(data)=>{ delete window[cb]; if(script.parentNode) document.head.removeChild(script); resolve(data); };
+      document.head.appendChild(script);
+      setTimeout(()=>{ if(window[cb]){ delete window[cb]; reject(new Error('timeout')); } },15000);
+    });
+  },
+  async getStaff(garden){ try{ const r=await this.request({action:'getStaff',garden:garden||''}); return r.ok?r.data:null; }catch(e){ return null; } },
+  async getRequests(garden){ try{ const r=await this.request({action:'getRequests',garden:garden||''}); return r.ok?r.data:null; }catch(e){ return null; } },
+  async approveRequest(reqId, approver){ try{ return await this.request({action:'approveRequest',reqId,approver,garden:MY_GARDEN}); }catch(e){ return {ok:false}; } },
+  async rejectRequest(reqId, approver, reason){ try{ return await this.request({action:'rejectRequest',reqId,approver,reason:reason||'',garden:MY_GARDEN}); }catch(e){ return {ok:false}; } },
+};
+
+// デモ専用GASから最新データを取ってきてローカルキャッシュに反映する。
+// URL未設定・通信失敗のときは何もせず、既存のlocalStorageデータのまま表示する。
+async function syncDemo(){
+  const [staff, reqs] = await Promise.all([DEMO_API.getStaff(MY_GARDEN), DEMO_API.getRequests(MY_GARDEN)]);
+  if(staff && staff.length) DB.saveStaff(staff);
+  if(reqs) DB.saveRequests(reqs);
+  if(staff || reqs) refreshAll();
+}
+
+function initialLoad(){
+  document.getElementById('appRoot').style.display = '';
+  document.getElementById('hdSub').textContent = `柴学園 有給管理システム｜${MY_GARDEN}｜デモ`;
+  renderPending();
+  renderAll();
+  renderStaff();
+  syncDemo();
+  setInterval(syncDemo, 5000); // 5秒ごとに職員側の申請・承認結果を取り込む
+}
+
+function getApprover(){ return localStorage.getItem('ym_approver')||'園長'; }
+function saveApprover(){
+  const v=document.getElementById('approverInput').value.trim()||'園長';
+  localStorage.setItem('ym_approver',v);
+  document.getElementById('approverModal').classList.remove('open');
+  alert('承認者名を「'+v+'」に設定しました');
+}
+document.getElementById('approverInput').value = getApprover();
+
+function showPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.sidebar-item').forEach(s=>s.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(name==='all') renderAll();
+  if(name==='staff') renderStaff();
+  if(name==='pending') renderPending();
+}
+
+function fmtDate(d){ const dt=new Date(d); return `${dt.getMonth()+1}/${dt.getDate()}`; }
+
+function renderPending(){
+  const reqs = DB.getRequests().filter(r=>r.status==='申請中');
+  const cnt = reqs.length;
+  document.getElementById('topPending').textContent = `承認待ち ${cnt}件`;
+  document.getElementById('sidebarCnt').textContent = cnt;
+  const ab = document.getElementById('alertBar');
+  if(cnt>0){ ab.classList.add('show'); document.getElementById('alertText').textContent=`${cnt}件の申請が承認を待っています`; }
+  else ab.classList.remove('show');
+  const tbody = document.getElementById('pendingBody');
+  if(!reqs.length){ tbody.innerHTML=`<tr><td colspan="8" class="empty">承認待ちの申請はありません</td></tr>`; return; }
+  tbody.innerHTML = reqs.map(r=>{
+    const s = DB.getStaffById(r.staffId);
+    const expDays = s ? DB.getExpireDays(s) : null;
+    const expCell = expDays===null ? '<span style="font-size:11px;color:var(--tm)">—</span>'
+      : `<span style="${expDays<=30?'color:var(--red);font-weight:600':expDays<=90?'color:var(--warn);font-weight:600':''}">${expDays>=0?expDays+'日':'失効済'}</span>`;
+    return `
+    <tr>
+      <td style="font-weight:500">${r.name}</td>
+      <td>${r.date}</td>
+      <td>${r.type}（${r.days}日）</td>
+      <td style="font-size:12px">${s&&s.grantDate?s.grantDate:'—'}</td>
+      <td>${expCell}</td>
+      <td style="font-size:12px;color:var(--tm)">${r.createdAt}</td>
+      <td style="font-size:12px;color:var(--ts)">${r.memo||'—'}</td>
+      <td><div class="action-row">
+        <button class="abtn abtn-ok" onclick="directApprove('${r.id}', this)">✓ 承認</button>
+        <button class="abtn abtn-ng" onclick="openAction('${r.id}','reject')">✗ 却下</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAll(){
+  const q=(document.getElementById('histSearch').value||'').toLowerCase();
+  const st=document.getElementById('histStatus').value;
+  const reqs=DB.getRequests().filter(r=>{
+    if(q && !r.name.includes(q)) return false;
+    if(st && r.status!==st) return false;
+    return true;
+  });
+  const tbody=document.getElementById('allBody');
+  if(!reqs.length){ tbody.innerHTML=`<tr><td colspan="6" class="empty">該当する申請がありません</td></tr>`; return; }
+  tbody.innerHTML=reqs.map(r=>{
+    const cls=r.status==='承認済'?'s-ok':r.status==='却下'?'s-ng':'s-pend';
+    const catB2 = r.category==='夏期'?'<span class="sbadge" style="background:#fff0f7;color:#ff69b4;font-size:10px">☀️</span> ':''; return `<tr><td style="font-weight:500">${r.name}</td><td>${r.date}</td><td>${catB2}${r.type}（${r.days}日）</td><td style="font-size:12px;color:var(--tm)">${r.createdAt}</td><td style="font-size:12px">${r.approver||'—'}</td><td><span class="sbadge ${cls}">${r.status}</span></td></tr>`;
+  }).join('');
+}
+
+function renderStaff(){
+  const staff=DB.getStaff();
+  const tbody=document.getElementById('staffBody');
+  tbody.innerHTML=staff.map(s=>{
+    const remain=DB.getRemain(s);
+    const done=DB.getObligDone(s);
+    const rc=remain<=3?'color:var(--red)':remain<=7?'color:var(--warn)':'';
+    const sr=DB.getSummerRemain(s);
+    const summerBadge=s.summerTotal>0?(sr===0?'<span class="sbadge s-ok">✓ 取得完了</span>':`<span class="sbadge" style="background:#fff0f7;color:#ff69b4">${sr}日残</span>`):'<span style="font-size:11px;color:var(--tm)">対象外</span>';
+    const expDays=DB.getExpireDays(s);
+    const expCell = expDays===null ? '<span style="font-size:11px;color:var(--tm)">未設定</span>'
+      : `<span style="${expDays<=30?'color:var(--red);font-weight:600':expDays<=90?'color:var(--warn);font-weight:600':''}">${expDays>=0?expDays+'日':'失効済'}</span>`;
+    return `<tr>
+      <td style="font-weight:500">${s.name}</td>
+      <td><span class="sbadge s-gray">${s.type}</span></td>
+      <td>${s.grant}日</td>
+      <td>${s.carry}日</td>
+      <td>${s.used}日</td>
+      <td style="font-weight:600;${rc}">${remain}日</td>
+      <td style="font-size:12px">${s.grantDate||'—'}</td>
+      <td>${expCell}</td>
+      <td>${summerBadge}</td>
+      <td><span class="sbadge ${done?'s-ok':'s-pend'}">${done?'✓ 達成':'未達成'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// 承認ボタンは確認画面を挟まず即実行する（却下は openAction のモーダルを使用）
+// デモ専用GASにも反映し、職員側の画面にも承認結果が届くようにする
+async function directApprove(reqId, btn){
+  if(btn) btn.disabled = true;
+  const approver = getApprover();
+  DB.approveRequest(reqId, approver);
+  refreshAll();
+  await DEMO_API.approveRequest(reqId, approver);
+  syncDemo();
+}
+
+function openAction(reqId, action){
+  currentReqId=reqId; currentAction=action;
+  const req=DB.getRequests().find(r=>r.id===reqId);
+  if(!req) return;
+  const modal=document.getElementById('actionModal');
+  document.getElementById('modalTitle').textContent=action==='approve'?'✓ 承認の確認':'✗ 却下の確認';
+  document.getElementById('modalBody').innerHTML=`
+    <div class="modal-row"><span class="modal-key">申請者</span><span class="modal-val">${req.name}</span></div>
+    <div class="modal-row"><span class="modal-key">取得希望日</span><span class="modal-val">${req.date}</span></div>
+    <div class="modal-row"><span class="modal-key">種別</span><span class="modal-val">${req.type}（${req.days}日消化）</span></div>
+    <div class="modal-row"><span class="modal-key">メモ</span><span class="modal-val">${req.memo||'なし'}</span></div>
+    ${action==='reject'?'<div class="modal-label">却下理由（任意）</div><input type="text" class="modal-input" id="rejectReason" placeholder="例：業務の都合により">':''}
+  `;
+  document.getElementById('modalBtns').innerHTML=`
+    <button class="modal-btn modal-btn-cancel" onclick="document.getElementById('actionModal').classList.remove('open')">キャンセル</button>
+    <button class="modal-btn ${action==='approve'?'modal-btn-ok':'modal-btn-ng'}" onclick="execAction()">${action==='approve'?'承認する':'却下する'}</button>
+  `;
+  modal.classList.add('open');
+}
+
+// デモ専用GASにも反映し、職員側の画面にも承認・却下結果が届くようにする
+async function execAction(){
+  const approver=getApprover();
+  const reason = currentAction==='reject' ? (document.getElementById('rejectReason')?.value||'') : '';
+  document.querySelectorAll('#modalBtns button').forEach(b=>b.disabled=true);
+
+  if(currentAction==='approve') DB.approveRequest(currentReqId, approver);
+  else DB.rejectRequest(currentReqId, approver, reason);
+
+  document.getElementById('actionModal').classList.remove('open');
+  refreshAll();
+
+  if(currentAction==='approve') await DEMO_API.approveRequest(currentReqId, approver);
+  else await DEMO_API.rejectRequest(currentReqId, approver, reason);
+  syncDemo();
+}
+
+function refreshAll(){
+  renderPending();
+  renderAll();
+  renderStaff();
+}
+
+initialLoad();
+</script>
+</body>
+</html>
