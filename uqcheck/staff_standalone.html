@@ -564,7 +564,7 @@ const DB = {
 
   // ★デモ固定用：ブラウザに残る「本番同期時の実データ」を初回だけ一掃し、以降は
   //   園長用(encho.html)・職員用(staff_standalone.html)で入力したデモの申請を共有し続ける
-  DEMO_VERSION: 'demo-v1',
+  DEMO_VERSION: 'fureai-shiodome-v1',
   ensureDemoData(){
     if(localStorage.getItem('ym_demo_version') !== this.DEMO_VERSION){
       this.reset();
@@ -737,7 +737,10 @@ const DEMO_API = {
 
 // デモ専用GASから最新データを取ってきてローカルキャッシュに反映する。
 // URL未設定・通信失敗のときは何もせず、既存のlocalStorageデータのまま表示する。
+// ★ふれあいしおどめ保育園用：共通デモGAS側が園ごとにデータを正しく分けられていないため、
+//   一時的に無効化（ローカルのdefaultStaffのみで動作させる）。TODO: 原因確認後に復活を検討。
 async function syncDemo(){
+  return;
   const [staff, reqs] = await Promise.all([DEMO_API.getStaff(MY_GARDEN), DEMO_API.getRequests(MY_GARDEN)]);
   if(staff && staff.length) DB.saveStaff(staff);
   if(reqs) DB.saveRequests(reqs);
