@@ -117,8 +117,8 @@ async function syncFromGAS(garden) {
 
 // 共有データストア (localStorage) ※GAS接続前のフォールバック/デモ用データとしても機能
 const DB = {
-  KEY_STAFF: 'ym_staff',
-  KEY_REQUESTS: 'ym_requests',
+  KEY_STAFF: 'ym_staff_fureai_shiodome',
+  KEY_REQUESTS: 'ym_requests_fureai_shiodome',
 
   defaultStaff: [
     {id:'EMP001',name:'佐藤 花子',type:'正規',hire:'2019-04-01',grantDate:'2026-04-01',grant:18,carry:3,used:6,summerUsed:3,summerTotal:5,basicPay:250000,allowance:18000,avgMonthlyHours:160,email:'sato.hanako@shiba.ed.jp',garden:'しおどめ保育園○○'},
