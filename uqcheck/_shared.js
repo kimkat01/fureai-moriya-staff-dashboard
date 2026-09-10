@@ -215,7 +215,7 @@ const DB = {
 
   // ★デモ固定用：ブラウザに残る「本番同期時の実データ」を初回だけ一掃し、以降は
   //   園長用(encho.html)・職員用(staff_standalone.html)で入力したデモの申請を共有し続ける
-  DEMO_VERSION: 'fureai-shiodome-v1',
+  DEMO_VERSION: 'fureai-shiodome-v2',
   ensureDemoData(){
     if(localStorage.getItem('ym_demo_version') !== this.DEMO_VERSION){
       this.reset();
