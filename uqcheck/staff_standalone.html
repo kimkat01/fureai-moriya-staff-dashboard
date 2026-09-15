@@ -707,53 +707,19 @@ const MY_GARDEN = 'ふれあいしおどめ保育園';
 DB.ensureDemoData();
 
 // ============================================================
-// デモ専用GAS連携（別端末間でデータを共有するため）
-// demo_gas_code.js をデプロイしたウェブアプリのURLをここに貼る。
-// encho.html の DEMO_GAS_URL と同じ値にすること。
-// 未設定（プレースホルダのまま）の間は通信に失敗するだけで、
-// 従来どおりこの端末のlocalStorageだけで動く（壊れない）。
+// 本番GAS連携（職員マスタスプレッドシート）
+// ※園ごとのURLではなく、getStaff呼び出し時に garden で絞り込む方式。
+// 本番の「職員マスタ」に対象園（garden名）のデータが未登録の場合、
+// 職員一覧が空になります。その場合はスプレッドシート側の登録を先に確認してください。
 // ============================================================
-const DEMO_GAS_URL = 'https://script.google.com/macros/s/AKfycbwAuE1lk7Co-VrQYVabf0VFBEVHkhD1jj58aKV-qVSLkvqh-PXLcgKtj_x7GBNOWVmoRQ/exec';
-
-const DEMO_API = {
-  async request(params){
-    try{ return await this._fetchText(params); }
-    catch(e){ return await this.jsonp(params); }
-  },
-  async _fetchText(params){
-    const query = new URLSearchParams({...params, callback:'cb'}).toString();
-    const res = await fetch(DEMO_GAS_URL + '?' + query, { method:'GET', redirect:'follow' });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const text = await res.text();
-    const m = text.trim().match(/^[\w$]+\s*\(([\s\S]*)\)\s*;?$/);
-    return JSON.parse(m ? m[1] : text);
-  },
-  jsonp(params){
-    return new Promise((resolve,reject)=>{
-      const cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*100000);
-      const script=document.createElement('script');
-      const query=new URLSearchParams({...params, callback:cb}).toString();
-      script.src=DEMO_GAS_URL+'?'+query;
-      script.onerror=()=>{ delete window[cb]; reject(new Error('JSONP error')); };
-      window[cb]=(data)=>{ delete window[cb]; if(script.parentNode) document.head.removeChild(script); resolve(data); };
-      document.head.appendChild(script);
-      setTimeout(()=>{ if(window[cb]){ delete window[cb]; reject(new Error('timeout')); } },15000);
-    });
-  },
-  async getStaff(garden){ try{ const r=await this.request({action:'getStaff',garden:garden||''}); return r.ok?r.data:null; }catch(e){ return null; } },
-  async getRequests(garden){ try{ const r=await this.request({action:'getRequests',garden:garden||''}); return r.ok?r.data:null; }catch(e){ return null; } },
-  async addRequestDemo(data){ try{ return await this.request({action:'addRequest', data: JSON.stringify(data)}); }catch(e){ return {ok:false}; } },
-};
-
-// デモ専用GASから最新データを取ってきてローカルキャッシュに反映する。
-// URL未設定・通信失敗のときは何もせず、既存のlocalStorageデータのまま表示する。
-// ★ふれあいしおどめ保育園用：共通デモGAS側が園ごとにデータを正しく分けられていないため、
-//   一時的に無効化（ローカルのdefaultStaffのみで動作させる）。TODO: 原因確認後に復活を検討。
-async function syncDemo(){
-  return;
-  const [staff, reqs] = await Promise.all([DEMO_API.getStaff(MY_GARDEN), DEMO_API.getRequests(MY_GARDEN)]);
+async function syncProd(){
+  let staff = null, reqs = null;
+  try{ staff = await API.getStaff(MY_GARDEN); }catch(e){ staff = null; }
   if(staff && staff.length) DB.saveStaff(staff);
-  if(reqs) DB.saveRequests(reqs);
+  if(me){
+    try{ reqs = await API.getRequests(me.id); }catch(e){ reqs = null; }
+    if(reqs) DB.saveRequests(reqs);
+  }
   if(!staff && !reqs) return;
   if(me){
     me = DB.getStaffById(me.id) || me;
@@ -785,15 +751,15 @@ function renderStaffOptions(staffList){
     sel.value = prevValue; // 再描画後も選択状態を復元
   }
 }
-// ★デモ固定：ローカルのダミー職員（デモ園に属する13名）のみを一覧表示し、GASへは接続しない
+// 本番の職員マスタから取得した職員一覧を表示する
 function buildLoginList(){
-  document.getElementById('gardenLabel').textContent = MY_GARDEN + '（デモ）';
+  document.getElementById('gardenLabel').textContent = MY_GARDEN;
   const list = DB.getStaff().filter(s => s.garden === MY_GARDEN);
   renderStaffOptions(list.length ? list : DB.defaultStaff);
 }
 buildLoginList();
-syncDemo();
-setInterval(syncDemo, 5000); // 5秒ごとに園長側の承認結果・最新申請を取り込む
+syncProd();
+setInterval(syncProd, 5000); // 5秒ごとに園長側の承認結果・最新申請を取り込む
 
 function doLogin(){
   const id = document.getElementById('staffSelect').value;
@@ -1106,9 +1072,9 @@ async function submitApply(){
       const days = t==='全日' ? 1 : 0.5;
       reqData = {staffId:me.id,name:s.name,date:dates[i],type:t,days,memo,category:'有給',garden:MY_GARDEN};
     }
-    // ローカル（この端末）にすぐ反映しつつ、デモ専用GASにも送って園長側に届くようにする
+    // ローカル（この端末）にすぐ反映しつつ、本番GASにも送って園長側に届くようにする
     DB.addRequest(reqData);
-    await DEMO_API.addRequestDemo(reqData);
+    await API.addRequest(reqData);
   }
   document.getElementById('applyMemo').value='';
   multiDates = [];
@@ -1119,7 +1085,7 @@ async function submitApply(){
   showToast(`${dates.length}日分の申請を送信しました！園長の承認をお待ちください`);
   showPage('history',document.querySelectorAll('.ni')[2]);
   btn.textContent = '申請する'; btn.disabled = false;
-  syncDemo();
+  syncProd();
 }
 </script>
 </body>
