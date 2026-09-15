@@ -17,6 +17,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
 .hd-title{font-size:22px;font-weight:800;color:#fff;letter-spacing:0.02em;font-family:'Nunito','Apple SD Gothic Neo',sans-serif}
 .hd-sub{display:none}
 .logout-btn{font-size:12px;color:rgba(255,255,255,0.8);background:none;border:1px solid rgba(255,255,255,0.4);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:inherit}
+.hd-home{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;border:1.5px solid rgba(255,255,255,.8);background:transparent;color:#fff;font-size:12.5px;font-weight:800;padding:6px 12px 6px 9px;border-radius:999px;cursor:pointer;font-family:inherit;white-space:nowrap;text-decoration:none}
+.hd-home:active{background:rgba(255,255,255,.16)}
+.hd-home svg{width:16px;height:16px;flex:0 0 auto}
 
 /* ログイン */
 .login-wrap{padding:40px 24px}
@@ -170,6 +173,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
       <div class="hd-sub" id="hdSub">柴学園 有給管理</div>
     </div>
     <button class="logout-btn" id="logoutBtn" style="display:none" onclick="logout()">ログアウト</button>
+    <a class="hd-home" id="hdHomeBtn" href="../?garden=ふれあいしおどめ保育園" aria-label="ホームに戻る">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 11L12 4L20 11"></path>
+        <path d="M6 10V19a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10"></path>
+        <path d="M10 20v-5h4v5"></path>
+      </svg>
+      Home
+    </a>
   </div>
 </div>
 
