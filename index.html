@@ -127,6 +127,19 @@ main{padding:16px}
 .i-sky{background:var(--sky-bg);color:var(--sky)} .i-lav{background:var(--lav-bg);color:var(--lav)}
 .i-sun{background:var(--sun-bg);color:var(--sun)}
 .i-red{background:var(--red-bg);color:var(--red)}
+.i-red-soft{background:#f0d9d6;color:#a9685f}
+.i-gray-soft{background:#e6e9ed;color:#767f8c}
+
+/* 危機管理対応状況／コーポレートブック：最下段・控えめな2分割コンパクト行
+   （滅多に使わないため、通常タイルより天地を大きく圧縮し、彩度も落としている） */
+.tile-compact{min-height:0;}
+.tile-compact .tileclip{flex-direction:row;align-items:center;gap:10px;padding:12px 13px;}
+.tile-compact .ictop{width:auto;height:auto;padding-left:0;flex:0 0 auto;}
+.tile-compact .ic{width:30px;height:30px;border-radius:10px;}
+.tile-compact .ic svg{width:16px;height:16px;stroke-width:2;}
+.tile-compact .tbody{padding:0;gap:0;flex:1;min-width:0;}
+.tile-compact .tt{font-size:13px;line-height:1.3;}
+.tile-compact .ds{display:none;}
 
 .soon{margin-top:20px;background:transparent;border:1px dashed var(--line);border-radius:16px;padding:13px 14px;}
 .soon .k{font-size:11px;font-weight:800;color:var(--brand);}
@@ -8490,17 +8503,23 @@ function renderHome(){
        '</span></button>';
   }).join("");
 
-  /* 安否確認（横長・薄型カード）。実施中にするときは ANPI_ACTIVE=true。将来は集計JSONで自動判定 */
+  /* 危機管理対応状況・コーポレートブック（最下段・控えめな2分割コンパクト行）。
+     危機管理対応状況を実施中にするときは ANPI_ACTIVE=true。将来は集計JSONで自動判定 */
   const ANPI_ACTIVE=false;
   const anpiFlag=ANPI_ACTIVE?'<span class="flag flag-anpi">🔴実施中</span>':'';
-  const anpiChip=ANPI_ACTIVE?'<span class="wide-chip on">実施中</span>':'<span class="wide-chip off">未実施</span>';
-  const anpiDesc=ANPI_ACTIVE?'回答をお願いします':'災害時に自分の安否を報告';
   const anpiCard=
-    '<button class="tile tile-wide" onclick="goStub(\'危機管理対応状況\',\'anpi\',\'i-red\')">'+anpiFlag+
+    '<button class="tile tile-compact" onclick="goStub(\'危機管理対応状況\',\'anpi\',\'i-red-soft\')">'+anpiFlag+
     '<span class="tileclip">'+
-      '<span class="ictop"><span class="ic i-red ic-anpi">'+IC.anpi+'</span></span>'+
-      '<span class="tbody"><span class="tt round">危機管理対応状況</span><span class="ds">'+anpiDesc+'</span></span>'+
-      '<span class="wide-status">'+anpiChip+'<span class="wide-go">›</span></span>'+
+      '<span class="ictop"><span class="ic i-red-soft">'+IC.anpi+'</span></span>'+
+      '<span class="tbody"><span class="tt round">危機管理対応状況</span></span>'+
+    '</span></button>';
+
+  /* コーポレートブック（既存の完成済みフリップブックを新タブで開くだけ。パスワードなし） */
+  const corpCard=
+    '<button class="tile tile-compact" onclick="goLink(CORP_URL,\'コーポレートブック\',\'book\',\'i-gray-soft\')">'+
+    '<span class="tileclip">'+
+      '<span class="ictop"><span class="ic i-gray-soft">'+IC.book+'</span></span>'+
+      '<span class="tbody"><span class="tt round">コーポレートブック</span></span>'+
     '</span></button>';
 
   const dnow=new Date();
@@ -8510,7 +8529,7 @@ function renderHome(){
   document.getElementById('screen-home').innerHTML=`
    <div class="sec-label home-date-row" style="margin-top:6px"><span></span><span class="home-date round">${dateStr}</span></div>
    <div class="home-notice" id="omHomeNotice" style="display:none">ご意見箱：本部がご意見を受領しました。投稿ありがとうございます。</div>
-   <div class="grid">${tiles}${anpiCard}</div>
+   <div class="grid">${tiles}${anpiCard}${corpCard}</div>
    <p class="foot"><b>これは試作です。</b>ログイン（園→名前）は共通で、全メニューに有効。1つの入口・1回のログインで全部ひらきます。</p>`;
   if(typeof omUpdateHomeNotice==='function')omUpdateHomeNotice();
 }
