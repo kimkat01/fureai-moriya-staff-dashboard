@@ -73,6 +73,10 @@ main{padding:16px}
 
 .sec-label{font-size:11.5px;font-weight:800;color:var(--ink-soft);letter-spacing:.06em;margin:22px 2px 11px;}
 .home-date-row{display:flex;align-items:center;justify-content:flex-end;}
+.home-notice{margin:0 2px 14px;font-size:12.5px;font-weight:800;background:var(--brand-soft);color:#155e51;border-radius:10px;padding:9px 12px;}
+#screen-omeyasu .oinfo{border:1px solid #dfe6f5;background:#f4f7ff;margin-bottom:14px;}
+#screen-omeyasu .oinfo .oilead{font-size:14px;font-weight:800;color:var(--brand-blue);margin-bottom:6px;}
+#screen-omeyasu .oinfo .oibody{font-size:13px;line-height:1.8;font-weight:700;color:var(--ink);white-space:pre-wrap;}
 .home-date{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:.01em;}
 .grid{display:flex;flex-wrap:wrap;gap:11px;}
 .tile{background:transparent;border:0;border-radius:18px;padding:0;
@@ -342,11 +346,13 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-news .nshidden{display:none;}
 /* ===== 規約・マニュアル（gd） ===== */
 #screen-manual .gdwrap{max-width:440px;margin:0 auto;padding:16px 12px 28px;}
-#screen-manual .gdintro{display:flex;gap:11px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow);}
-#screen-manual .gdintro .gdic{flex:0 0 auto;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--train-bg);color:var(--train);}
-#screen-manual .gdintro .gdic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-#screen-manual .gdintro h2{margin:0 0 3px;font-size:16px;font-weight:800;color:var(--ink);}
-#screen-manual .gdintro p{margin:0;font-size:12.5px;line-height:1.5;color:var(--ink-soft);}
+#screen-manual .gdsearch{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow);margin:0;}
+#screen-manual .gdsearch svg{flex:0 0 auto;width:18px;height:18px;fill:none;stroke:var(--ink-soft);stroke-width:2;stroke-linecap:round;}
+#screen-manual .gdsearch input{flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:16px;font-family:inherit;color:var(--ink);padding:6px 0;}
+#screen-manual .gdsearch input::placeholder{color:var(--ink-soft);opacity:.75;font-size:14px;}
+#screen-manual .gdsearch button{flex:0 0 auto;border:0;border-radius:11px;background:var(--train);color:#fff;font-size:13.5px;font-weight:800;padding:9px 16px;cursor:pointer;font-family:inherit;}
+#screen-manual .gdshint{font-size:11.5px;color:var(--ink-soft);padding:7px 6px 0;line-height:1.5;}
+#screen-manual .gdempty{font-size:13px;color:var(--ink-soft);padding:18px 6px;text-align:center;line-height:1.7;}
 #screen-manual .gdgroup{margin-top:18px;}
 #screen-manual .gdglabel{font-size:12px;font-weight:800;color:var(--train);letter-spacing:.04em;padding:0 4px 9px;display:flex;align-items:center;gap:7px;}
 #screen-manual .gdglabel::before{content:"";width:4px;height:14px;border-radius:2px;background:var(--train);}
@@ -532,16 +538,13 @@ tbody tr.me .namecol{color:var(--brand)}
     <section id="screen-stub" hidden></section>
     <section id="screen-omeyasu" hidden>
       <div class="owrap">
+        <div id="omReplyList"></div>
         <div class="ocard osafe">
           <div class="olead">💡 ご意見・ご提案をお寄せください</div>
           <div class="obody">
             現場で感じたこと、「こうしたらもっと良くなるかも」というアイデアなど、どんなことでも歓迎です。小さなことでも大歓迎です。<br>
             記名で送るか匿名で送るか、下のボタンで選べます。
           </div>
-        </div>
-        <div class="ocard osafe ohidden" id="omReceivedNotice">
-          <div class="olead">📬 本部が確認しました</div>
-          <div class="obody">以前お送りいただいたご意見について、本部が確認済みです。</div>
         </div>
         <div id="omPanePost">
           <div class="ocard" id="omFormCard">
@@ -683,13 +686,12 @@ tbody tr.me .namecol{color:var(--brand)}
     </section>
     <section id="screen-manual" hidden>
       <div class="gdwrap">
-        <div class="gdintro">
-          <div class="gdic" id="gdIcon"></div>
-          <div>
-            <h2 class="round">規約・マニュアル</h2>
-            <p>就業規則・各種規程・マニュアルをまとめています。文書を選ぶとPDFが開きます。</p>
-          </div>
-        </div>
+        <form class="gdsearch" onsubmit="gdSearchSubmit(event)">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="gdQ" type="search" enterkeyhint="search" placeholder="キーワードを入力" autocomplete="off" oninput="gdFilter()">
+          <button type="submit">検索</button>
+        </form>
+        <div class="gdshint" id="gdHint">文書名で絞り込みます。「検索」を押すとPDFの本文から探します。</div>
         <div id="gdList"></div>
         <div class="gdfoot">
           <div class="gdnote">最新版に随時更新します。内容についてのご質問は本部までお問い合わせください。</div>
@@ -699,6 +701,7 @@ tbody tr.me .namecol{color:var(--brand)}
   </main>
 </div>
 
+<script src="https://kimkat01.github.io/staff-dashboard/docs/manuals.js"></script>
 <script>
 const DATA = {
  "facility": "ふれあいしおどめ保育園",
@@ -8058,8 +8061,22 @@ function goOmeyasu(){
   document.getElementById('omGarden').value='';
   document.getElementById('omName').value='';
   omeyasuSetIdentityMode('named');
-  omApplyReceivedNotice();
+  omRenderReplies();
   show('omeyasu');
+}
+function omRenderReplies(){
+  var host=document.getElementById('omReplyList');
+  if(!host)return;
+  var inbox=omGetReplyInbox();
+  if(!inbox.length){host.innerHTML='';return;}
+  host.innerHTML=inbox.map(function(x){
+    return '<div class="ocard oinfo"><div class="oilead">📩 本部からの返信</div><div class="oibody">'+
+      String(x.reply).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')+
+      '</div></div>';
+  }).join('');
+  /* 表示したら既読にする（次に開いたときはもう出ない） */
+  omSetReplyInbox([]);
+  omUpdateHomeNotice();
 }
 function omeyasuSubmit(){
   var body=document.getElementById('omBody').value.trim();
@@ -8074,14 +8091,20 @@ function omeyasuSubmit(){
     name=document.getElementById('omName').value.trim()||name;
   }
   var btn=document.getElementById('omSendBtn');btn.disabled=true;msg.textContent='送信中…';
-  var payload={category:category,body:body,garden:garden,name:name};
-  fetch(OM_GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+  var payload={category:category,body:body,garden:garden,name:name,mode:(omIdentityMode==='named'?'記名':'匿名')};
+  var qs='action=submit'
+    +'&category='+encodeURIComponent(payload.category)
+    +'&body='+encodeURIComponent(payload.body)
+    +'&garden='+encodeURIComponent(payload.garden)
+    +'&name='+encodeURIComponent(payload.name)
+    +'&mode='+encodeURIComponent(payload.mode);
+  fetch(OM_GAS_URL+'?'+qs)
     .then(function(r){return r.json();})
     .then(function(res){
       btn.disabled=false;
       if(res&&res.ok){
         omLastCode=res.code;
-        if(res.code)omAddLocalCode(res.code);
+        if(res.code)omAddLocalCode(res.code,omIdentityMode==='named');
         document.getElementById('omFormCard').className='ocard ohidden';
         document.getElementById('omDoneCard').className='ocard ocode-box';
       }else{msg.className='omsg err';msg.textContent='送信に失敗しました。時間をおいて再度お試しください。';}
@@ -8089,60 +8112,76 @@ function omeyasuSubmit(){
     .catch(function(){btn.disabled=false;msg.className='omsg err';msg.textContent='通信エラーが発生しました。';});
 }
 
-/* ===== ご意見箱：受領通知（本部が確認済みにすると、ホームのタイルにスタンプが点滅） ===== */
+/* ===== ご意見箱：受領通知（投稿するとホームに案内を出し、本部がスプレッドシートを更新したら消える） =====
+   記名で送った投稿だけ、本部の返信本文もローカルに保存して開いたときに読めるようにする。 */
 var OM_LOCAL_KEY='om_local_codes_v1';
+var OM_REPLY_KEY='om_reply_inbox_v1';
 function omGetLocalCodes(){try{return JSON.parse(localStorage.getItem(OM_LOCAL_KEY)||'[]');}catch(e){return [];}}
 function omSetLocalCodes(list){try{localStorage.setItem(OM_LOCAL_KEY,JSON.stringify(list));}catch(e){}}
-function omAddLocalCode(code){
+function omGetReplyInbox(){try{return JSON.parse(localStorage.getItem(OM_REPLY_KEY)||'[]');}catch(e){return [];}}
+function omSetReplyInbox(list){try{localStorage.setItem(OM_REPLY_KEY,JSON.stringify(list));}catch(e){}}
+function omAddLocalCode(code,named){
   var list=omGetLocalCodes();
   if(!list.some(function(x){return x.code===code;})){
-    list.push({code:code,confirmed:false,seen:false});
+    list.push({code:code,named:!!named});
     omSetLocalCodes(list);
   }
+  omUpdateHomeNotice();
 }
-function omShowTileBadge(){
-  var el=document.getElementById('omTileFlag');
-  if(el)el.style.display='';
+function omUpdateHomeNotice(){
+  var el=document.getElementById('omHomeNotice');
+  if(!el)return;
+  var hasReply=omGetReplyInbox().length>0;
+  var hasPending=omGetLocalCodes().length>0;
+  if(hasReply){
+    el.textContent='ご意見箱：本部から返信が届いています。タップしてご確認ください。';
+    el.style.display='';
+    el.onclick=function(){goOmeyasu();};
+    el.style.cursor='pointer';
+  }else if(hasPending){
+    el.textContent='ご意見箱：本部がご意見を受領しました。投稿ありがとうございます。';
+    el.style.display='';
+    el.onclick=null;
+    el.style.cursor='default';
+  }else{
+    el.style.display='none';
+    el.onclick=null;
+  }
 }
-function omHideTileBadge(){
-  var el=document.getElementById('omTileFlag');
-  if(el)el.style.display='none';
-}
-/* 起動時に、未確認（seen:false）の投稿コードだけ本部のステータスを確認する。
-   status が「未対応」以外になっていれば「本部が確認済み」とみなしてバッジを点滅させる。 */
+/* 起動時・ホーム表示のたびに、投稿済みでまだ確認していないコードだけ本部の状態を見に行く。
+   状態(status)が「未対応」以外になった、または返信欄(reply)に何か書かれていたら「本部が対応した」とみなし、
+   受領案内のリストからは外す。記名投稿で実際に返信本文があれば、返信一覧に保存する。 */
 function omCheckPending(){
-  if(!OM_GAS_URL)return;
   var list=omGetLocalCodes();
-  var targets=list.filter(function(x){return !x.seen;});
-  if(!targets.length)return;
-  var remaining=targets.length;
-  function omDone(){remaining--;if(remaining===0)omSetLocalCodes(list);}
-  targets.forEach(function(item){
+  if(!OM_GAS_URL||!list.length){omUpdateHomeNotice();return;}
+  var remaining=list.length;
+  var stillPending=list.slice();
+  var replyInbox=omGetReplyInbox();
+  function omDone(){
+    remaining--;
+    if(remaining===0){
+      omSetLocalCodes(stillPending);
+      omSetReplyInbox(replyInbox);
+      omUpdateHomeNotice();
+    }
+  }
+  list.forEach(function(item){
     fetch(OM_GAS_URL+'?code='+encodeURIComponent(item.code)+'&t='+Date.now())
       .then(function(r){return r.json();})
       .then(function(res){
         var statusChanged=res&&res.ok&&res.status&&res.status!=='未対応';
-        var hasReply=res&&res.ok&&res.reply&&String(res.reply).trim()!=='';
-        if(statusChanged||hasReply){
-          item.confirmed=true;
-          omShowTileBadge();
+        var replyText=(res&&res.ok&&res.reply)?String(res.reply).trim():'';
+        if(statusChanged||replyText){
+          var idx=stillPending.findIndex(function(x){return x.code===item.code;});
+          if(idx>-1)stillPending.splice(idx,1);
+        }
+        if(item.named&&replyText&&!replyInbox.some(function(x){return x.code===item.code;})){
+          replyInbox.push({code:item.code,reply:replyText});
         }
         omDone();
       })
       .catch(function(){omDone();});
   });
-}
-/* ご意見箱の画面を開いたときに呼ぶ。確認済みの投稿があれば案内を出し、既読にしてバッジを消す */
-function omApplyReceivedNotice(){
-  var list=omGetLocalCodes();
-  var hasConfirmed=list.some(function(x){return x.confirmed&&!x.seen;});
-  var notice=document.getElementById('omReceivedNotice');
-  if(notice)notice.className=hasConfirmed?'ocard osafe':'ocard osafe ohidden';
-  if(hasConfirmed){
-    list.forEach(function(x){if(x.confirmed)x.seen=true;});
-    omSetLocalCodes(list);
-    omHideTileBadge();
-  }
 }
 
 /* HOME */
@@ -8364,39 +8403,55 @@ function nsBack(){
 }
 
 /* ===== 規約・マニュアル（接頭辞 gd） ===== */
-/* (A) PDFの置き場所。実体は shiodome-knowledge リポジトリ（既に公開済み）を参照するので、
-   このダッシュボード側にPDFを二重に置く必要はない。別の場所へ移すときはここだけ変更。 */
-const GD_BASE="https://kimkat01.github.io/shiodome-knowledge/";
-/* 全文キーワード検索できる既存の規約ビューア（manual.html）。フッターのリンク先。 */
-const GD_VIEWER="https://kimkat01.github.io/shiodome-knowledge/manual.html";
+/* (A) PDFの置き場所と文書一覧は、全園共通で staff-dashboard リポジトリの docs フォルダにまとめている。
+     一覧：https://kimkat01.github.io/staff-dashboard/docs/manuals.js（ここだけ直せば全園に反映）
+     PDF ：staff-dashboard/docs/fureai_shiodome/（この園の資料）と docs/common/（全園共通）
+   同じ kimkat01.github.io 内なので、このリポジトリから直接読める。 */
+const GD_DOCS_BASE="https://kimkat01.github.io/staff-dashboard/docs/";
+/* PDF内をキーワードで検索するビューア。?garden=園名 を付けて、その園の資料だけを検索する。 */
+const GD_VIEWER=GD_DOCS_BASE+"viewer.html";
 /* コーポレートブック（完成済みのHTMLフリップブック）。タイルから新タブで開くだけ。 */
 const CORP_URL="https://kimkat01.github.io/shiodome-knowledge/corporate-book-flipbook.html";
 const CORP_PW="shiodome8000";
-/* (B) 文書一覧（グループ分け）。追加は該当グループの docs に1行足すだけ。
-   title=表示名／file=PDFファイル名（GD_BASE からの相対・半角推奨）。 */
-const MANUALS=[
-  {label:"規約・マニュアル", docs:[
-    /* TODO: ふれあいしおどめ保育園の就業規則（正規職員）PDFを用意し、ここに local:true で追加してください */
-    {title:"就業規則（パート職員）", file:"fureai-part-shugyo-kisoku.pdf", local:true}
-  ]},
-  {label:"参考資料", docs:[
-    {title:"こども性暴力防止法の施行について", file:"kodomo-seibouryoku-hou.pdf"}
-  ]}
-];
 var GD_EXT_ICON='<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 function gdEsc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-/* local=true の場合は GD_BASE(shiodome-knowledge=三郷中央専用) を経由せず、
-   このダッシュボード（ふれあいしおどめ保育園用）のリポジトリ直下のPDFを直接開く。 */
-function gdOpenDoc(file,local){window.open(local?file:GD_BASE+encodeURIComponent(file),'_blank','noopener');}
-function gdOpenViewer(){window.open(GD_VIEWER,'_blank','noopener');}
+function gdOpenDoc(path){window.open(GD_DOCS_BASE+path,'_blank','noopener');}
+function gdOpenViewer(q){window.open(GD_VIEWER+'?garden='+encodeURIComponent(gardenName())+(q?'&q='+encodeURIComponent(q):''),'_blank','noopener');}
+/* 検索窓：入力中は文書名で絞り込み、「検索」でPDF本文を検索（その園の資料だけ） */
+function gdFilter(){
+  var q=(document.getElementById('gdQ').value||'').trim().toLowerCase();
+  var groups=document.querySelectorAll('#gdList .gdgroup'),shown=0;
+  for(var g=0;g<groups.length;g++){
+    var btns=groups[g].querySelectorAll('.gddoc'),any=false;
+    for(var d=0;d<btns.length;d++){
+      var t=btns[d].querySelector('.gdt').textContent.toLowerCase();
+      var hit=!q||t.indexOf(q)!==-1;
+      btns[d].style.display=hit?'':'none';
+      if(hit){any=true;shown++;}
+    }
+    groups[g].style.display=any?'':'none';
+  }
+  var em=document.getElementById('gdEmpty');
+  if(!shown&&q){
+    if(!em){em=document.createElement('div');em.id='gdEmpty';em.className='gdempty';document.getElementById('gdList').appendChild(em);}
+    em.innerHTML='文書名に「'+gdEsc(document.getElementById('gdQ').value.trim())+'」はありません。<br>「検索」を押すとPDFの本文から探します。';
+    em.style.display='';
+  }else if(em){em.style.display='none';}
+}
+function gdSearchSubmit(e){
+  e.preventDefault();
+  var q=(document.getElementById('gdQ').value||'').trim();
+  gdOpenViewer(q);
+}
 function gdRender(){
+  var groups=(typeof manualGroupsFor==='function')?manualGroupsFor(gardenName()):[];
   var html='';
-  for(var g=0;g<MANUALS.length;g++){
-    var grp=MANUALS[g];
+  for(var g=0;g<groups.length;g++){
+    var grp=groups[g];
     html+='<div class="gdgroup"><div class="gdglabel">'+gdEsc(grp.label)+'</div>';
     for(var d=0;d<grp.docs.length;d++){
       var doc=grp.docs[d];
-      html+='<button class="gddoc" onclick="gdOpenDoc(\''+doc.file+'\','+(!!doc.local)+')">'
+      html+='<button class="gddoc" onclick="gdOpenDoc(\''+doc.file+'\')">'
           +'<span class="gdfic">'+IC.doc+'</span>'
           +'<span class="gdmeta"><span class="gdt">'+gdEsc(doc.title)+'</span><span class="gdpill">PDF</span></span>'
           +'<span class="gdchev">'+GD_EXT_ICON+'</span>'
@@ -8404,11 +8459,12 @@ function gdRender(){
     }
     html+='</div>';
   }
+  if(!groups.length)html='<div class="gdnote">文書一覧を読み込めませんでした。電波の良い場所でもう一度開いてください。</div>';
   document.getElementById('gdList').innerHTML=html;
 }
 function goManual(){
   document.getElementById('brandtxt').textContent='規約・マニュアル';
-  document.getElementById('gdIcon').innerHTML=IC.doc;
+  var q=document.getElementById('gdQ');if(q)q.value='';
   gdRender();
   show("manual");
 }
@@ -8420,7 +8476,7 @@ const MENU=[
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-lav",go:()=>goManual()},
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
  {t:"メンタルヘルスサポート",d:"ストレスチェックやカウンセリング等の手続き",ic:"doctor",tint:"i-gold",go:()=>goStub("メンタルヘルスサポート","doctor","i-gold")},
- {t:"ご意見箱",d:"匿名で本部に届ける",ic:"box",tint:"i-mid",go:()=>goOmeyasu(),flagId:"omTileFlag"},
+ {t:"ご意見箱",d:"匿名で本部に届ける",ic:"box",tint:"i-mid",go:()=>goOmeyasu()},
  {t:"職員紹介制度",d:"一緒に働く仲間をご紹介",ic:"ref",tint:"i-sun",go:()=>goReferral()},
 ];
 function renderHome(){
@@ -8453,8 +8509,10 @@ function renderHome(){
 
   document.getElementById('screen-home').innerHTML=`
    <div class="sec-label home-date-row" style="margin-top:6px"><span></span><span class="home-date round">${dateStr}</span></div>
+   <div class="home-notice" id="omHomeNotice" style="display:none">ご意見箱：本部がご意見を受領しました。投稿ありがとうございます。</div>
    <div class="grid">${tiles}${anpiCard}</div>
    <p class="foot"><b>これは試作です。</b>ログイン（園→名前）は共通で、全メニューに有効。1つの入口・1回のログインで全部ひらきます。</p>`;
+  if(typeof omUpdateHomeNotice==='function')omUpdateHomeNotice();
 }
 
 /* SHIFT screen (personal + facility) */
