@@ -158,8 +158,9 @@ main{padding:16px}
 .today2 .eyebrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
 .today2 .date{font-size:13px;color:var(--ink-soft);font-weight:700;}
 .today2 .dot{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;}
-.today2 .headline{font-size:27px;font-weight:800;margin:2px 0;}
-.today2 .time{font-size:15px;color:var(--ink-soft);font-weight:700;font-variant-numeric:tabular-nums;}
+.today2 .hl-row{display:flex;align-items:baseline;gap:9px;margin:1px 0 8px;}
+.today2 .headline{font-size:24px;font-weight:800;margin:0;line-height:1;}
+.today2 .time{font-size:13.5px;color:var(--ink-soft);font-weight:700;font-variant-numeric:tabular-nums;margin:0;}
 .today2 .ev{margin-top:10px;font-size:12.5px;background:var(--brand-soft);color:#155e51;border-radius:10px;padding:7px 10px;font-weight:700;}
 .today2 .kp-wrap{padding-top:8px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;margin-top:8px;}
 .today2 .kp-row{display:flex;align-items:center;justify-content:space-between;}
@@ -8155,8 +8156,27 @@ const TODAY_IN_RANGE=(DATA.dates||[]).some(x=>x.iso===_REAL_TODAY);
 function _computeToday(){ return TODAY_IN_RANGE ? _REAL_TODAY : DATA.today; }
 const staff = DATA.staff, dates = DATA.dates, today = _computeToday();
 let current = null, curScreen="home", showAllPeriod=false, shiftTab="me";
-/* 給食・駐車場の当日記録（見た目のみ。GAS側ができたらsaveKP内のfetchを有効化する） */
+/* 給食・駐車場の当日記録。GAS Web AppのURLをKP_ENDPOINTに設定すると、
+   実際に記録・取得されるようになる（空文字のままだと見た目だけの動作） */
 let KP_STATE = { meal:false, park:false };
+const KP_ENDPOINT = "https://script.google.com/macros/s/AKfycbxov7LyccCioWBxq64G0XdgcI-IRscXzQYghWXl3Xc8hD-tK25l7o3Bfn7Fb636v8Bzeg/exec";
+/* 給食・駐車場ボタンの記録日は、シフトデータの基準日(today)ではなく、
+   実際に押した瞬間の実際の日付を使う（タイムゾーンずれを避けローカル日付で組み立てる） */
+function _kpLocalDateStr(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return y+"-"+m+"-"+day;
+}
+function kpToday(){ return _kpLocalDateStr(new Date()); }
+function kpFacilityId(){return (DATA.domeKey||DATA.facility||"").toString();}
+function loadKPToday(){
+  if(!KP_ENDPOINT||current===null)return;
+  const url=KP_ENDPOINT+"?action=today&facility="+encodeURIComponent(kpFacilityId())
+    +"&date="+encodeURIComponent(kpToday())+"&name="+encodeURIComponent(staff[current].name);
+  fetch(url).then(r=>r.json()).then(d=>{
+    KP_STATE.meal=!!d.meal;KP_STATE.park=!!d.park;
+    if(curScreen==="shift")renderShift();
+  }).catch(()=>{});
+}
 
 const CAT = {
  "早番":{cls:"cell-early",bg:"--early-bg",ink:"--early-ink",label:"早番"},
@@ -8219,7 +8239,7 @@ function renderShiftLogin(){
       '<div class="namelist">'+names+'</div>'+
     '</div></div>';
 }
-function pickShift(i){current=i;goShift();}
+function pickShift(i){current=i;loadKPToday();goShift();}
 /* router */
 function show(name){
   curScreen=name;
@@ -8886,13 +8906,33 @@ function kpHTML(){
     <div class="kp-note" id="kp-note"></div>
   </div>`;
 }
+function _kpPing(url){
+  /* fetch()だとCORSの制約で失敗することがあるため、img要素での送信に切り替える
+     （<img src=...>は他サイトへのGETでもブロックされにくい。応答内容は使わない） */
+  var img=new Image();
+  img.src=url;
+}
 function toggleKP(topic){
   KP_STATE[topic]=!KP_STATE[topic];
   renderShift();
   const note=document.getElementById('kp-note');
+  const label=topic==='meal'?'給食':'駐車場';
+  if(KP_ENDPOINT&&current!==null){
+    const url=KP_ENDPOINT+"?action=save"
+      +"&date="+encodeURIComponent(kpToday())
+      +"&facility="+encodeURIComponent(kpFacilityId())
+      +"&name="+encodeURIComponent(staff[current].name)
+      +"&meal="+(KP_STATE.meal?1:0)+"&park="+(KP_STATE.park?1:0)
+      +"&_="+Date.now();
+    _kpPing(url);
+    if(note){
+      note.textContent='保存しました（'+label+'）';
+      setTimeout(()=>{if(note)note.textContent='';},1500);
+    }
+    return;
+  }
   if(note){
-    const label=topic==='meal'?'給食':'駐車場';
-    note.textContent='保存しました（'+label+'）';
+    note.textContent='（デモ・未保存）（'+label+'）';
     setTimeout(()=>{if(note)note.textContent='';},1500);
   }
 }
@@ -8913,12 +8953,13 @@ function meHTML(){
         <div class="rail"><div class="span" style="left:${a}%;width:${w}%;background:${col}"></div></div>
         <div class="cap">この時間帯に勤務</div></div>`;}}
   const ev=td.event?`<div class="ev">📌 きょうの予定 ・ ${td.event}</div>`:"";
-  const kp=working?kpHTML():"";
+  /* 給食・駐車場は休日（公休・有休）でも表示する（行事などで出勤する日があるため） */
+  const kp=kpHTML();
   const staleNote=TODAY_IN_RANGE?"":`<div class="ev" style="color:#c0392b">⚠ シフトデータが未更新です（${DATA.period&&DATA.period.label||""}：${DATA.period&&DATA.period.start||""}〜${DATA.period&&DATA.period.end||""}）。上の日付は今日ではありません。</div>`;
   const hero=`<div class="today2"><div class="eyebrow">
      <span class="date round">${td.md?td.md.replace('/','月')+'日（'+td.dow+'）':''} ・ きょうのあなた</span>
      <span class="dot" style="background:var(${c.bg});color:var(${c.ink})">${c.label}</span></div>
-     <div class="headline round">${head}</div><div class="time">${time}</div>${track}${ev}${kp}${staleNote}</div>`;
+     <div class="hl-row"><span class="headline round">${head}</span><span class="time">${time}</span></div>${track}${ev}${kp}${staleNote}</div>`;
 
   const base=new Date(today);const dow=(base.getDay()+6)%7;const mon=new Date(base);mon.setDate(base.getDate()-dow);
   let rows="";
