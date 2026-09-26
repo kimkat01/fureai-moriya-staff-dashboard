@@ -8143,7 +8143,17 @@ const DATA = {
  "uqGarden": "ふれあいしおどめ保育園",
  "domeKey": "fureai_shiodome"
 };
-const staff = DATA.staff, dates = DATA.dates, today = DATA.today;
+function _todayLocalStr(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+/* 「きょうのあなた」等が指す日付。実際の今日の日付を使う（つくば版と同じ仕組み）。
+   シフトデータの範囲外（翌月分のデータ未アップロード等）のときだけ DATA.today にフォールバックし、
+   画面に「シフトデータ未更新」の注意を出す（古い日付を黙って「きょう」と表示しないため） */
+const _REAL_TODAY=_todayLocalStr(new Date());
+const TODAY_IN_RANGE=(DATA.dates||[]).some(x=>x.iso===_REAL_TODAY);
+function _computeToday(){ return TODAY_IN_RANGE ? _REAL_TODAY : DATA.today; }
+const staff = DATA.staff, dates = DATA.dates, today = _computeToday();
 let current = null, curScreen="home", showAllPeriod=false, shiftTab="me";
 /* 給食・駐車場の当日記録（見た目のみ。GAS側ができたらsaveKP内のfetchを有効化する） */
 let KP_STATE = { meal:false, park:false };
@@ -8904,10 +8914,11 @@ function meHTML(){
         <div class="cap">この時間帯に勤務</div></div>`;}}
   const ev=td.event?`<div class="ev">📌 きょうの予定 ・ ${td.event}</div>`:"";
   const kp=working?kpHTML():"";
+  const staleNote=TODAY_IN_RANGE?"":`<div class="ev" style="color:#c0392b">⚠ シフトデータが未更新です（${DATA.period&&DATA.period.label||""}：${DATA.period&&DATA.period.start||""}〜${DATA.period&&DATA.period.end||""}）。上の日付は今日ではありません。</div>`;
   const hero=`<div class="today2"><div class="eyebrow">
      <span class="date round">${td.md?td.md.replace('/','月')+'日（'+td.dow+'）':''} ・ きょうのあなた</span>
      <span class="dot" style="background:var(${c.bg});color:var(${c.ink})">${c.label}</span></div>
-     <div class="headline round">${head}</div><div class="time">${time}</div>${track}${ev}${kp}</div>`;
+     <div class="headline round">${head}</div><div class="time">${time}</div>${track}${ev}${kp}${staleNote}</div>`;
 
   const base=new Date(today);const dow=(base.getDay()+6)%7;const mon=new Date(base);mon.setDate(base.getDate()-dow);
   let rows="";
