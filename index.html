@@ -501,7 +501,9 @@ tbody tr.me .namecol{color:var(--brand)}
   var GAS_URL = 'https://script.google.com/macros/s/AKfycbwnTzHQ5XdHPPLdf9QnWJLA-Dc7oBIYzfr1MfFd-Uunyarw0QWc48WzzAme6hR1muBisg/exec';
 
   var params = new URLSearchParams(location.search);
-  var GARDEN = params.get('garden') || '';
+  // このリポジトリはふれあいしおどめ保育園専用なので、URLの ?garden= に関係なく園名を固定する
+  // （?garden= が無い・他園名が付いたURLで開かれても、ログイン先の園がずれないように）
+  var GARDEN = 'ふれあいしおどめ保育園';
   var SESSION_KEY = 'sd_pin_login__' + (GARDEN || 'default');
   var pgLoginId = null;
   var pgPasswordUsedToLogin = null;
@@ -8253,8 +8255,10 @@ const DOME_KEY={
   "しおどめなかよし保育園":"shiodome_nakayoshi",
 };
 /* デモ園がUQ/ドメボットに未登録のときに使う代表値（動作確認用） */
-const DEMO_UQ_GARDEN="しおどめ保育園稲城";   // UQchecker職員マスタに登録済みの園名
-const DEMO_DOME_KEY="yashio_akanemachi";      // ドメボットの代表園キー（稲城のキーは未確認）
+/* ※このリポジトリはふれあいしおどめ保育園専用。万一 DATA から園の設定が消えても他園に飛ばないよう、
+   予備の値もふれあいにしておく（以前は稲城・八潮茜町になっていた） */
+const DEMO_UQ_GARDEN="ふれあいしおどめ保育園";
+const DEMO_DOME_KEY="fureai_shiodome";
 
 function gardenName(){return (DATA.facility||"").replace(/（(デモ|サンプル)）/,"").trim();}
 function uqUrl(){
