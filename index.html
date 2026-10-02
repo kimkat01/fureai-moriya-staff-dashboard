@@ -8826,7 +8826,16 @@ function gdRender(){
   if(!groups.length)html='<div class="gdnote">文書一覧を読み込めませんでした。電波の良い場所でもう一度開いてください。</div>';
   document.getElementById('gdList').innerHTML=html;
 }
+/* 規約・マニュアルを開いた時点で、PDFの表示に使うプログラムを裏で先に読み込んでおく（文書を押してからの待ち時間を短くする） */
+var gdPrefetched=false;
+function gdPrefetch(){
+  if(gdPrefetched)return;gdPrefetched=true;
+  ['pdf.min.js','pdf.worker.min.js','manuals.js'].forEach(function(f){
+    var l=document.createElement('link');l.rel='prefetch';l.href=GD_DOCS_BASE+f;document.head.appendChild(l);
+  });
+}
 function goManual(){
+  gdPrefetch();
   document.getElementById('brandtxt').textContent='規約・マニュアル';
   var q=document.getElementById('gdQ');if(q)q.value='';
   gdRender();
