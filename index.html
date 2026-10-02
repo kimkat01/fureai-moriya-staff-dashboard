@@ -8769,11 +8769,18 @@ const GD_DOCS_BASE="https://kimkat01.github.io/staff-dashboard/docs/";
 const GD_VIEWER=GD_DOCS_BASE+"viewer.html";
 /* コーポレートブック（完成済みのHTMLフリップブック）。タイルから新タブで開くだけ。 */
 const CORP_URL="https://kimkat01.github.io/shiodome-knowledge/corporate-book-flipbook.html";
+/* 同じタブで開き、ブック右上の「Home」でこのダッシュボードのホームへ戻れるよう戻り先URLを渡す（ログイン状態はそのまま） */
+function openCorpBook(){
+  var back=location.origin+location.pathname+location.search;
+  location.href=CORP_URL+"?home="+encodeURIComponent(back);
+}
 const CORP_PW="shiodome8000";
-var GD_EXT_ICON='<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+var GD_EXT_ICON='<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';  /* 同じ画面で開くので「›」 */
 function gdEsc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function gdOpenDoc(path){window.open(GD_DOCS_BASE+path,'_blank','noopener');}
-function gdOpenViewer(q){window.open(GD_VIEWER+'?garden='+encodeURIComponent(gardenName())+(q?'&q='+encodeURIComponent(q):''),'_blank','noopener');}
+/* PDFはビューア（docs/viewer.html）で同じ画面に開く。ピンチで拡大しても位置が飛ばず、右上の「Home」でここへ戻れる */
+function gdBackUrl(){return location.origin+location.pathname+location.search;}
+function gdOpenDoc(path){location.href=GD_VIEWER+'?garden='+encodeURIComponent(gardenName())+'&doc='+encodeURIComponent(path)+'&home='+encodeURIComponent(gdBackUrl());}
+function gdOpenViewer(q){location.href=GD_VIEWER+'?garden='+encodeURIComponent(gardenName())+(q?'&q='+encodeURIComponent(q):'')+'&home='+encodeURIComponent(gdBackUrl());}
 /* 検索窓：入力中は文書名で絞り込み、「検索」でPDF本文を検索（その園の資料だけ） */
 function gdFilter(){
   var q=(document.getElementById('gdQ').value||'').trim().toLowerCase();
@@ -8860,7 +8867,7 @@ function renderHome(){
 
   /* コーポレートブック（既存の完成済みフリップブックを新タブで開くだけ。パスワードなし） */
   const corpCard=
-    '<button class="tile tile-compact" onclick="goLink(CORP_URL,\'コーポレートブック\',\'book\',\'i-gray-soft\')">'+
+    '<button class="tile tile-compact" onclick="openCorpBook()">'+
     '<span class="tileclip">'+
       '<span class="ictop"><span class="ic i-gray-soft">'+IC.book+'</span></span>'+
       '<span class="tbody"><span class="tt round">コーポレートブック</span></span>'+
