@@ -8220,11 +8220,44 @@ const IC={
  anpi:'<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5.2c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/><path d="M8.7 12.2l2.2 2.2 4.3-4.3"/></svg>',
 };
 
-/* シフト管理ログイン（園→名前） */
+/* シフト管理ログイン
+   ログイン（ID＋パスワード）した職員の名前でシフト表から本人を探し、自分のシフトを直接開く。
+   職員の名前一覧（他の職員を選べる画面）は出さない。 */
+function normName(n){
+  return String(n||'').normalize('NFKC')
+    .replace(/[\s\u3000]/g,'')
+    .replace(/[﨑嵜]/g,'崎').replace(/邊|邉/g,'辺').replace(/髙/g,'高').replace(/濵/g,'浜').replace(/德/g,'徳');
+}
+function loginStaffName(){
+  try{
+    var pin=JSON.parse(localStorage.getItem('sd_pin_login__ふれあいしおどめ保育園')||'null');
+    return (pin&&pin.name)?pin.name:'';
+  }catch(e){return '';}
+}
+function findLoginStaffIndex(){
+  var key=normName(loginStaffName());
+  if(!key)return -1;
+  for(var i=0;i<staff.length;i++){ if(normName(staff[i].name)===key)return i; }
+  return -1;
+}
 function goShiftLogin(){
   document.getElementById('brandtxt').textContent='シフト管理';
-  renderShiftLogin();
+  var i=findLoginStaffIndex();
+  if(i>=0){pickShift(i);return;}
+  renderShiftNotFound();
   show('shiftlogin');
+}
+function renderShiftNotFound(){
+  var fac=DATA.facility.replace(/（(デモ|サンプル)）/,'');
+  var nm=loginStaffName();
+  document.getElementById('screen-shiftlogin').innerHTML=
+    '<div class="login"><div class="login-card">'+
+      '<div class="login-fac">'+fac+'</div>'+
+      '<h2 class="round">シフト管理</h2>'+
+      '<p class="login-hint">'+(nm?('「'+nm.replace(/[<>&"]/g,'')+'」さんのシフトが見つかりませんでした。'):'ログイン中の職員が確認できませんでした。')+
+      '<br>今月のシフト表にお名前がまだ載っていない可能性があります。園長にお知らせください。</p>'+
+      '<button class="pin-btn" onclick="goHome()">ホームに戻る</button>'+
+    '</div></div>';
 }
 function renderShiftLogin(){
   var fac=DATA.facility.replace(/（(デモ|サンプル)）/,'');
