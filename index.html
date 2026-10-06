@@ -755,7 +755,7 @@ tbody tr.me .namecol{color:var(--brand)}
           <div id="nsList"></div>
         </div>
         <div id="nsDetailView" class="nshidden">
-          <button class="nsback" onclick="nsBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>お知らせ</button>
+          <button class="nsback" onclick="nsBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>News &amp; Topics</button>
           <div class="nsdetail" id="nsDetailCard"></div>
         </div>
       </div>
@@ -8692,7 +8692,7 @@ function nsRenderDetail(n){
 }
 
 function goNews(){
-  document.getElementById('brandtxt').textContent='お知らせ';
+  document.getElementById('brandtxt').textContent='News & Topics';
   nsCurFilter='all';
   document.getElementById('nsDetailView').className='nshidden';
   document.getElementById('nsListView').className='';
@@ -8878,7 +8878,7 @@ function goManual(){
 const MENU=[
  {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShiftLogin();}},flag:"🔴NEW"},
  {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(uqUrl(),"有給チェッカー","uq","i-early")},
- {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-sky",go:()=>goNews()},
+ {t:"News & Topics",d:"本部・園からのお知らせ",ic:"news",tint:"i-sky",go:()=>goNews()},
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-lav",go:()=>goManual()},
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
  {t:"メンタルヘルスサポート",d:"ストレスチェックやカウンセリング等の手続き",ic:"doctor",tint:"i-gold",go:()=>goMental()},
