@@ -191,6 +191,28 @@ main{padding:16px}
 .badge .tm{font-size:12px;color:var(--ink-soft);font-weight:700;font-variant-numeric:tabular-nums;}
 .ev2{font-size:10px;color:var(--brand);font-weight:700;margin-top:2px;}
 .mutedrow{font-size:12px;color:var(--off-ink);font-weight:700}
+/* 給食・駐車場の1ヶ月一覧（2026-10-08） */
+.kph-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0 8px;}
+.kph-nav button{border:1px solid var(--line);background:var(--card);border-radius:10px;width:40px;height:36px;font-size:16px;cursor:pointer;color:var(--ink);font-family:inherit;}
+.kph-nav button:disabled{opacity:.35;cursor:default;}
+.kph-ttl{text-align:center;font-weight:800;font-size:15px;line-height:1.3;}
+.kph-ttl small{display:block;font-size:12px;color:var(--ink-soft);font-weight:700;}
+.kph-sum{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px;}
+.kph-sum div{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:10px 12px;text-align:center;}
+.kph-sum b{display:block;font-size:24px;line-height:1.2;color:var(--ink);}
+.kph-sum span{font-size:12px;color:var(--ink-soft);font-weight:700;}
+.kph-tbl{width:100%;border-collapse:collapse;background:var(--card);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);font-size:14px;}
+.kph-tbl th{background:#f3efe8;font-size:12px;color:var(--ink-soft);font-weight:800;padding:7px 4px;}
+.kph-tbl td{border-top:1px solid var(--line);padding:7px 4px;text-align:center;}
+.kph-tbl td.d{text-align:left;padding-left:12px;font-weight:700;white-space:nowrap;}
+.kph-tbl td.d .sat{color:#2f6fd6}.kph-tbl td.d .sun{color:#d64b4b}
+.kph-tbl tr.now td{background:#fff8e6;}
+.kph-tbl tr.fut td{color:var(--off-ink);}
+.kph-on{display:inline-block;min-width:54px;padding:2px 8px;border-radius:999px;background:var(--mid-bg);color:var(--mid-ink);font-weight:800;font-size:13px;}
+.kph-off{color:var(--off);font-weight:700;}
+.kph-note{font-size:12px;color:var(--ink-soft);line-height:1.6;margin:10px 2px 4px;}
+.kph-msg{padding:24px 10px;text-align:center;color:var(--ink-soft);font-size:14px;line-height:1.7;}
+.kph-msg button{margin-top:8px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 14px;font-family:inherit;font-size:14px;cursor:pointer;}
 .more{width:100%;margin-top:12px;border:1px dashed var(--line);background:transparent;border-radius:13px;padding:11px;font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;font-family:inherit;}
 .legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:2px 2px 12px;}
 .legend span{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-soft);font-weight:700;}
@@ -9042,11 +9064,72 @@ function renderHome(){
 function renderShift(){
   const host=document.getElementById('screen-shift');
   host.innerHTML=`<div class="seg"><button id="tab-me" onclick="shiftTab='me';renderShift()">自分のシフト</button>
-    <button id="tab-all" onclick="shiftTab='all';renderShift()">園ぜんたい</button></div>
+    <button id="tab-all" onclick="shiftTab='all';renderShift()">園ぜんたい</button>
+    <button id="tab-kp" onclick="shiftTab='kp';renderShift()">給食・駐車場</button></div>
     <div id="sh-body"></div>`;
   document.getElementById('tab-me').classList.toggle('on',shiftTab==='me');
   document.getElementById('tab-all').classList.toggle('on',shiftTab==='all');
-  document.getElementById('sh-body').innerHTML = shiftTab==='me'?meHTML():allHTML();
+  document.getElementById('tab-kp').classList.toggle('on',shiftTab==='kp');
+  document.getElementById('sh-body').innerHTML = shiftTab==='me'?meHTML():shiftTab==='kp'?kphHTML():allHTML();
+  if(shiftTab==='kp')loadKPHist();
+}
+
+/* ===== 給食・駐車場の1ヶ月一覧（2026-10-08） =====
+   自分が「食べた」「使った」にした日を、連絡票と同じ 16日〜翌月15日 の1ヶ月分で一覧表示する。
+   ・見るだけ（過去の日の修正は職員自身ではできない。違っていたら園長へ）
+   ・データは給食駐車場記録GASの action=history から取る */
+let KPH_OFS=0;            /* 0＝今の月度、-1＝前の月度 … */
+const KPH_CACHE={};       /* 月度の開始日 → 取得結果 */
+let KPH_ERR=null;
+function kphPeriod(ofs){
+  const t=new Date();let y=t.getFullYear(),m=t.getMonth();   /* m:0始まり */
+  if(t.getDate()<16)m-=1;                                     /* 15日までは前の月度 */
+  m+=ofs;
+  const s=new Date(y,m,16),e=new Date(y,m+1,15);
+  return {start:_kpLocalDateStr(s),end:_kpLocalDateStr(e),s:s,e:e,label:(s.getMonth()+1)+'月度'};
+}
+function kphMove(d){KPH_OFS=Math.min(0,KPH_OFS+d);renderShift();}
+function loadKPHist(force){
+  if(!KP_ENDPOINT||current===null)return;
+  const p=kphPeriod(KPH_OFS),key=staff[current].name+'|'+p.start;
+  if(KPH_CACHE[key]&&!force)return;
+  KPH_ERR=null;
+  const url=KP_ENDPOINT+"?action=history&facility="+encodeURIComponent(kpFacilityId())
+    +"&name="+encodeURIComponent(staff[current].name)
+    +"&start="+p.start+"&end="+p.end+"&_="+Date.now();
+  fetch(url).then(r=>r.json()).then(d=>{
+    if(!d||d.error||!d.days)throw new Error((d&&d.error)||'no data');
+    KPH_CACHE[key]=d;
+  }).catch(()=>{KPH_ERR=key;}).then(()=>{
+    if(curScreen==="shift"&&shiftTab==='kp'){const b=document.getElementById('sh-body');if(b)b.innerHTML=kphHTML();}
+  });
+}
+function kphRetry(){const p=kphPeriod(KPH_OFS);delete KPH_CACHE[staff[current].name+'|'+p.start];loadKPHist(true);renderShift();}
+function kphHTML(){
+  const p=kphPeriod(KPH_OFS);
+  const nav=`<div class="kph-nav"><button onclick="kphMove(-1)" aria-label="前の月">◀</button>
+    <div class="kph-ttl">${p.label}<small>${p.s.getMonth()+1}/16〜${p.e.getMonth()+1}/15</small></div>
+    <button onclick="kphMove(1)" ${KPH_OFS>=0?'disabled':''} aria-label="次の月">▶</button></div>`;
+  if(!KP_ENDPOINT)return nav+`<div class="kph-msg">記録の保存先がまだ設定されていません。</div>`;
+  if(current===null)return nav+`<div class="kph-msg">名前を選ぶと表示されます。</div>`;
+  const key=staff[current].name+'|'+p.start,d=KPH_CACHE[key];
+  if(!d){
+    if(KPH_ERR===key)return nav+`<div class="kph-msg">記録を読み込めませんでした。<br>電波の良いところで、もう一度開いてください。<br><button onclick="kphRetry()">もう一度読み込む</button></div>`;
+    return nav+`<div class="kph-msg">読み込み中…</div>`;
+  }
+  const todayIso=kpToday(),W=["日","月","火","水","木","金","土"];
+  let rows="";
+  for(let x=new Date(p.s);x<=p.e;x.setDate(x.getDate()+1)){
+    const iso=_kpLocalDateStr(x),r=d.days[iso]||{},w=x.getDay();
+    const fut=iso>todayIso,cls=iso===todayIso?'now':fut?'fut':'';
+    const mk=(on,txt)=>fut?'':on?`<span class="kph-on">${txt}</span>`:'<span class="kph-off">ー</span>';
+    rows+=`<tr class="${cls}"><td class="d">${x.getMonth()+1}/${x.getDate()} <span class="${w===6?'sat':w===0?'sun':''}">(${W[w]})</span></td>
+      <td>${mk(r.meal,'食べた')}</td><td>${mk(r.park,'使った')}</td></tr>`;
+  }
+  return nav+`<div class="kph-sum"><div><b>${d.meal||0}<small style="font-size:13px"> 回</small></b><span>🍚 給食を食べた</span></div>
+    <div><b>${d.park||0}<small style="font-size:13px"> 回</small></b><span>🚗 駐車場を使った</span></div></div>
+    <table class="kph-tbl"><thead><tr><th style="text-align:left;padding-left:12px">日付</th><th>🍚 給食</th><th>🚗 駐車場</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="kph-note">・「自分のシフト」の「きょうの給食／駐車場」で押した内容が、この表に入ります。<br>・過去の日の記録は、ここでは直せません。違っているときは園長に伝えてください。<br>・この回数が、月末の連絡票（給食・駐車場の回数）に使われます。</p>`;
 }
 const KP_ON={meal:"食べた",park:"使った"},KP_OFF={meal:"食べていない",park:"使っていない"};
 function kpHTML(){
@@ -9074,6 +9157,7 @@ function _kpPing(url){
 }
 function toggleKP(topic){
   KP_STATE[topic]=!KP_STATE[topic];
+  {const p0=kphPeriod(0);if(current!==null)delete KPH_CACHE[staff[current].name+'|'+p0.start];}
   renderShift();
   const note=document.getElementById('kp-note');
   const label=topic==='meal'?'給食':'駐車場';
