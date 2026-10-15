@@ -541,7 +541,16 @@ tbody tr.me .namecol{color:var(--brand)}
 
   var saved = null;
   try{ saved = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }catch(e){}
-  if(saved && saved.garden === GARDEN && saved.name){
+  // 本部閲覧モード（2026-10）：本部ダッシュボードから ?view=honbu 付きで開いたときはログイン画面を出さない
+  //   条件：URLに view=honbu があり、同じブラウザで本部ダッシュボードを開いた記録（sd_honbu_viewer、7日以内）があること
+  window.SD_HONBU_VIEW = false;
+  try{
+    if(params.get('view')==='honbu'){
+      var _hv = Number(localStorage.getItem('sd_honbu_viewer')||0);
+      if(_hv && Date.now()-_hv < 7*24*60*60*1000) window.SD_HONBU_VIEW = true;
+    }
+  }catch(e){}
+  if(window.SD_HONBU_VIEW || (saved && saved.garden === GARDEN && saved.name)){
     hideGate();
   } else {
     document.body.style.overflow = 'hidden';
@@ -9251,6 +9260,69 @@ function allHTML(){
 
 /* boot */
 renderHome();goHome();
+</script>
+<!-- ============================================================
+     本部閲覧モード（2026-10）
+     本部ダッシュボードから ?view=honbu 付きで開いたときだけ動く（判定はログインゲートの SD_HONBU_VIEW）。
+     ・画面の一番上に「本部閲覧中」の帯と園の切り替えを出す
+     ・給食／駐車場の記録、ご意見箱・紹介・メンタルヘルスの送信、News & Topicsの閲覧数・いいねは送らない（実データを汚さないため）
+     ・有給チェッカーは本部閲覧モード（見るだけ・申請は送らない）で開く
+     ============================================================ -->
+<!-- 園マスタ（園の切り替え用）。このリポジトリには無いので staff-dashboard のものを読む -->
+<script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
+<style>
+  .hv-bar{position:relative;z-index:21;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    background:#1b2340;color:#fff;padding:8px 12px;font-size:13px;font-weight:700;line-height:1.4;}
+  .hv-bar .hv-tag{background:#f0a134;color:#1b2340;border-radius:999px;padding:2px 10px;font-size:12px;white-space:nowrap;}
+  .hv-bar select{flex:1;min-width:0;max-width:260px;font:inherit;font-size:13px;font-weight:700;color:#1b2340;
+    background:#fff;border:0;border-radius:8px;padding:5px 8px;}
+  .hv-bar .hv-note{width:100%;font-size:11.5px;font-weight:400;opacity:.8;}
+</style>
+<script>
+(function(){
+  if(!window.SD_HONBU_VIEW) return;
+  // ふれあいしおどめ保育園（S09）は共通版ではなく専用リポジトリで運用中
+  var SPECIAL_URL = { fureai_shiodome: 'https://kimkat01.github.io/fureai-moriya-staff-dashboard/' };
+  var BASE = 'https://kimkat01.github.io/staff-dashboard/';
+  function urlFor(key){ return (SPECIAL_URL[key] || BASE) + '?garden=' + encodeURIComponent(key) + '&view=honbu'; }
+
+  var cur = (typeof findGarden==='function') ? findGarden('fureai_shiodome') : null;   // このリポジトリはふれあいしおどめ保育園専用
+  var opts = (typeof GARDEN_MASTER!=='undefined' ? GARDEN_MASTER : []).map(function(g){
+    return '<option value="'+g.key+'"'+(cur && cur.key===g.key ? ' selected' : '')+'>'+g.name+'</option>';
+  }).join('');
+  var bar = document.createElement('div');
+  bar.className = 'hv-bar';
+  bar.innerHTML = '<span class="hv-tag">本部閲覧中</span>'+
+    '<select aria-label="表示する園を切り替える">'+(cur ? '' : '<option value="" selected>園を選ぶ</option>')+opts+'</select>'+
+    '<div class="hv-note">閲覧のみです。記録・送信・いいね等は本部閲覧中は行われません。</div>';
+  var wrap = document.querySelector('.wrap');
+  if(wrap) wrap.insertBefore(bar, wrap.firstChild);
+  // 本部ダッシュボードの「スマホで見る」枠の中では、外側に園の切り替えがあるので内側のは隠す
+  var inFrame = false; try{ inFrame = window.self !== window.top; }catch(e){ inFrame = true; }
+  if(inFrame) bar.querySelector('select').style.display = 'none';
+  bar.querySelector('select').addEventListener('change', function(){
+    if(this.value) location.href = urlFor(this.value);
+  });
+
+  function blocked(what){ alert('本部閲覧中のため、' + what + 'は行いません。'); }
+
+  // 給食・駐車場：記録しない（表示だけ）
+  window.toggleKP = function(topic){
+    var note = document.getElementById('kp-note');
+    if(note){ note.textContent = '本部閲覧中のため記録しません'; setTimeout(function(){ if(note) note.textContent=''; }, 1800); }
+  };
+  window._kpPing = function(){};
+  // 送信系
+  window.omeyasuSubmit  = function(){ blocked('ご意見箱の送信'); };
+  window.referralSubmit = function(){ blocked('紹介の送信'); };
+  window.mhSubmit       = function(){ blocked('申込みの送信'); };
+  // News & Topics：閲覧数・いいねを記録しない
+  window.nsPost = function(){ return Promise.reject(new Error('honbu view')); };
+  window.nsToggleLike = function(ev){ if(ev) ev.stopPropagation(); blocked('いいね'); };
+  // 有給チェッカー：本部閲覧モードで開く（職員を選んで見るだけ・申請は送らない。仕組みは uqcheck/staff_standalone.html 側）
+  var _uqUrl = window.uqUrl;
+  window.uqUrl = function(){ return _uqUrl() + '&view=honbu'; };
+})();
 </script>
 </body>
 </html>
