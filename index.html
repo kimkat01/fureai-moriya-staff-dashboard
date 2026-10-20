@@ -543,6 +543,8 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-mental a.mhrow{text-decoration:none;}
 #screen-mental .hidden{display:none}
 </style>
+<!-- 利用状況（アクセスログ・2026-10-20追加）：共通版と同じ送信スクリプトを読み込む（起動時の記録に間に合うよう head で読む） -->
+<script src="https://kimkat01.github.io/staff-dashboard/access-log.js"></script>
 </head>
 <body>
 <!-- ============================================================
@@ -660,6 +662,7 @@ tbody tr.me .namecol{color:var(--brand)}
           } else {
             try{ localStorage.setItem(SESSION_KEY, JSON.stringify({ garden:GARDEN, name:data.name, loginId:id, token:data.token })); }catch(e){}
             hideGate();
+            if(typeof sdLog === 'function') sdLog('ホーム');   // 利用状況：ログインした記録
           }
         } else {
           err.textContent = (data && data.message) || 'ログインIDまたはパスワードが正しくありません';
@@ -688,6 +691,7 @@ tbody tr.me .namecol{color:var(--brand)}
         if(data && data.ok){
           try{ localStorage.setItem(SESSION_KEY, JSON.stringify({ garden:GARDEN, name:data.name, loginId:pgLoginId, token:Date.now()+'' })); }catch(e){}
           hideGate();
+          if(typeof sdLog === 'function') sdLog('ホーム');   // 利用状況：ログインした記録
         } else {
           err.textContent = (data && data.message) || '設定に失敗しました';
         }
@@ -9303,6 +9307,16 @@ function goManual(){
   show("manual");
 }
 
+/* 利用状況（アクセスログ・2026-10-20追加）：ログイン中の人が開いたツールを本部に記録する
+   （中身は staff-dashboard の access-log.js。共通版の sdLog と同じ形。園名はこの専用版なので固定） */
+function sdLog(tool){
+  try{
+    var s=getPinSession();
+    if(!s||!s.loginId||!window.ShiodomeLog) return;
+    ShiodomeLog.send({dash:'職員',garden:'ふれあいしおどめ保育園',loginId:s.loginId,name:s.name||'',tool:tool});
+  }catch(e){}
+}
+
 const MENU=[
  {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShiftLogin();}},flag:"🔴NEW"},
  {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(uqUrl(),"有給チェッカー","uq","i-early")},
@@ -9317,7 +9331,7 @@ function renderHome(){
   const tiles=MENU.map(function(m,i){
      var flag=m.flag?'<span class="flag">'+m.flag+'</span>':(m.flagId?'<span class="flag flag-pulse" id="'+m.flagId+'" style="display:none">受領</span>':'');
      var lg=m.ic==='bot'?' ic-lg':'';
-     return '<button class="tile" onclick="MENU['+i+'].go()">'+flag+
+     return '<button class="tile" onclick="sdLog(MENU['+i+'].t);MENU['+i+'].go()">'+flag+
        '<span class="tileclip">'+
        '<span class="ictop '+m.tint+'"><span class="ic '+m.tint+icClass(m.ic)+lg+'">'+icInner(m.ic)+'</span></span>'+
        '<span class="tbody"><span class="tt round">'+m.t+'</span><span class="ds">'+m.d+'</span></span>'+
@@ -9329,7 +9343,7 @@ function renderHome(){
   const ANPI_ACTIVE=false;
   const anpiFlag=ANPI_ACTIVE?'<span class="flag flag-anpi">🔴実施中</span>':'';
   const anpiCard=
-    '<button class="tile tile-compact" onclick="goStub(\'危機管理対応状況\',\'anpi\',\'i-red-soft\')">'+anpiFlag+
+    '<button class="tile tile-compact" onclick="sdLog(\'危機管理対応状況\');goStub(\'危機管理対応状況\',\'anpi\',\'i-red-soft\')">'+anpiFlag+
     '<span class="tileclip">'+
       '<span class="ictop"><span class="ic i-red-soft">'+IC.anpi+'</span></span>'+
       '<span class="tbody"><span class="tt round">危機管理対応状況</span></span>'+
@@ -9337,7 +9351,7 @@ function renderHome(){
 
   /* コーポレートブック（既存の完成済みフリップブックを新タブで開くだけ。パスワードなし） */
   const corpCard=
-    '<button class="tile tile-compact" onclick="openCorpBook()">'+
+    '<button class="tile tile-compact" onclick="sdLog(\'コーポレートブック\');openCorpBook()">'+
     '<span class="tileclip">'+
       '<span class="ictop"><span class="ic i-gray-soft">'+IC.book+'</span></span>'+
       '<span class="tbody"><span class="tt round">コーポレートブック</span></span>'+
@@ -9545,7 +9559,7 @@ function allHTML(){
 }
 
 /* boot */
-renderHome();goHome();
+renderHome();goHome();sdLog('ホーム');
 </script>
 <!-- ============================================================
      本部閲覧モード（2026-10）
