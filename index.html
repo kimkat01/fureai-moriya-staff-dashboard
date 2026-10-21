@@ -8573,6 +8573,7 @@ function omeyasuSubmit(){
     .then(function(res){
       btn.disabled=false;
       if(res&&res.ok){
+        sdLog('ご意見箱','投稿');
         omLastCode=res.code;
         if(res.code)omAddLocalCode(res.code,omIdentityMode==='named');
         document.getElementById('omFormCard').className='ocard ohidden';
@@ -8701,6 +8702,7 @@ function referralSubmit(){
     .then(function(res){
       btn.disabled=false;
       if(res&&res.ok){
+        sdLog('職員紹介制度','投稿');
         document.getElementById('rfFormCard').className='rcard rhidden';
         document.getElementById('rfDoneCard').className='rcard rdone';
       }else{m.className='rmsg err';m.textContent='送信に失敗しました。時間をおいて再度お試しください。';}
@@ -9309,11 +9311,12 @@ function goManual(){
 
 /* 利用状況（アクセスログ・2026-10-20追加）：ログイン中の人が開いたツールを本部に記録する
    （中身は staff-dashboard の access-log.js。共通版の sdLog と同じ形。園名はこの専用版なので固定） */
-function sdLog(tool){
+/* 2026-10-21：送信・投稿したときは sdLog('ツール名','投稿') で「投稿」として記録する（共通版と同じ） */
+function sdLog(tool,act){
   try{
     var s=getPinSession();
     if(!s||!s.loginId||!window.ShiodomeLog) return;
-    ShiodomeLog.send({dash:'職員',garden:'ふれあいしおどめ保育園',loginId:s.loginId,name:s.name||'',tool:tool});
+    ShiodomeLog.send({dash:'職員',garden:'ふれあいしおどめ保育園',loginId:s.loginId,name:s.name||'',tool:tool,act:act||'閲覧'});
   }catch(e){}
 }
 
@@ -9478,6 +9481,7 @@ function toggleKP(topic){
       +"&meal="+(KP_STATE.meal?1:0)+"&park="+(KP_STATE.park?1:0)
       +"&_="+Date.now();
     _kpPing(url);
+    sdLog('シフト管理','投稿');   /* 給食・駐車場ボタンを押した */
     if(note){
       note.textContent='保存しました（'+label+'）';
       setTimeout(()=>{if(note)note.textContent='';},1500);
