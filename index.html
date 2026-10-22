@@ -9233,6 +9233,45 @@ const GD_DOCS_BASE="https://kimkat01.github.io/staff-dashboard/docs/";
 /* PDF内をキーワードで検索するビューア。?garden=園名 を付けて、その園の資料だけを検索する。 */
 const GD_VIEWER=GD_DOCS_BASE+"viewer.html";
 /* コーポレートブック（完成済みのHTMLフリップブック）。タイルから新タブで開くだけ。 */
+/* ===== 危機管理対応状況（安否確認：kimkat01/anpi） ===== */
+const ANPI_URL="https://kimkat01.github.io/anpi/anpi.html";
+const ANPI_GAS="https://script.google.com/macros/s/AKfycbyr8b-l2TlgUMWOopYqfYmIp5pgs1ftTLpsXWYVLl_-VFJiMr_haxk0L3LcraWalHOvGg/exec";
+/* 園名：URLの ?garden= を優先（園キーでも可）、なければシフトデータの園名 */
+function anpiGarden(){
+  var g=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
+  if(g) return g.name;
+  return gardenName();
+}
+/* 回答画面を開く：園名・ログイン名・戻り先を渡す（名前は自動で選択される） */
+function openAnpi(){
+  var q='?garden='+encodeURIComponent(anpiGarden());
+  var ps=(typeof getPinSession==='function')?getPinSession():null;
+  if(ps&&ps.name) q+='&name='+encodeURIComponent(ps.name);
+  q+='&home='+encodeURIComponent(location.origin+location.pathname+location.search);
+  location.href=ANPI_URL+q;
+}
+/* 実施中なら「🔴実施中」を付ける（通信できなければ何もしない） */
+function anpiCheckActive(){
+  var fac=anpiGarden(); if(!fac) return;
+  var cb='anpiCb_'+Math.random().toString(36).slice(2);
+  var sc=document.createElement('script');
+  var tm=setTimeout(function(){cleanup();},15000);
+  function cleanup(){clearTimeout(tm);try{delete window[cb];}catch(e){window[cb]=undefined;}if(sc.parentNode)sc.parentNode.removeChild(sc);}
+  window[cb]=function(r){
+    cleanup();
+    var tile=document.getElementById('anpiTile'); if(!tile) return;
+    var old=tile.querySelector('.flag-anpi'); if(old) old.remove();
+    if(r&&r.ok&&r.active){
+      var f=document.createElement('span'); f.className='flag flag-anpi';
+      f.textContent=(r.event&&r.event.type==='訓練')?'🔴訓練中':'🔴実施中';
+      tile.insertBefore(f,tile.firstChild);
+    }
+  };
+  sc.onerror=cleanup;
+  sc.src=ANPI_GAS+'?callback='+cb+'&action=active&facility='+encodeURIComponent(fac);
+  document.body.appendChild(sc);
+}
+
 const CORP_URL="https://kimkat01.github.io/shiodome-knowledge/corporate-book-flipbook.html";
 /* 同じタブで開き、ブック右上の「Home」でこのダッシュボードのホームへ戻れるよう戻り先URLを渡す（ログイン状態はそのまま） */
 function openCorpBook(){
@@ -9340,11 +9379,10 @@ function renderHome(){
   }).join("");
 
   /* 危機管理対応状況・コーポレートブック（最下段・控えめな2分割コンパクト行）。
-     危機管理対応状況を実施中にするときは ANPI_ACTIVE=true。将来は集計JSONで自動判定 */
-  const ANPI_ACTIVE=false;
-  const anpiFlag=ANPI_ACTIVE?'<span class="flag flag-anpi">🔴実施中</span>':'';
+     危機管理対応状況は anpi.html（kimkat01/anpi）を開く。園長が安否確認を開始していれば
+     自動で「🔴実施中」を表示する（anpiCheckActive が GAS に問い合わせる）。 */
   const anpiCard=
-    '<button class="tile tile-compact" onclick="sdLog(\'危機管理対応状況\');goStub(\'危機管理対応状況\',\'anpi\',\'i-red-soft\')">'+anpiFlag+
+    '<button class="tile tile-compact" id="anpiTile" onclick="sdLog(\'危機管理対応状況\');openAnpi()">'+
     '<span class="tileclip">'+
       '<span class="ictop"><span class="ic i-red-soft">'+IC.anpi+'</span></span>'+
       '<span class="tbody"><span class="tt round">危機管理対応状況</span></span>'+
@@ -9368,6 +9406,7 @@ function renderHome(){
    <div class="grid">${tiles}${anpiCard}${corpCard}</div>
    <p class="foot"><b>これは試作です。</b>ログイン（園→名前）は共通で、全メニューに有効。1つの入口・1回のログインで全部ひらきます。</p>`;
   if(typeof omUpdateHomeNotice==='function')omUpdateHomeNotice();
+  if(typeof anpiCheckActive==='function')anpiCheckActive();
 }
 
 /* SHIFT screen (personal + facility) */
