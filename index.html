@@ -8828,9 +8828,7 @@ function tnRender(){
   host.innerHTML='<div class="tnwrap">'+
     '<p class="tnlead round">ほかの園の保育を、<br>のぞいてみよう。</p>'+
     '<p class="tnsub">グループ各園の環境づくり・手作り玩具・製作・あそびの様子を紹介しています。</p>'+
-    '<label class="tnsearch">'+TN_ICO.search+'<input type="search" id="tnQ" placeholder="キーワード（例：リズム遊び、牛乳パック）" aria-label="キーワード検索" oninput="tnSetQ(this.value)" value="'+tnEsc(TN_Q)+'"></label>'+
     '<div class="tnflabel">カテゴリ</div><div class="tnchips" id="tnCatChips"></div>'+
-    '<div class="tnflabel">年齢</div><div class="tnchips" id="tnAgeChips"></div>'+
     '<div id="tnResults"></div>'+
     '<p class="tnnote">記事を書けるのは、園長と園長が承認した職員です（投稿機能は準備中）。<br>コメント欄はありません。気になることは自園の園長へ。</p>'+
   '</div>';
@@ -8838,11 +8836,11 @@ function tnRender(){
 }
 function tnRenderChips(){
   var c=document.getElementById('tnCatChips'),a=document.getElementById('tnAgeChips');
-  if(!c||!a)return;
+  if(!c)return;
   c.innerHTML=[''].concat(TN_CATS).map(function(x){
     return '<button type="button" class="tnchip'+(TN_CAT===x?' on':'')+'" onclick="tnSetCat(\''+x+'\')">'+(x||'すべて')+'</button>';
   }).join('');
-  a.innerHTML=[-1].concat(TN_AGES).map(function(x){
+  if(a)a.innerHTML=[-1].concat(TN_AGES).map(function(x){
     return '<button type="button" class="tnchip'+(TN_AGE===x?' on':'')+'" onclick="tnSetAge('+x+')">'+(x<0?'全年齢':x+'歳')+'</button>';
   }).join('');
 }
@@ -8853,7 +8851,7 @@ function tnRenderResults(){
     var hit=all.filter(tnMatch);
     host.innerHTML='<div class="tnsec"><h3 class="round">さがした結果</h3><span>'+hit.length+'件</span></div>'+
       (hit.length?'<div class="tnlist">'+hit.map(function(p){return tnRow(p,true);}).join('')+'</div>'
-                 :'<div class="tnempty">条件に合う記事はまだありません。<br>カテゴリや年齢を変えてみてください。</div>');
+                 :'<div class="tnempty">条件に合う記事はまだありません。<br>ほかのカテゴリも見てみてください。</div>');
     return;
   }
   var pick=all.filter(function(p){return p.pickup;})[0];
