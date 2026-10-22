@@ -9236,12 +9236,8 @@ const GD_VIEWER=GD_DOCS_BASE+"viewer.html";
 /* ===== 危機管理対応状況（安否確認：kimkat01/anpi） ===== */
 const ANPI_URL="https://kimkat01.github.io/anpi/anpi.html";
 const ANPI_GAS="https://script.google.com/macros/s/AKfycbyr8b-l2TlgUMWOopYqfYmIp5pgs1ftTLpsXWYVLl_-VFJiMr_haxk0L3LcraWalHOvGg/exec";
-/* 園名：URLの ?garden= を優先（園キーでも可）、なければシフトデータの園名 */
-function anpiGarden(){
-  var g=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
-  if(g) return g.name;
-  return gardenName();
-}
+/* 園名：このリポジトリはふれあいしおどめ保育園専用なので、URLの ?garden= に関係なく固定 */
+function anpiGarden(){ return 'ふれあいしおどめ保育園'; }
 /* 回答画面を開く：園名・ログイン名・戻り先を渡す（名前は自動で選択される） */
 function openAnpi(){
   var q='?garden='+encodeURIComponent(anpiGarden());
