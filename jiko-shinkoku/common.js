@@ -5,7 +5,7 @@
 const JK = {
   // ↓ GASをデプロイしたら、そのURL（/exec で終わる）を '' の中に貼る。
   //   空のままだと「お試しモード」（この端末のブラウザの中だけに保存）で動く。
-  GAS_URL: '',
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbxDo2C4wiZKgDlwemLO_9CynXuSI05PwWNg8UuYTsmwUuppUvgGSFnvtqDRlds9mj4N/exec',
   TOKEN: 'fureai_jiko_2026',          // GAS側の TOKEN と同じ文字にする
   GARDEN: 'fureai_shiodome',          // 園キー
   FACILITY_CODE: 'S09',               // 職員マスタの施設コード（ふれあいしおどめ保育園）
