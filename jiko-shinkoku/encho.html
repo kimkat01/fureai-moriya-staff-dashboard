@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>自己申告の集計（試用版・事務用）｜ふれあいしおどめ保育園</title>
+<link rel="stylesheet" href="common.css">
+<style>
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.top h2{margin:0;font-size:18px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.acts .btn{width:auto;padding:0 18px;height:44px;font-size:15px}
+.stats4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.stats4 div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stats4 b{display:block;font-size:22px;color:var(--blue-d)}
+.stats4 span{font-size:12px;font-weight:700;color:var(--ink2)}
+.filt{max-width:520px}
+table.mt td.nm{font-weight:700;color:var(--blue-d);text-decoration:underline}
+table.mt th.grp{text-align:center;background:#dfe6fb}
+.setgrid select,.setgrid input{height:38px;font-size:14px;border:1px solid #b9b8b1;border-radius:8px;padding:0 6px;background:#fff}
+@media (max-width:640px){.stats4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div><div class="ttl">自己申告の集計（試用版・事務用）</div><div class="sub" id="fac">ふれあいしおどめ保育園</div></div>
+</div>
+<div class="wrap wide">
+  <div class="demo hidden" id="demo">お試しモード：この端末のブラウザに保存された申告だけが表示されます（同じ端末の職員用ページで入力した内容）。</div>
+  <div id="loading" class="loading">読み込んでいます…</div>
+  <div id="fatal" class="err hidden"></div>
+
+  <div id="main" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+    <div class="top">
+      <div><h2 id="perTitle"></h2><div class="muted" id="perSub"></div></div>
+      <div class="acts">
+        <button type="button" class="btn2" id="btnReload">最新にする</button>
+        <button type="button" class="btn2" id="btnSet">職員の設定</button>
+        <button type="button" class="btn" id="btnXlsx">締め用Excelを出力</button>
+      </div>
+    </div>
+    <div class="err" id="xlsxErr"></div>
+    <div class="stats4" id="stats4"></div>
+    <div class="seg filt" role="tablist">
+      <button type="button" data-f="all" class="on">全員</button>
+      <button type="button" data-f="パート">パート</button>
+      <button type="button" data-f="正規">正規</button>
+      <button type="button" data-f="ng">未確定のみ</button>
+    </div>
+    <div id="list"></div>
+    <div class="muted">名前を押すと、その職員の1か月の表が開きます。事務はそこで、確定後でも直せます。<br>
+      ⑥＝出勤・有休・特休の日のシフト時間（休憩を引いた実働）の合計、⑦＝予定との差（＋−）の合計。給与の試算は（⑥＋⑦）×時給です。<br>
+      休憩は試用版の仮ルールで、拘束6時間を超えると45分、8時間を超えると60分を引いています。</div>
+  </div>
+</div>
+
+<div id="modal" class="modal-bg hidden"><div class="modal big" id="modalBody"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="common.js"></script>
+<script>
+let SH = null, G = { recs: {}, conf: {}, set: {} }, FILT = 'all', ROWS = [];
+function $(id) { return document.getElementById(id); }
+function show(id, on) { $(id).classList.toggle('hidden', !on); }
+function setOf(name) { return Object.assign({ kubun: 'パート', parking: false, yukyuMin: 0 }, G.set[name] || {}); }
+
+async function init() {
+  if (isDemo()) show('demo', true);
+  try { SH = await loadShift(); await reload(); }
+  catch (e) { show('loading', false); show('fatal', true); $('fatal').textContent = e.message; return; }
+  show('loading', false); show('main', true);
+  $('fac').textContent = SH.facility;
+  $('perTitle').textContent = SH.label;
+  $('perSub').textContent = SH.start + '〜' + SH.end + '（' + SH.dates.length + '日）';
+  draw();
+}
+async function reload() { G = groupLoad(await api('load', { pid: SH.pid })); }
+
+function compute() {
+  ROWS = SH.staff.map((s) => {
+    const set = setOf(s.name);
+    const t = calcStaff(SH, s, G.recs[s.name] || {}, set, !!G.conf[s.name]);
+    if (set.kubun === '対象外') t.status = '対象外';
+    return { s, set, t, unset: !G.set[s.name] };
+  });
+  // 対象外（育休など）は一覧の最後に回す
+  ROWS.sort((a, b) => (a.set.kubun === '対象外') - (b.set.kubun === '対象外'));
+}
+function draw() {
+  compute();
+  const act = ROWS.filter((r) => r.set.kubun !== '対象外');
+  const cnt = (f) => act.filter(f).length;
+  $('stats4').innerHTML =
+    '<div><b>' + cnt((r) => r.t.status === '確定') + ' / ' + act.length + '</b><span>確定済み（対象外 ' + (ROWS.length - act.length) + '名を除く）</span></div>' +
+    '<div><b>' + cnt((r) => r.t.status === '入力中' || r.t.status === '入力完了') + '</b><span>入力中・未確定</span></div>' +
+    '<div><b style="color:#b3261e">' + cnt((r) => r.t.status === '未申告あり') + '</b><span>未申告の日あり</span></div>' +
+    '<div><b style="color:#7a4a00">' + cnt((r) => r.unset) + '</b><span>区分が未設定</span></div>';
+  const rows = ROWS.filter((r) => FILT === 'all' || (FILT === 'ng' ? (r.t.status !== '確定' && r.t.status !== '対象外') : r.set.kubun === FILT));
+  let h = '<div class="tblwrap"><table class="mt"><thead><tr><th rowspan="2">職員名</th><th rowspan="2">区分</th><th rowspan="2">状態</th><th rowspan="2">入力</th>' +
+    '<th class="grp" colspan="6">日数</th><th class="grp" colspan="4">パート</th><th class="grp" colspan="5">正規</th></tr><tr>' +
+    '<th>①出勤</th><th>②有休</th><th>③特休</th><th>④公休</th><th>⑤希望休</th><th>欠勤</th>' +
+    '<th>⑥予定h</th><th>⑦差h</th><th>⑧給食</th><th>⑨駐車</th>' +
+    '<th>時間有休</th><th>残業</th><th>遅刻</th><th>早退</th><th>駐車</th></tr></thead><tbody>';
+  rows.forEach((r) => {
+    const t = r.t, c = t.c, p = r.set.kubun === 'パート';
+    h += '<tr class="click" data-name="' + esc(r.s.name) + '"><td class="nm">' + esc(r.s.name) + '</td><td>' + esc(r.set.kubun) + (r.unset ? '<span style="color:#7a4a00;font-size:11px">（未設定）</span>' : '') + '</td><td>' + statusBadge(t.status) +
+      (t.warn.length ? ' <span title="' + esc(t.warn.join('、')) + '" style="color:#7a4a00;font-size:11px">要確認</span>' : '') + '</td><td class="num">' + t.done + '/' + t.n + '</td>' +
+      '<td class="num">' + c['出勤'] + '</td><td class="num">' + c['有休'] + '</td><td class="num">' + c['特休'] + '</td><td class="num">' + c['公休'] + '</td><td class="num">' + c['希望休'] + '</td><td class="num">' + (p ? '' : c['欠勤']) + '</td>' +
+      (p ? '<td class="num">' + toHours(t.plan) + '</td><td class="num">' + toHours(t.diff) + '</td><td class="num">' + t.kyu + '</td><td class="num">' + t.chu + '</td><td></td><td></td><td></td><td></td><td></td>'
+         : '<td></td><td></td><td></td><td></td><td class="num">' + (t.yh ? t.yh + 'h' : '') + '</td><td class="num">' + (t.ot ? fmtHM(t.ot) : '') + '</td><td class="num">' + (t.late ? fmtHM(t.late) : '') + '</td><td class="num">' + (t.early ? fmtHM(t.early) : '') + '</td><td class="num">' + (r.set.parking ? t.chu : '') + '</td>') +
+      '</tr>';
+  });
+  $('list').innerHTML = h + '</tbody></table></div>';
+}
+$('list').onclick = (e) => { const tr = e.target.closest('tr[data-name]'); if (tr) openStaff(tr.dataset.name); };
+document.querySelectorAll('.filt button').forEach((b) => b.onclick = () => {
+  FILT = b.dataset.f; document.querySelectorAll('.filt button').forEach((x) => x.classList.toggle('on', x === b)); draw();
+});
+$('btnReload').onclick = async () => { try { await reload(); draw(); } catch (e) { alert(e.message); } };
+
+/* ---------- 職員ごとの1か月 ---------- */
+function closeModal() { show('modal', false); $('modalBody').innerHTML = ''; draw(); }
+$('modal').onclick = (e) => { if (e.target === $('modal')) closeModal(); };
+function openStaff(name, dayIso) {
+  const s = SH.staff.find((x) => x.name === name);
+  const set = setOf(name);
+  const recs = G.recs[name] || {};
+  const conf = !!G.conf[name];
+  const t = calcStaff(SH, s, recs, set, conf);
+  const park = set.kubun === 'パート' ? true : !!set.parking;
+  let h = '<div class="row"><div><b style="font-size:17px">' + esc(name) + '</b> <span class="badge b-blue">' + esc(set.kubun) + '</span> ' + statusBadge(t.status) + '</div>' +
+    '<button type="button" class="btn2" id="mClose">閉じる</button></div>';
+  h += statsHTML(t);
+  if (t.warn.length) h += '<div class="demo">' + esc(t.warn.join('、')) + '。「職員の設定」で有休1日分の時間を入れてください。</div>';
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;align-items:start"><div id="mTable">' + monthTableHTML(SH, s, recs, set.kubun, park) + '</div><div id="mForm"><div class="note">左の表で日付を押すと、その日の申告を直せます。</div></div></div>';
+  h += '<div class="acts">' + (conf ? '<button type="button" class="btn2" id="mUnconf">確定を取り消す（本人が直せるように戻す）</button>' : '<button type="button" class="btn2" id="mConf">事務が代わりに確定する</button>') + '</div>';
+  $('modalBody').innerHTML = h; show('modal', true);
+  $('mClose').onclick = closeModal;
+  const mt = $('mTable');
+  mt.onclick = (e) => { const tr = e.target.closest('tr[data-date]'); if (tr) openDay(name, tr.dataset.date); };
+  const u = $('mUnconf'); if (u) u.onclick = async () => { if (!confirm('確定を取り消しますか？')) return; await api('unconfirm', { pid: SH.pid, name }); delete G.conf[name]; openStaff(name); };
+  const c = $('mConf'); if (c) c.onclick = async () => {
+    if (t.missing.length && !confirm('未申告の日が ' + t.missing.length + '日 あります。このまま確定しますか？')) return;
+    await api('confirm', { pid: SH.pid, name }); G.conf[name] = new Date().toISOString(); openStaff(name);
+  };
+  if (dayIso) openDay(name, dayIso);
+}
+function openDay(name, iso) {
+  const s = SH.staff.find((x) => x.name === name);
+  const set = setOf(name);
+  const d = SH.dates.find((x) => x.iso === iso);
+  renderForm($('mForm'), {
+    pid: SH.pid, name, kubun: set.kubun, parking: set.kubun === 'パート' ? true : !!set.parking,
+    date: d, sh: s.shifts[iso], rec: (G.recs[name] || {})[iso] || null, locked: false, by: '事務',
+    onSaved: (rec) => { (G.recs[name] = G.recs[name] || {})[iso] = rec; openStaff(name, iso); }
+  });
+}
+
+/* ---------- 職員の設定 ---------- */
+$('btnSet').onclick = () => {
+  let h = '<div class="row"><b style="font-size:17px">職員の設定</b><button type="button" class="btn2" id="sClose">閉じる</button></div>' +
+    '<div class="muted">区分、正規の駐車場（日割り対象）、有休・特休1日分の時間（シフトに時間が入っていない日に使います）。変えるとすぐ保存されます。</div>' +
+    '<div class="tblwrap setgrid"><table class="mt"><thead><tr><th>職員名</th><th>区分</th><th>駐車場 日割り（正規）</th><th>有休1日分の時間</th><th></th></tr></thead><tbody>';
+  SH.staff.forEach((s) => {
+    const st = setOf(s.name), hm = splitMin(st.yukyuMin);
+    h += '<tr data-name="' + esc(s.name) + '"><td><b>' + esc(s.name) + '</b>' + (G.set[s.name] ? '' : ' <span style="color:#7a4a00;font-size:11px">未設定</span>') + '</td>' +
+      '<td><select data-k="kubun"><option' + (st.kubun === 'パート' ? ' selected' : '') + '>パート</option><option' + (st.kubun === '正規' ? ' selected' : '') + '>正規</option><option' + (st.kubun === '対象外' ? ' selected' : '') + '>対象外</option></select></td>' +
+      '<td><label><input type="checkbox" data-k="parking"' + (st.parking ? ' checked' : '') + ' style="height:20px;width:20px;vertical-align:middle"> 対象</label></td>' +
+      '<td><select data-k="yh">' + hourOpts(0, 10, hm.h) + '</select> 時間 <select data-k="ym">' + minOpts(hm.m) + '</select> 分</td><td class="ok" style="font-size:12px;color:#1e7a45"></td></tr>';
+  });
+  h += '</tbody></table></div>';
+  $('modalBody').innerHTML = h; show('modal', true);
+  $('sClose').onclick = closeModal;
+  $('modalBody').onchange = async (e) => {
+    const tr = e.target.closest('tr[data-name]'); if (!tr) return;
+    const name = tr.dataset.name;
+    const setting = {
+      kubun: tr.querySelector('[data-k=kubun]').value,
+      parking: tr.querySelector('[data-k=parking]').checked,
+      yukyuMin: (+tr.querySelector('[data-k=yh]').value) * 60 + (+tr.querySelector('[data-k=ym]').value)
+    };
+    const ok = tr.querySelector('.ok'); ok.textContent = '保存中…';
+    try { await api('setting', { name, setting }); G.set[name] = Object.assign({ name }, setting); ok.textContent = '保存しました'; const u = tr.querySelector('td:first-child span'); if (u) u.remove(); }
+    catch (er) { ok.style.color = '#b3261e'; ok.textContent = er.message; }
+  };
+};
+
+/* ---------- Excel出力（事務のひな形の形） ---------- */
+$('btnXlsx').onclick = async () => {
+  $('xlsxErr').textContent = '';
+  try { await makeXlsx(); } catch (e) { $('xlsxErr').textContent = 'Excelを作れませんでした：' + e.message; }
+};
+async function makeXlsx() {
+  if (!window.ExcelJS) throw new Error('Excel作成の部品を読み込めませんでした（ネット接続を確認してください）');
+  compute();
+  const FONT = { name: 'ＭＳ ゴシック', size: 12 };
+  const BOLD = { name: 'ＭＳ ゴシック', size: 12, bold: true };
+  const thin = { style: 'thin', color: { argb: 'FF999999' } };
+  const BORDER = { top: thin, left: thin, bottom: thin, right: thin };
+  const HEAD = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE9EEFC' } };
+  const n = SH.dates.length;
+  const wb = new ExcelJS.Workbook();
+  wb.creator = '自己申告（試用版）';
+
+  /* --- パート（事務のひな形と同じ並び） --- */
+  const ws = wb.addWorksheet('パート');
+  ws.columns = [{ width: 18 }, { width: 11 }, { width: 15 }, { width: 15 }, { width: 11 }, { width: 11 }, { width: 28 }, { width: 14 }, { width: 11 }, { width: 11 }, { width: 11 }, { width: 11 }, { width: 14 }, { width: 15 }, { width: 15 }, { width: 10 }];
+  ws.getCell('A1').value = '職員名';
+  ws.mergeCells('B1:F1'); ws.getCell('B1').value = '申告';
+  ws.getCell('G1').value = 'シフトから引用（予定どおり）';
+  ws.mergeCells('H1:J1'); ws.getCell('H1').value = '申告';
+  ws.mergeCells('K1:L1'); ws.getCell('K1').value = '事務が入力';
+  ws.mergeCells('M1:O1'); ws.getCell('M1').value = '確認';
+  ws.getCell('P1').value = '状態';
+  ['', '➀', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨'].forEach((v, i) => { if (v) ws.getRow(2).getCell(i + 1).value = v; });
+  ['', '出勤日累計', '有休取得日累計', '特休取得日累計', '公休累計', '希望休累計', '勤務実績累計', '時間変更累計', '給食累計', '駐車場累計', '時給', '通勤単価', '日数確認', '給与（試算）', '通勤手当（試算）', ''].forEach((v, i) => { if (v) ws.getRow(3).getCell(i + 1).value = v; });
+  let r = 4;
+  ROWS.filter((x) => x.set.kubun === 'パート').forEach((x) => {
+    const t = x.t, c = t.c;
+    const row = ws.getRow(r);
+    row.values = [x.s.name, c['出勤'], c['有休'], c['特休'], c['公休'], c['希望休'], toHours(t.plan), toHours(t.diff), t.kyu, t.chu, null, null];
+    row.getCell(13).value = { formula: 'IF(SUM(B' + r + ':F' + r + ')=' + n + ',"OK","NG（"&SUM(B' + r + ':F' + r + ')&"日）")' };
+    row.getCell(14).value = { formula: 'IF(K' + r + '="","",ROUND((G' + r + '+H' + r + ')*K' + r + ',0))' };
+    row.getCell(15).value = { formula: 'IF(L' + r + '="","",(B' + r + '+C' + r + ')*L' + r + ')' };
+    row.getCell(16).value = t.status;
+    r++;
+  });
+  const last = r - 1;
+  for (let i = 1; i <= Math.max(last, 3); i++) for (let j = 1; j <= 16; j++) {
+    const cell = ws.getRow(i).getCell(j);
+    cell.font = i <= 3 ? BOLD : FONT; cell.border = BORDER;
+    if (i <= 3) { cell.fill = HEAD; cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; }
+    if (i > 3 && (j === 7 || j === 8)) cell.numFmt = '0.00';
+    if (i > 3 && (j === 11 || j === 12 || j === 14 || j === 15)) cell.numFmt = '#,##0';
+  }
+  const notes = [
+    ['期間', SH.label + '（' + SH.start + '〜' + SH.end + '、' + n + '日）　出力：' + new Date().toLocaleString('ja-JP')],
+    ['日数確認', '＊①＋②＋③＋④＋⑤の合計が期間の日数（' + n + '日）になるかを確認（M列）'],
+    ['給与確認', '＊（⑥＋⑦）×時給 がその月の給与支給額になる（N列）'],
+    ['', '⑥＝出勤・有休・特休の日のシフト時間（休憩を引いた実働）の合計、⑦＝予定との差（＋−）の合計。時間は小数（6.5＝6時間30分）'],
+    ['通勤手当確認', '＊（①＋②）×通勤単価がその月の通勤手当になる（O列）'],
+    ['注', '②有休と③特休は給与支給'],
+    ['注', '②有休は通勤手当支給'],
+    ['注', '③特休は通勤手当対象外'],
+    ['注', '休憩は試用版の仮ルール：拘束6時間超は45分、8時間超は60分を引いて計算'],
+    ['注', '時給・通勤単価（K・L列）は事務が入力してください']
+  ];
+  r = last + 2;
+  notes.forEach((nt) => { const row = ws.getRow(r++); row.getCell(1).value = nt[0]; row.getCell(2).value = nt[1]; row.getCell(1).font = BOLD; row.getCell(2).font = FONT; });
+  ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 3 }];
+
+  /* --- 正規 --- */
+  const w2 = wb.addWorksheet('正規');
+  const h2 = ['職員名', '出勤', '公休', '希望休', '有休', '特休', '欠勤', '時間有休（時間）', '残業（時間）', '遅刻（時間）', '早退（時間）', '駐車場（日割り）', '日数確認', '状態'];
+  w2.columns = h2.map((x, i) => ({ width: i === 0 ? 18 : (i >= 7 && i <= 11 ? 15 : 10) }));
+  w2.getRow(1).values = h2;
+  r = 2;
+  ROWS.filter((x) => x.set.kubun === '正規').forEach((x) => {
+    const t = x.t, c = t.c;
+    w2.getRow(r).values = [x.s.name, c['出勤'], c['公休'], c['希望休'], c['有休'], c['特休'], c['欠勤'], t.yh, toHours(t.ot), toHours(t.late), toHours(t.early), x.set.parking ? t.chu : '対象外', null, t.status];
+    w2.getRow(r).getCell(13).value = { formula: 'IF(SUM(B' + r + ':G' + r + ')=' + n + ',"OK","NG（"&SUM(B' + r + ':G' + r + ')&"日）")' };
+    r++;
+  });
+  for (let i = 1; i < Math.max(r, 2); i++) for (let j = 1; j <= h2.length; j++) {
+    const cell = w2.getRow(i).getCell(j); cell.font = i === 1 ? BOLD : FONT; cell.border = BORDER;
+    if (i === 1) { cell.fill = HEAD; cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; }
+    if (i > 1 && j >= 9 && j <= 11) cell.numFmt = '0.00';
+  }
+  const r2 = w2.getRow(r + 1); r2.getCell(1).value = '期間'; r2.getCell(2).value = SH.label + '（' + SH.start + '〜' + SH.end + '、' + n + '日）'; r2.getCell(1).font = BOLD; r2.getCell(2).font = FONT;
+  const r3 = w2.getRow(r + 2); r3.getCell(1).value = '注'; r3.getCell(2).value = '遅刻・早退は時間有休を使った分を含めない。時間は小数（1.5＝1時間30分）'; r3.getCell(1).font = BOLD; r3.getCell(2).font = FONT;
+  w2.views = [{ state: 'frozen', xSplit: 1, ySplit: 1 }];
+
+  /* --- 日別明細（確認用） --- */
+  const w3 = wb.addWorksheet('日別明細');
+  const h3 = ['職員名', '区分', '日付', '曜日', 'シフト', '申告', '勤務入力', '勤務時間', '給食', '駐車場', '時間有休', '残業', '遅刻', '早退', '入力者'];
+  w3.columns = h3.map((x, i) => ({ width: [18, 8, 12, 6, 22, 8, 10, 10, 8, 8, 9, 9, 9, 9, 8][i] }));
+  w3.getRow(1).values = h3;
+  r = 2;
+  ROWS.forEach((x) => {
+    SH.dates.forEach((d) => {
+      const rec = (G.recs[x.s.name] || {})[d.iso];
+      const w = rec && rec.kind === '出勤';
+      w3.getRow(r).values = [x.s.name, x.set.kubun, d.iso, d.dow, shiftText(x.s.shifts[d.iso]), rec ? rec.kind : '未申告',
+        w && x.set.kubun === 'パート' ? (rec.mode === 'edit' ? '変更' : '予定どおり') : '', w && x.set.kubun === 'パート' ? fmtHM(rec.min) : '',
+        w && rec.kyu === 'yes' ? '○' : '', w && rec.chu === 'yes' ? '○' : '', w && +rec.yh ? rec.yh : '', w && +rec.ot ? fmtHM(rec.ot) : '', w && +rec.late ? fmtHM(rec.late) : '', w && +rec.early ? fmtHM(rec.early) : '', rec ? (rec.by || '') : ''];
+      r++;
+    });
+  });
+  for (let i = 1; i < r; i++) for (let j = 1; j <= h3.length; j++) {
+    const cell = w3.getRow(i).getCell(j); cell.font = i === 1 ? BOLD : FONT; cell.border = BORDER;
+    if (i === 1) cell.fill = HEAD;
+  }
+  w3.views = [{ state: 'frozen', xSplit: 1, ySplit: 1 }];
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '自己申告_' + SH.facility + '_' + SH.label + '.xlsx';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+init();
+</script>
+</body>
+</html>

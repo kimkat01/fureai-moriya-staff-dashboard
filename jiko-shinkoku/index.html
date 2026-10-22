@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>自己申告（試用版）｜ふれあいしおどめ保育園</title>
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<div class="hdr">
+  <div><div class="ttl">自己申告（試用版）</div><div class="sub" id="fac">ふれあいしおどめ保育園</div></div>
+</div>
+<div class="wrap">
+  <div class="demo hidden" id="demo">お試しモード：入力した内容は、この端末のブラウザの中だけに保存されます。</div>
+  <div id="loading" class="loading">読み込んでいます…</div>
+  <div id="fatal" class="err hidden"></div>
+
+  <!-- 名前を選ぶ（本番では職員ダッシュボードのログインから自動で入ります） -->
+  <div class="card hidden" id="who">
+    <div class="lbl">あなたの名前を選んでください</div>
+    <select id="whoSel" style="width:100%;height:46px;font-size:16px;border:1px solid #b9b8b1;border-radius:10px;padding:0 10px;background:#fff"></select>
+    <div class="muted" style="margin-top:6px">試用版のため名前を選ぶ形です。本番ではログインした名前が自動で入ります。</div>
+    <button type="button" class="btn" id="whoOk" style="margin-top:10px">決定</button>
+  </div>
+
+  <div id="main" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+    <div class="row">
+      <div><b id="meName" style="font-size:16px"></b> <span class="badge b-blue" id="meKubun"></span></div>
+      <button type="button" class="btn2" id="whoChange">名前を変える</button>
+    </div>
+    <div class="muted" id="kubunNote"></div>
+    <div class="seg" role="tablist">
+      <button type="button" id="tabDay" class="on">きょうの申告</button>
+      <button type="button" id="tabList">1か月の一覧</button>
+    </div>
+
+    <div id="viewDay" style="display:flex;flex-direction:column;gap:12px">
+      <div class="dnav">
+        <button type="button" id="prevDay" aria-label="前の日">‹</button>
+        <div class="c"><b id="dayTitle"></b><span id="daySub"></span></div>
+        <button type="button" id="nextDay" aria-label="次の日">›</button>
+      </div>
+      <div id="form"></div>
+    </div>
+
+    <div id="viewList" class="hidden" style="display:flex;flex-direction:column;gap:12px">
+      <div style="text-align:center"><b id="perTitle" style="font-size:17px"></b><div class="muted" id="perSub"></div></div>
+      <div id="stats"></div>
+      <div id="table"></div>
+      <div class="muted">行を押すと、その日の申告を開きます（確定するまでは直せます）。○＝食べた・利用</div>
+      <div id="confArea"></div>
+    </div>
+  </div>
+</div>
+
+<script src="common.js"></script>
+<script>
+let SH = null, ME = null, STAFF = null, SET = null, RECS = {}, CONF = null, CUR = 0;
+
+function $(id) { return document.getElementById(id); }
+function show(id, on) { $(id).classList.toggle('hidden', !on); }
+
+async function init() {
+  if (isDemo()) show('demo', true);
+  try {
+    SH = await loadShift();
+  } catch (e) {
+    $('loading').classList.add('hidden'); show('fatal', true); $('fatal').textContent = e.message; return;
+  }
+  $('fac').textContent = SH.facility + '　' + SH.label;
+  $('whoSel').innerHTML = '<option value="">選んでください</option>' + SH.staff.map((s) => '<option>' + esc(s.name) + '</option>').join('');
+  let saved = ''; try { saved = localStorage.getItem('jiko_me') || ''; } catch (e) {}
+  $('loading').classList.add('hidden');
+  if (saved && SH.staff.some((s) => s.name === saved)) start(saved); else show('who', true);
+}
+$('whoOk').onclick = () => {
+  const v = $('whoSel').value;
+  if (!v) return;
+  try { localStorage.setItem('jiko_me', v); } catch (e) {}
+  start(v);
+};
+$('whoChange').onclick = () => { show('main', false); show('who', true); };
+
+async function start(name) {
+  ME = name; STAFF = SH.staff.find((s) => s.name === name);
+  show('who', false); show('loading', true);
+  try {
+    const g = groupLoad(await api('load', { pid: SH.pid, name }));
+    RECS = g.recs[name] || {}; CONF = g.conf[name] || null; SET = g.set[name] || null;
+  } catch (e) { show('loading', false); show('fatal', true); $('fatal').textContent = e.message; return; }
+  show('loading', false); show('main', true);
+  $('meName').textContent = name;
+  const kubun = (SET && SET.kubun) || 'パート';
+  $('meKubun').textContent = kubun;
+  $('kubunNote').textContent = SET && SET.kubun ? '' : '区分（パート／正規）は事務が設定します。まだ設定されていないので、パートとして表示しています。';
+  if (kubun === '対象外') {
+    $('kubunNote').textContent = 'この期間は、自己申告の対象外です（事務が設定しています）。';
+    document.querySelector('.seg').classList.add('hidden'); show('viewDay', false); show('viewList', false);
+    return;
+  }
+  document.querySelector('.seg').classList.remove('hidden'); show('viewDay', true);
+  const t = todayIso();
+  const idx = SH.dates.findIndex((d) => d.iso === t);
+  CUR = idx >= 0 ? idx : 0;
+  drawDay(); drawList();
+}
+function kubun() { return (SET && SET.kubun) || 'パート'; }
+function parking() { return kubun() === 'パート' ? true : !!(SET && SET.parking); }
+
+function drawDay() {
+  const d = SH.dates[CUR];
+  $('dayTitle').textContent = d.md + '（' + d.dow + '）';
+  $('daySub').textContent = d.iso === todayIso() ? 'きょう' : (d.iso < todayIso() ? '過去の日' : 'これからの日');
+  $('prevDay').disabled = CUR === 0;
+  $('nextDay').disabled = CUR === SH.dates.length - 1;
+  renderForm($('form'), {
+    pid: SH.pid, name: ME, kubun: kubun(), parking: parking(), date: d, sh: STAFF.shifts[d.iso],
+    rec: RECS[d.iso] || null, locked: !!CONF, by: '本人',
+    onSaved: (rec) => { RECS[d.iso] = rec; drawDay(); drawList(); flash(); }
+  });
+}
+function flash() {
+  const el = document.querySelector('#form .okmsg') || document.createElement('div');
+  el.className = 'okmsg'; el.textContent = '申告しました';
+  document.querySelector('#form .box').appendChild(el);
+}
+function drawList() {
+  const t = calcStaff(SH, STAFF, RECS, Object.assign({ kubun: kubun() }, SET || {}), !!CONF);
+  $('perTitle').textContent = SH.label;
+  $('perSub').textContent = SH.start + '〜' + SH.end + '（' + t.n + '日）';
+  $('stats').innerHTML = statsHTML(t);
+  $('table').innerHTML = monthTableHTML(SH, STAFF, RECS, kubun(), parking());
+  let h = '';
+  if (CONF) {
+    h = '<div class="sum" style="text-align:center"><span class="badge b-ok">確定済み</span><div class="muted" style="margin-top:6px">直したいときは、事務に連絡してください。</div></div>';
+  } else {
+    h = '<button type="button" class="btn" id="confBtn">今月分を確定して提出</button><div class="err" id="confErr"></div>' +
+        '<div class="muted">全部の日を申告すると確定できます。確定したあとに直したいときは、事務に連絡してください。</div>';
+  }
+  $('confArea').innerHTML = h;
+  const b = $('confBtn');
+  if (b) b.onclick = async () => {
+    if (t.missing.length) { $('confErr').textContent = 'まだ申告していない日が ' + t.missing.length + '日 あります'; return; }
+    if (!confirm(SH.label + 'の申告を確定して提出します。よろしいですか？')) return;
+    try { await api('confirm', { pid: SH.pid, name: ME }); CONF = new Date().toISOString(); drawList(); drawDay(); }
+    catch (e) { $('confErr').textContent = e.message; }
+  };
+}
+$('table').onclick = (e) => {
+  const tr = e.target.closest('tr[data-date]');
+  if (!tr) return;
+  CUR = SH.dates.findIndex((d) => d.iso === tr.dataset.date);
+  setTab('day'); drawDay(); window.scrollTo(0, 0);
+};
+$('prevDay').onclick = () => { if (CUR > 0) { CUR--; drawDay(); } };
+$('nextDay').onclick = () => { if (CUR < SH.dates.length - 1) { CUR++; drawDay(); } };
+function setTab(t) {
+  $('tabDay').classList.toggle('on', t === 'day'); $('tabList').classList.toggle('on', t === 'list');
+  show('viewDay', t === 'day'); show('viewList', t === 'list');
+}
+$('tabDay').onclick = () => setTab('day');
+$('tabList').onclick = () => { drawList(); setTab('list'); };
+init();
+</script>
+</body>
+</html>
