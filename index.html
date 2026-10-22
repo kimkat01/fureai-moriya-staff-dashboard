@@ -126,6 +126,7 @@ main{padding:16px}
 .i-gold{background:var(--gold-bg);color:var(--gold)}
 .i-sky{background:var(--sky-bg);color:var(--sky)} .i-lav{background:var(--lav-bg);color:var(--lav)}
 .i-sun{background:var(--sun-bg);color:var(--sun)}
+.i-pink{background:#fce6ee;color:#c2557a} /* となりの保育室（薄いピンク） */
 .i-red{background:var(--red-bg);color:var(--red)}
 .i-red-soft{background:#f0d9d6;color:#a9685f}
 .i-gray-soft{background:#e6e9ed;color:#767f8c}
@@ -394,8 +395,49 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-tonari .tnlike.on{background:var(--early-ink);color:#fff;}
 #screen-tonari .tnlike.on svg{fill:currentColor;}
 #screen-tonari .tnnocom{margin:10px 0 0;font-size:12px;color:var(--ink-soft);text-align:center;}
-#screen-tonari .tnmore{padding:20px 18px 8px;}
-#screen-tonari .tnmore h4{margin:0 0 10px;font-size:16px;font-weight:800;}
+/* 各園のインスタから（2026-10-16） */
+#screen-tonari .tnig{display:flex;gap:10px;overflow-x:auto;padding:0 2px 4px;-webkit-overflow-scrolling:touch;}
+#screen-tonari .tnigc{flex:0 0 140px;display:flex;flex-direction:column;gap:4px;padding:0;text-align:left;background:transparent;border:0;cursor:pointer;font-family:inherit;color:var(--ink);}
+#screen-tonari .tnigt{position:relative;width:140px;height:140px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:var(--sun-bg);color:var(--sun-ink);font-size:12px;font-weight:700;}
+#screen-tonari .tnigt img{width:100%;height:100%;object-fit:cover;display:block;}
+/* 写真の自動表示（2026-10-21）：インスタ公式の埋め込みページを縮小し、上の見出し部分を隠して写真だけを見せる */
+#screen-tonari .tnigt .tnigph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;}
+#screen-tonari .tnigt iframe{position:absolute;left:0;top:-24px;width:326px;height:520px;border:0;transform:scale(.4295);transform-origin:0 0;pointer-events:none;background:transparent;}
+#screen-tonari .tnigt svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.8;}
+#screen-tonari .tnigt .tnigb{position:absolute;top:7px;right:7px;width:26px;height:26px;border-radius:50%;background:rgba(31,36,48,.6);color:#fff;display:grid;place-items:center;}
+#screen-tonari .tnigt .tnigb svg{width:15px;height:15px;stroke-width:2;}
+#screen-tonari .tnigc b{font-size:13px;}
+#screen-tonari .tnigc small{font-size:12px;color:var(--ink-soft);line-height:1.4;}
+#screen-tonari .tnigview{padding:14px 16px 4px;background:var(--card);}
+#screen-tonari .tnigembed{margin-top:14px;min-height:200px;}
+#screen-tonari .tnigembed .instagram-media{margin:0 auto !important;min-width:0 !important;width:100% !important;max-width:540px !important;}
+#screen-tonari .tnigload{padding:28px 16px;text-align:center;font-size:13px;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);border-radius:12px;}
+#screen-tonari .tnone{margin-top:16px;padding:14px 16px;background:var(--early-bg);border-radius:14px;}
+#screen-tonari .tnone b{display:block;font-size:15px;color:var(--early-ink);}
+#screen-tonari .tnone p{margin:6px 0 0;font-size:15px;line-height:1.85;}
+#screen-tonari .tnigopen{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:48px;margin-top:10px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;font-weight:700;text-decoration:none;}
+#screen-tonari .tnigopen svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* インスタ投稿画面（2026-10-16） */
+#screen-tonari .tnigadd{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:46px;margin-top:10px;border-radius:12px;border:1.5px dashed var(--ink-soft);background:var(--card);color:var(--ink);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;}
+#screen-tonari .tnigadd svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;}
+#screen-tonari .tnform{padding:16px 16px 28px;display:flex;flex-direction:column;gap:20px;}
+#screen-tonari .tninfo{padding:12px 14px;background:var(--lav-bg);color:var(--lav-ink);border-radius:12px;font-size:13px;line-height:1.75;}
+#screen-tonari .tninfo b{display:block;font-size:15px;}
+#screen-tonari .tnfl{font-size:14px;font-weight:800;margin-bottom:8px;display:block;}
+#screen-tonari .tnfl small{font-size:12px;font-weight:400;color:var(--ink-soft);margin-left:4px;}
+#screen-tonari .tnfl em{font-style:normal;font-size:12px;color:var(--early-ink);margin-left:4px;}
+#screen-tonari .tnin{width:100%;box-sizing:border-box;height:48px;padding:0 12px;border:1px solid var(--line);border-radius:10px;font-size:16px;font-family:inherit;background:var(--card);color:var(--ink);}
+#screen-tonari textarea.tnin{height:auto;padding:10px 12px;line-height:1.7;resize:vertical;}
+#screen-tonari .tnurl{display:flex;gap:8px;}
+#screen-tonari .tnurl .tnin{flex:1;min-width:0;}
+#screen-tonari .tnsub2{flex:0 0 auto;height:48px;padding:0 14px;border:1px solid var(--ink);border-radius:10px;background:var(--card);color:var(--ink);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;}
+#screen-tonari .tnhelp{margin:6px 0 0;font-size:12px;color:var(--ink-soft);line-height:1.6;}
+#screen-tonari .tnfchips{display:flex;flex-wrap:wrap;gap:8px;}
+#screen-tonari .tnfchips .tnchip{height:44px;}
+#screen-tonari .tnerr{font-size:13px;color:#b42318;font-weight:700;line-height:1.6;}
+#screen-tonari .tnsubmit{width:100%;height:52px;border:0;border-radius:14px;background:var(--ink);color:#fff;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;}
+#screen-tonari .tnsubmit:disabled{opacity:.5;cursor:default;}
+#screen-tonari .tndel{display:block;width:100%;min-height:44px;margin-top:14px;border:0;background:transparent;color:#b42318;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;text-decoration:underline;}
 /* 園のページ */
 #screen-tonari .tngh{padding:18px 18px 6px;}
 #screen-tonari .tngh h2{margin:0;font-size:21px;font-weight:800;}
@@ -8729,7 +8771,6 @@ function getPinSession(){
      ages    … 対象年齢の数字の配列（例：[1,2,3,4,5]）
      cat     … TN_CATS のどれか1つ
      tags    … ハッシュタグ（#は付けない）
-     pickup  … true にすると「今月のピックアップ」に出る（1件だけにする）
      img     … 写真のパス（例：'tonari/tsukuba-rhythm.jpg'）。なければ ''
      lead    … リード文（段落の配列）
      sections… {h:見出し, p:[段落], list:[箇条書き], cards:[{head,body}]} の配列（p/list/cards は必要なものだけ）
@@ -8738,7 +8779,7 @@ const TN_CATS=['環境・コーナー','手作り玩具','製作','あそびの�
 const TN_AGES=[0,1,2,3,4,5];
 const TONARI_POSTS=[
  {id:'t20261012-tsukuba-rhythm',garden:'しおどめ保育園つくば',date:'2026-10-12',ages:[1,2,3,4,5],cat:'あそびの様子',
-  tags:['リズム遊び','さくらさくらんぼ'],pickup:true,img:'tonari/tsukuba-rhythm.jpg',
+  tags:['リズム遊び','さくらさくらんぼ'],img:'tonari/tsukuba-rhythm.jpg',
   title:'毎朝のリズム遊びで、からだと心にスイッチを',
   lead:['「豊かな心と感性を育てる」という理念のもと、つくばでは1歳児クラスから、さくらさくらんぼリズム遊びに取り組んでいます。',
         '4・5歳児クラスは毎朝、リズム遊びで体を温めてから一日の活動をスタートします。'],
@@ -8813,6 +8854,7 @@ function goTonari(){
   TN_VIEW='list';TN_CUR=null;TN_GARDEN=null;
   tnRender();
   show('tonari');
+  tnIgFetch();tnIgCheckCan();
 }
 function tnOpen(id){TN_CUR=id;TN_VIEW='article';tnRender();window.scrollTo({top:0});}
 function tnOpenGarden(g){TN_GARDEN=g;TN_VIEW='garden';tnRender();window.scrollTo({top:0});}
@@ -8825,12 +8867,15 @@ function tnRender(){
   var host=document.getElementById('screen-tonari');
   if(TN_VIEW==='article'){host.innerHTML='<div class="tnwrap">'+tnArticleHTML()+'</div>';return;}
   if(TN_VIEW==='garden'){host.innerHTML='<div class="tnwrap">'+tnGardenHTML()+'</div>';return;}
+  if(TN_VIEW==='insta'){host.innerHTML='<div class="tnwrap">'+tnInstaHTML()+'</div>';tnLoadInstaEmbed();return;}
+  if(TN_VIEW==='igpost'){host.innerHTML='<div class="tnwrap">'+tnIgPostHTML()+'</div>';return;}
   host.innerHTML='<div class="tnwrap">'+
-    '<p class="tnlead round">ほかの園の保育を、<br>のぞいてみよう。</p>'+
+    '<p class="tnlead round">ほかの園の保育を、<br>見てみよう。</p>'+
     '<p class="tnsub">グループ各園の環境づくり・手作り玩具・製作・あそびの様子を紹介しています。</p>'+
+    tnInstaStripHTML()+
     '<div class="tnflabel">カテゴリ</div><div class="tnchips" id="tnCatChips"></div>'+
     '<div id="tnResults"></div>'+
-    '<p class="tnnote">記事を書けるのは、園長と園長が承認した職員です（投稿機能は準備中）。<br>コメント欄はありません。気になることは自園の園長へ。</p>'+
+    '<p class="tnnote">記事を書けるのは、園長と園長が承認した職員です（記事の投稿機能は準備中）。<br>コメント欄はありません。気になることは自園の園長へ。</p>'+
   '</div>';
   tnRenderChips();tnRenderResults();
 }
@@ -8854,15 +8899,8 @@ function tnRenderResults(){
                  :'<div class="tnempty">条件に合う記事はまだありません。<br>ほかのカテゴリも見てみてください。</div>');
     return;
   }
-  var pick=all.filter(function(p){return p.pickup;})[0];
-  var rest=all.filter(function(p){return p!==pick;});
+  var rest=all;
   var h='';
-  if(pick){
-    h+='<div class="tnsec"><h3 class="round">今月のピックアップ</h3><span>本部が選定</span></div>'+
-      '<button class="tnpick" onclick="tnOpen(\''+pick.id+'\')">'+tnCover(pick)+
-      '<div class="tnpbody">'+tnTags(pick,false)+'<div class="tnttl">'+tnEsc(pick.title)+'</div>'+
-      '<div class="tnmeta"><span>'+tnEsc(pick.garden)+' ・ '+tnDate(pick.date)+'</span>'+tnMine(pick)+'</div></div></button>';
-  }
   h+='<div class="tnsec"><h3 class="round">新着</h3></div>'+
     (rest.length?'<div class="tnlist">'+rest.slice(0,10).map(function(p){return tnRow(p,true);}).join('')+'</div>'
                 :'<div class="tnempty">各園の記事を、順次ここに掲載していきます。</div>');
@@ -8887,7 +8925,6 @@ function tnArticleHTML(){
   });
   if(p.tips&&p.tips.length)b+='<div class="tntips"><b class="round">まねするときのポイント</b><ul>'+p.tips.map(function(t){return '<li>'+tnEsc(t)+'</li>';}).join('')+'</ul></div>';
   var liked=tnLiked(p.id);
-  var others=tnSorted().filter(function(x){return x.garden===p.garden&&x.id!==p.id;});
   return '<button class="tnback" onclick="tnToList()">'+TN_ICO.back+'となりの保育室</button>'+
     '<article class="tnart">'+tnCover(p)+'<div class="tnab">'+tnTags(p,true)+
       '<h2 class="round">'+tnEsc(p.title)+'</h2>'+
@@ -8895,10 +8932,186 @@ function tnArticleHTML(){
       b+
       '<button type="button" class="tnlike'+(liked?' on':'')+'" aria-pressed="'+liked+'" onclick="tnToggleLike(\''+p.id+'\')">'+TN_ICO.star+'<span>'+(liked?'まねしたい に登録済み':'まねしたい')+'</span></button>'+
       '<p class="tnnocom">コメント欄はありません。気になることは自園の園長へ。</p>'+
-    '</div></article>'+
-    '<div class="tnmore"><h4 class="round">この園のほかの記事</h4>'+
-      (others.length?'<div class="tnlist">'+others.map(function(x){return tnRow(x,false);}).join('')+'</div>':'<div class="tnempty">この園の記事は、今のところこの1件です。</div>')+
-    '</div>';
+    '</div></article>';
+}
+
+/* ===== 各園のインスタから（2026-10-16） =====
+   各園の公式インスタ投稿を、URLから公式の埋め込み表示で見せる。投稿画面（URLを貼るだけ）は準備中。
+   それまでは下の TONARI_INSTA に1件ずつ足す（新しい日付が左に並ぶ）。
+     id     … 一意の文字列（例：'i20261016-tsukuba-rhythm'）。「まねしたい」の記録キーになるので後から変えない
+     garden … 正式な園名（例：'しおどめ保育園つくば'）
+     date   … 'YYYY-MM-DD'（のせた日）
+     url    … インスタ投稿のURL（例：'https://www.instagram.com/p/xxxxxxxx/'）。投稿の「…」→「リンクをコピー」で取れる
+     theme  … 一覧の写真の下に出る短いテーマ（例：'リズム遊び'）
+     ages   … 対象年齢の数字の配列（例：[1,2,3,4,5]）
+     cat    … TN_CATS のどれか1つ
+     img    … 一覧に出す正方形の写真のパス（任意。空なら色付きのタイル）
+     note   … 園からのひとこと（任意・100字程度） */
+const TONARI_INSTA=[
+ /* 例：
+ {id:'i20261016-tsukuba-rhythm',garden:'しおどめ保育園つくば',date:'2026-10-16',
+  url:'https://www.instagram.com/p/xxxxxxxx/',theme:'リズム遊び',ages:[1,2,3,4,5],cat:'あそびの様子',
+  img:'tonari/tsukuba-rhythm.jpg',note:'裸足で行うのがポイントです。'},
+ */
+];
+let TN_IG_CUR=null;
+const TN_IG_ICO='<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.6"/></svg>';
+
+/* ---- 園からの直接投稿（2026-10-16）----
+   TN_GAS_URL … となりの保育室GAS（スプレッドシート「となりの保育室」）のウェブアプリURL（…/exec）。
+               控え：このリポジトリの gas/tonari_gas.js
+   ・URLが空のあいだは、投稿ボタンは出ず、上の TONARI_INSTA だけを表示する。
+   ・投稿できるのは、スプレッドシートのシート「投稿できる人」に 園名＋ログインID がある人だけ（園長も同じく登録）。
+   ・投稿はすぐ公開。取り下げは投稿した本人が記事画面から、または本部がシートの「状態」を 非公開 に変える。 */
+var TN_GAS_URL="https://script.google.com/macros/s/AKfycbxSxA4yrXrYHiesgfhdF9lYzB4v_SK7S8Su6oeE500tt4wDbl4PjhQRXFQG6qNdN1XNkw/exec";
+var TN_IG_CACHE_KEY='tn_insta_cache';
+var TN_IG_REMOTE=[], TN_IG_CAN=false, TN_IG_LOADING=false;
+try{var _tc=JSON.parse(localStorage.getItem(TN_IG_CACHE_KEY)||'null');if(Array.isArray(_tc))TN_IG_REMOTE=_tc;}catch(e){}
+function tnIgUser(){var s=null;try{s=(typeof getPinSession==='function')?getPinSession():null;}catch(e){}return (s&&s.loginId)?s:null;}
+function tnIgAll(){
+  var seen={},out=[];
+  TN_IG_REMOTE.concat(TONARI_INSTA).forEach(function(p){if(p&&p.id&&!seen[p.id]){seen[p.id]=1;out.push(p);}});
+  return out;
+}
+function tnIgRerenderList(){var sc=document.getElementById('screen-tonari');if(sc&&!sc.hidden&&TN_VIEW==='list')tnRender();}
+function tnIgFetch(){
+  if(!TN_GAS_URL||TN_IG_LOADING)return Promise.resolve();
+  TN_IG_LOADING=true;
+  return fetch(TN_GAS_URL+'?action=list').then(function(r){return r.json();}).then(function(d){
+    TN_IG_LOADING=false;
+    if(d&&d.ok&&Array.isArray(d.posts)){
+      TN_IG_REMOTE=d.posts;
+      try{localStorage.setItem(TN_IG_CACHE_KEY,JSON.stringify(TN_IG_REMOTE));}catch(e){}
+      tnIgRerenderList();
+    }
+  }).catch(function(){TN_IG_LOADING=false;});
+}
+function tnIgCheckCan(){
+  var u=tnIgUser();
+  if(!TN_GAS_URL||!u){TN_IG_CAN=false;return;}
+  fetch(TN_GAS_URL+'?action=canPost&garden='+encodeURIComponent(u.garden||'')+'&loginId='+encodeURIComponent(u.loginId)).then(function(r){return r.json();}).then(function(d){
+    var c=!!(d&&d.ok&&d.can);
+    if(c!==TN_IG_CAN){TN_IG_CAN=c;tnIgRerenderList();}
+  }).catch(function(){});
+}
+function tnIgPostGas(body){
+  var u=tnIgUser()||{};
+  body.garden=u.garden||'';body.loginId=u.loginId||'';body.name=u.name||'';
+  return fetch(TN_GAS_URL,{method:'POST',body:JSON.stringify(body)}).then(function(r){return r.json();});
+}
+
+/* 投稿画面の入力（画面を描き直しても消えないように変数に持つ） */
+var TN_F={url:'',theme:'',cat:'',ages:{},note:'',err:'',busy:false};
+function tnIgStartPost(){TN_F={url:'',theme:'',cat:'',ages:{},note:'',err:'',busy:false};TN_VIEW='igpost';tnRender();window.scrollTo({top:0});}
+function tnIgNormUrl(v){
+  var m=String(v||'').trim().match(/^https?:\/\/(?:www\.)?instagram\.com\/(?:[A-Za-z0-9_.]+\/)?(p|reel|tv)\/([A-Za-z0-9_-]+)/);
+  return m?('https://www.instagram.com/'+m[1]+'/'+m[2]+'/'):'';
+}
+function tnIgPaste(){
+  if(!navigator.clipboard||!navigator.clipboard.readText){TN_F.err='この端末では貼り付けボタンが使えません。入力欄を長押しして「ペースト」してください。';tnRender();return;}
+  navigator.clipboard.readText().then(function(t){TN_F.url=String(t||'').trim();TN_F.err='';tnRender();})
+    .catch(function(){TN_F.err='貼り付けできませんでした。入力欄を長押しして「ペースト」してください。';tnRender();});
+}
+function tnIgSetCat(c){TN_F.cat=c;tnRender();}
+function tnIgToggleAge(a){TN_F.ages[a]=!TN_F.ages[a];tnRender();}
+function tnIgPostHTML(){
+  var back='<button class="tnback" onclick="tnToList()">'+TN_ICO.back+'インスタから投稿</button>';
+  var u=tnIgUser();
+  if(!TN_GAS_URL||!u||!TN_IG_CAN)return back+'<div class="tnpad"><div class="tnempty" style="margin-top:16px">投稿できるのは、本部に登録された園長・職員だけです。<br>投稿したいときは、自園の園長に相談してください。</div></div>';
+  var ages=TN_AGES.map(function(a){return '<button type="button" class="tnchip'+(TN_F.ages[a]?' on':'')+'" onclick="tnIgToggleAge('+a+')">'+a+'歳</button>';}).join('');
+  var cats=TN_CATS.map(function(c){return '<button type="button" class="tnchip'+(TN_F.cat===c?' on':'')+'" onclick="tnIgSetCat(\''+c+'\')">'+c+'</button>';}).join('');
+  return back+'<div class="tnform">'+
+    '<div class="tninfo"><b>原稿は書かなくて大丈夫です</b>自園のインスタ投稿のURLを貼るだけで、写真と本文がそのまま載ります。<br>投稿者：'+tnEsc(u.garden)+' ／ '+tnEsc(u.name||'')+'</div>'+
+    '<div><label class="tnfl" for="tnIgUrl">1. インスタ投稿のURL<em>必須</em></label>'+
+      '<div class="tnurl"><input class="tnin" id="tnIgUrl" type="url" inputmode="url" placeholder="https://www.instagram.com/p/…" value="'+tnEsc(TN_F.url)+'" oninput="TN_F.url=this.value">'+
+      '<button type="button" class="tnsub2" onclick="tnIgPaste()">貼り付け</button></div>'+
+      '<p class="tnhelp">インスタアプリで投稿を開き、右上の「…」（または紙飛行機マーク）→「リンクをコピー」でURLが取れます。自園の公式アカウントの投稿だけをのせてください。</p></div>'+
+    '<div><label class="tnfl" for="tnIgTheme">2. テーマ<em>必須</em><small>20字まで</small></label>'+
+      '<input class="tnin" id="tnIgTheme" type="text" maxlength="20" placeholder="例：リズム遊び" value="'+tnEsc(TN_F.theme)+'" oninput="TN_F.theme=this.value"></div>'+
+    '<div><span class="tnfl">3. カテゴリ<em>必須</em></span><div class="tnfchips">'+cats+'</div></div>'+
+    '<div><span class="tnfl">4. 対象年齢<em>必須</em><small>複数選べます</small></span><div class="tnfchips">'+ages+'</div></div>'+
+    '<div><label class="tnfl" for="tnIgNote">5. ほかの園へのひとこと<small>任意・100字まで</small></label>'+
+      '<textarea class="tnin" id="tnIgNote" rows="3" maxlength="100" placeholder="例：裸足で行うのがポイントです。" oninput="TN_F.note=this.value">'+tnEsc(TN_F.note)+'</textarea></div>'+
+    (TN_F.err?'<div class="tnerr" role="alert">'+tnEsc(TN_F.err)+'</div>':'')+
+    '<button type="button" class="tnsubmit" onclick="tnIgSubmit()"'+(TN_F.busy?' disabled':'')+'>'+(TN_F.busy?'のせています…':'のせる')+'</button>'+
+  '</div>';
+}
+function tnIgSubmit(){
+  if(TN_F.busy)return;
+  var url=tnIgNormUrl(TN_F.url);
+  var ages=TN_AGES.filter(function(a){return TN_F.ages[a];});
+  var err='';
+  if(!url)err='インスタ投稿のURLを確認してください（https://www.instagram.com/p/… の形）。';
+  else if(!String(TN_F.theme).trim())err='テーマを入力してください。';
+  else if(!TN_F.cat)err='カテゴリを選んでください。';
+  else if(!ages.length)err='対象年齢を選んでください。';
+  TN_F.err=err;
+  if(err){tnRender();return;}
+  TN_F.busy=true;tnRender();
+  tnIgPostGas({action:'add',url:url,theme:String(TN_F.theme).trim(),cat:TN_F.cat,ages:ages,note:String(TN_F.note||'').trim()}).then(function(d){
+    TN_F.busy=false;
+    if(!d||!d.ok){TN_F.err=(d&&d.error)||'のせられませんでした。時間をおいてもう一度お試しください。';tnRender();return;}
+    sdLog('となりの保育室','投稿');
+    if(d.post){TN_IG_REMOTE=[d.post].concat(TN_IG_REMOTE.filter(function(p){return p.id!==d.post.id;}));try{localStorage.setItem(TN_IG_CACHE_KEY,JSON.stringify(TN_IG_REMOTE));}catch(e){}}
+    alert('のせました。');
+    if(d.post)tnOpenInsta(d.post.id);else tnToList();
+  }).catch(function(){TN_F.busy=false;TN_F.err='通信できませんでした。電波のよい所でもう一度お試しください。';tnRender();});
+}
+function tnIgDelete(id){
+  if(!confirm('この投稿を取り下げますか？（となりの保育室から消えます。インスタの投稿はそのまま残ります）'))return;
+  tnIgPostGas({action:'delete',id:id}).then(function(d){
+    if(!d||!d.ok){alert((d&&d.error)||'取り下げできませんでした。');return;}
+    TN_IG_REMOTE=TN_IG_REMOTE.filter(function(p){return p.id!==id;});
+    try{localStorage.setItem(TN_IG_CACHE_KEY,JSON.stringify(TN_IG_REMOTE));}catch(e){}
+    tnToList();
+  }).catch(function(){alert('通信できませんでした。');});
+}
+
+function tnInstaSorted(){return tnIgAll().sort(function(a,b){var x=(a.date||'')+(a.at||''),y=(b.date||'')+(b.at||'');return x<y?1:x>y?-1:0;});}
+function tnInstaStripHTML(){
+  var list=tnInstaSorted();
+  var add=TN_IG_CAN?'<button type="button" class="tnigadd" onclick="tnIgStartPost()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>自園のインスタ投稿をのせる</button>':'';
+  var h='<div class="tnsec"><h3 class="round">各園のインスタから</h3><span>各園の公式アカウントより</span></div>';
+  if(!list.length)return h+'<div class="tnempty">各園のインスタ投稿を、順次ここに掲載していきます。</div>'+add;
+  return h+'<div class="tnig">'+list.map(function(p){
+    var emb=tnIgNormUrl(p.url);
+    var t=p.img?'<img src="'+tnEsc(p.img)+'" alt="'+tnEsc(p.theme||'')+'" loading="lazy">'
+      :('<span class="tnigph">'+TN_IG_ICO+'<span>'+tnEsc(p.cat||'インスタ')+'</span></span>'+
+        (emb?'<iframe src="'+tnEsc(emb)+'embed/" title="'+tnEsc(p.theme||'インスタ投稿')+'" loading="lazy" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>':''));
+    return '<button type="button" class="tnigc" onclick="tnOpenInsta(\''+p.id+'\')">'+
+      '<span class="tnigt">'+t+'<span class="tnigb" aria-hidden="true">'+TN_IG_ICO+'</span></span>'+
+      '<b>'+tnEsc(tnShort(p.garden))+'</b><small>'+tnEsc(p.theme||'')+'</small></button>';
+  }).join('')+'</div>'+add;
+}
+function tnOpenInsta(id){TN_IG_CUR=id;TN_VIEW='insta';tnRender();window.scrollTo({top:0});}
+function tnInstaHTML(){
+  var p=tnIgAll().filter(function(x){return x.id===TN_IG_CUR;})[0];
+  var me=tnIgUser();
+  var mine=!!(p&&me&&p.loginId&&String(p.loginId)===String(me.loginId)&&p.garden===me.garden);
+  var back='<button class="tnback" onclick="tnToList()">'+TN_ICO.back+'となりの保育室</button>';
+  if(!p)return back+'<div class="tnpad"><div class="tnempty" style="margin-top:16px">投稿が見つかりませんでした。</div></div>';
+  var liked=tnLiked(p.id);
+  var tags='<div class="tntags"><span class="tnage">'+tnAgeLabel(p.ages)+'</span>'+(p.cat?'<span class="tncat">'+tnEsc(p.cat)+'</span>':'')+'<span class="tnhash">インスタより</span></div>';
+  return back+'<div class="tnigview">'+tags+
+    '<button class="tnby" onclick="tnOpenGarden(\''+tnEsc(p.garden)+'\')"><span class="tnav round">'+tnEsc(tnShort(p.garden).charAt(0))+'</span><span><b>'+tnEsc(p.garden)+'</b><small>'+tnDate(p.date,true)+' にのせました</small></span></button>'+
+    '<div class="tnigembed"><blockquote class="instagram-media" data-instgrm-permalink="'+tnEsc(p.url)+'" data-instgrm-version="14">'+
+      '<div class="tnigload">インスタの投稿を読み込んでいます…<br>表示されないときは下の「Instagramで見る」から開いてください。</div></blockquote></div>'+
+    (p.note?'<div class="tnone"><b class="round">園からのひとこと</b><p>'+tnEsc(p.note)+'</p></div>':'')+
+    '<button type="button" class="tnlike'+(liked?' on':'')+'" aria-pressed="'+liked+'" onclick="tnToggleLike(\''+p.id+'\')">'+TN_ICO.star+'<span>'+(liked?'まねしたい に登録済み':'まねしたい')+'</span></button>'+
+    '<a class="tnigopen" href="'+tnEsc(p.url)+'" target="_blank" rel="noopener">Instagramで見る<svg viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M19 14v6H4V5h6"/></svg></a>'+
+    '<p class="tnnocom">コメント欄はありません。気になることは自園の園長へ。</p>'+
+    (mine?'<button type="button" class="tndel" onclick="tnIgDelete(\''+tnEsc(p.id)+'\')">この投稿を取り下げる</button>':'')+
+  '</div>';
+}
+var tnIgScript=false;
+function tnLoadInstaEmbed(){
+  if(window.instgrm&&window.instgrm.Embeds){window.instgrm.Embeds.process();return;}
+  if(tnIgScript)return;
+  tnIgScript=true;
+  var s=document.createElement('script');
+  s.async=true;s.src='https://www.instagram.com/embed.js';
+  s.onload=function(){if(window.instgrm&&window.instgrm.Embeds)window.instgrm.Embeds.process();};
+  document.body.appendChild(s);
 }
 function tnGardenHTML(){
   var g=TN_GARDEN||'';
@@ -8907,7 +9120,6 @@ function tnGardenHTML(){
     '<div class="tngh"><h2 class="round">'+tnEsc(g)+'</h2><p>記事 '+list.length+'件</p></div>'+
     '<div class="tnpad">'+(list.length?'<div class="tnlist">'+list.map(function(p){return tnRow(p,false);}).join('')+'</div>':'<div class="tnempty">この園の記事はまだありません。</div>')+'</div>';
 }
-
 /* ===== お知らせ（型：静的埋め込み／後でGAS化可） ===== */
 /* (A) お知らせデータ（X風タイムラインで表示）。後日ここを OM_GAS_URL と同じ作法で
       fetch(NS_GAS_URL) 取得へ差し替え可能。
@@ -9361,7 +9573,7 @@ const MENU=[
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
  {t:"メンタルヘルスサポート",d:"ストレスチェックやカウンセリング等の手続き",ic:"doctor",tint:"i-gold",go:()=>goMental()},
  {t:"ご意見箱",d:"匿名で本部に届ける",ic:"box",tint:"i-mid",go:()=>goOmeyasu()},
- {t:"となりの保育室",d:"ほかの園の保育をのぞいてみよう",ic:"tonari",tint:"i-sun",go:()=>goTonari()},
+ {t:"となりの保育室",d:"ほかの園の保育を見てみよう",ic:"tonari",tint:"i-pink",go:()=>goTonari()},
 ];
 function renderHome(){
   const tiles=MENU.map(function(m,i){
