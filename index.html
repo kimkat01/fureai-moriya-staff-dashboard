@@ -711,7 +711,7 @@ tbody tr.me .namecol{color:var(--brand)}
   <header class="topbar">
     <img class="tb-mascot" id="brandmascot" src="" alt="">
     <div class="tb-title" id="brandtxt">職員ダッシュボード</div>
-    <button class="tb-home" id="homebtn" onclick="hdBtn()" aria-label="ホームに戻る">
+    <button class="tb-home" id="homebtn" onclick="goHome()" aria-label="ホームに戻る">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 11L12 4L20 11"></path>
         <path d="M6 10V19a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10"></path>
@@ -8415,23 +8415,9 @@ function show(name){
   document.getElementById('screen-manual').hidden=name!=="manual";
   document.getElementById('screen-mental').hidden=name!=="mental";
   document.getElementById('homebtn').classList.toggle('on',name!=="home");
-  hdSync();
   document.getElementById('brandmascot').style.display=(name==="home")?"":"none";
   window.scrollTo({top:0});
 }
-/* ヘッダー右のボタン：となりの保育室の中（記事・園のページ）では「もどる」、それ以外は「Home」 */
-var HD_HOME_HTML=null;
-function hdIsBack(){return curScreen==='tonari'&&typeof TN_VIEW!=='undefined'&&TN_VIEW!=='list';}
-function hdSync(){
-  var b=document.getElementById('homebtn');if(!b)return;
-  if(HD_HOME_HTML===null)HD_HOME_HTML=b.innerHTML;
-  var back=hdIsBack();
-  if(b.getAttribute('data-mode')===(back?'back':'home'))return;
-  b.setAttribute('data-mode',back?'back':'home');
-  b.innerHTML=back?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>もどる':HD_HOME_HTML;
-  b.setAttribute('aria-label',back?'1つ前の画面にもどる':'ホームに戻る');
-}
-function hdBtn(){if(hdIsBack())tnBack();else goHome();}
 function goHome(){document.getElementById('brandtxt').textContent='職員ダッシュボード';show("home");if(typeof omCheckPending==='function')omCheckPending();}
 function goShift(){document.getElementById('brandtxt').textContent='シフト管理';renderShift();show("shift");}
 function goStub(title,icon,tint){
@@ -8824,30 +8810,18 @@ function tnFiltering(){return !!(TN_CAT||TN_AGE>=0||TN_Q);}
 
 function goTonari(){
   document.getElementById('brandtxt').textContent='となりの保育室';
-  TN_VIEW='list';TN_CUR=null;TN_GARDEN=null;TN_HIST=[];
+  TN_VIEW='list';TN_CUR=null;TN_GARDEN=null;
   tnRender();
   show('tonari');
 }
-/* 1つ前にもどるための履歴 */
-var TN_HIST=[];
-function tnPush(){TN_HIST.push({v:TN_VIEW,c:TN_CUR,g:TN_GARDEN,y:window.scrollY||0});}
-function tnBack(){
-  var s=TN_HIST.pop();
-  if(!s){tnToList();return;}
-  TN_VIEW=s.v;TN_CUR=s.c;TN_GARDEN=s.g;
-  tnRender();window.scrollTo({top:s.y||0});
-}
-function tnOpen(id){tnPush();TN_CUR=id;TN_VIEW='article';tnRender();window.scrollTo({top:0});}
-function tnOpenGarden(g){tnPush();TN_GARDEN=g;TN_VIEW='garden';tnRender();window.scrollTo({top:0});}
-function tnToList(){TN_HIST=[];TN_VIEW='list';tnRender();window.scrollTo({top:0});}
+function tnOpen(id){TN_CUR=id;TN_VIEW='article';tnRender();window.scrollTo({top:0});}
+function tnOpenGarden(g){TN_GARDEN=g;TN_VIEW='garden';tnRender();window.scrollTo({top:0});}
+function tnToList(){TN_VIEW='list';tnRender();window.scrollTo({top:0});}
 function tnSetCat(c){TN_CAT=c;tnRenderResults();tnRenderChips();}
 function tnSetAge(a){TN_AGE=a;tnRenderResults();tnRenderChips();}
 function tnSetQ(v){TN_Q=String(v||'').trim();tnRenderResults();}
 
 function tnRender(){
-  tnRenderView();hdSync();
-}
-function tnRenderView(){
   var host=document.getElementById('screen-tonari');
   if(TN_VIEW==='article'){host.innerHTML='<div class="tnwrap">'+tnArticleHTML()+'</div>';return;}
   if(TN_VIEW==='garden'){host.innerHTML='<div class="tnwrap">'+tnGardenHTML()+'</div>';return;}
@@ -8894,11 +8868,17 @@ function tnRenderResults(){
   h+='<div class="tnsec"><h3 class="round">新着</h3></div>'+
     (rest.length?'<div class="tnlist">'+rest.slice(0,10).map(function(p){return tnRow(p,true);}).join('')+'</div>'
                 :'<div class="tnempty">各園の記事を、順次ここに掲載していきます。</div>');
+  var gs={};all.forEach(function(p){gs[p.garden]=(gs[p.garden]||0)+1;});
+  var names=Object.keys(gs);
+  if(names.length){
+    h+='<div class="tnsec"><h3 class="round">園からさがす</h3></div><div class="tngrid">'+
+      names.map(function(g){return '<button class="tngarden" onclick="tnOpenGarden(\''+tnEsc(g)+'\')"><b>'+tnEsc(tnShort(g))+'</b><span>記事 '+gs[g]+'件</span></button>';}).join('')+'</div>';
+  }
   host.innerHTML=h;
 }
 function tnArticleHTML(){
   var p=TONARI_POSTS.filter(function(x){return x.id===TN_CUR;})[0];
-  if(!p)return '<button class="tnback" onclick="tnBack()">'+TN_ICO.back+'となりの保育室</button><div class="tnpad"><div class="tnempty" style="margin-top:16px">記事が見つかりませんでした。</div></div>';
+  if(!p)return '<button class="tnback" onclick="tnToList()">'+TN_ICO.back+'となりの保育室</button><div class="tnpad"><div class="tnempty" style="margin-top:16px">記事が見つかりませんでした。</div></div>';
   var b='';
   (p.lead||[]).forEach(function(t){b+='<p>'+tnEsc(t)+'</p>';});
   (p.sections||[]).forEach(function(s){
@@ -8910,7 +8890,7 @@ function tnArticleHTML(){
   if(p.tips&&p.tips.length)b+='<div class="tntips"><b class="round">まねするときのポイント</b><ul>'+p.tips.map(function(t){return '<li>'+tnEsc(t)+'</li>';}).join('')+'</ul></div>';
   var liked=tnLiked(p.id);
   var others=tnSorted().filter(function(x){return x.garden===p.garden&&x.id!==p.id;});
-  return '<button class="tnback" onclick="tnBack()">'+TN_ICO.back+'となりの保育室</button>'+
+  return '<button class="tnback" onclick="tnToList()">'+TN_ICO.back+'となりの保育室</button>'+
     '<article class="tnart">'+tnCover(p)+'<div class="tnab">'+tnTags(p,true)+
       '<h2 class="round">'+tnEsc(p.title)+'</h2>'+
       '<button class="tnby" onclick="tnOpenGarden(\''+tnEsc(p.garden)+'\')"><span class="tnav round">'+tnEsc(tnShort(p.garden).charAt(0))+'</span><span><b>'+tnEsc(p.garden)+'</b><small>'+tnDate(p.date,true)+'</small></span></button>'+
@@ -8925,7 +8905,7 @@ function tnArticleHTML(){
 function tnGardenHTML(){
   var g=TN_GARDEN||'';
   var list=tnSorted().filter(function(p){return p.garden===g;});
-  return '<button class="tnback" onclick="tnBack()">'+TN_ICO.back+'となりの保育室</button>'+
+  return '<button class="tnback" onclick="tnToList()">'+TN_ICO.back+'となりの保育室</button>'+
     '<div class="tngh"><h2 class="round">'+tnEsc(g)+'</h2><p>記事 '+list.length+'件</p></div>'+
     '<div class="tnpad">'+(list.length?'<div class="tnlist">'+list.map(function(p){return tnRow(p,false);}).join('')+'</div>':'<div class="tnempty">この園の記事はまだありません。</div>')+'</div>';
 }
