@@ -86,15 +86,15 @@ async function start(name) {
   show('who', false); show('loading', true);
   try {
     const g = groupLoad(await api('load', { pid: SH.pid, name }));
-    RECS = g.recs[name] || {}; CONF = g.conf[name] || null; SET = g.set[name] || null;
+    RECS = g.recs[name] || {}; CONF = g.conf[name] || null; SET = effSetting(name, g, STAFF, SH);
   } catch (e) { show('loading', false); show('fatal', true); $('fatal').textContent = e.message; return; }
   show('loading', false); show('main', true);
   $('meName').textContent = name;
-  const kubun = (SET && SET.kubun) || 'パート';
+  const kubun = SET.kubun;
   $('meKubun').textContent = kubun;
-  $('kubunNote').textContent = SET && SET.kubun ? '' : '区分（パート／正規）は事務が設定します。まだ設定されていないので、パートとして表示しています。';
+  $('kubunNote').textContent = SET.kubunSrc === '初期値' ? '区分（パート／正規）が職員マスタに見つからないため、パートとして表示しています。違うときは事務に連絡してください。' : '';
   if (kubun === '対象外') {
-    $('kubunNote').textContent = 'この期間は、自己申告の対象外です（事務が設定しています）。';
+    $('kubunNote').textContent = 'この期間は、自己申告の対象外です（育休など。違うときは事務に連絡してください）。';
     document.querySelector('.seg').classList.add('hidden'); show('viewDay', false); show('viewList', false);
     return;
   }
@@ -104,8 +104,8 @@ async function start(name) {
   CUR = idx >= 0 ? idx : 0;
   drawDay(); drawList();
 }
-function kubun() { return (SET && SET.kubun) || 'パート'; }
-function parking() { return kubun() === 'パート' ? true : !!(SET && SET.parking); }
+function kubun() { return SET.kubun; }
+function parking() { return kubun() === 'パート' ? true : !!SET.parking; }
 
 function drawDay() {
   const d = SH.dates[CUR];
@@ -125,7 +125,7 @@ function flash() {
   document.querySelector('#form .box').appendChild(el);
 }
 function drawList() {
-  const t = calcStaff(SH, STAFF, RECS, Object.assign({ kubun: kubun() }, SET || {}), !!CONF);
+  const t = calcStaff(SH, STAFF, RECS, SET, !!CONF);
   $('perTitle').textContent = SH.label;
   $('perSub').textContent = SH.start + '〜' + SH.end + '（' + t.n + '日）';
   $('stats').innerHTML = statsHTML(t);

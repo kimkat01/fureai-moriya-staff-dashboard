@@ -62,7 +62,7 @@ table.mt th.grp{text-align:center;background:#dfe6fb}
 let SH = null, G = { recs: {}, conf: {}, set: {} }, FILT = 'all', ROWS = [];
 function $(id) { return document.getElementById(id); }
 function show(id, on) { $(id).classList.toggle('hidden', !on); }
-function setOf(name) { return Object.assign({ kubun: 'パート', parking: false, yukyuMin: 0 }, G.set[name] || {}); }
+function setOf(name) { return effSetting(name, G, SH.staff.find((x) => x.name === name), SH); }
 
 async function init() {
   if (isDemo()) show('demo', true);
@@ -81,7 +81,7 @@ function compute() {
     const set = setOf(s.name);
     const t = calcStaff(SH, s, G.recs[s.name] || {}, set, !!G.conf[s.name]);
     if (set.kubun === '対象外') t.status = '対象外';
-    return { s, set, t, unset: !G.set[s.name] };
+    return { s, set, t, unset: set.kubunSrc === '初期値' };
   });
   // 対象外（育休など）は一覧の最後に回す
   ROWS.sort((a, b) => (a.set.kubun === '対象外') - (b.set.kubun === '対象外'));
@@ -94,7 +94,7 @@ function draw() {
     '<div><b>' + cnt((r) => r.t.status === '確定') + ' / ' + act.length + '</b><span>確定済み（対象外 ' + (ROWS.length - act.length) + '名を除く）</span></div>' +
     '<div><b>' + cnt((r) => r.t.status === '入力中' || r.t.status === '入力完了') + '</b><span>入力中・未確定</span></div>' +
     '<div><b style="color:#b3261e">' + cnt((r) => r.t.status === '未申告あり') + '</b><span>未申告の日あり</span></div>' +
-    '<div><b style="color:#7a4a00">' + cnt((r) => r.unset) + '</b><span>区分が未設定</span></div>';
+    '<div><b style="color:#7a4a00">' + cnt((r) => r.unset) + '</b><span>職員マスタに区分なし</span></div>';
   const rows = ROWS.filter((r) => FILT === 'all' || (FILT === 'ng' ? (r.t.status !== '確定' && r.t.status !== '対象外') : r.set.kubun === FILT));
   let h = '<div class="tblwrap"><table class="mt"><thead><tr><th rowspan="2">職員名</th><th rowspan="2">区分</th><th rowspan="2">状態</th><th rowspan="2">入力</th>' +
     '<th class="grp" colspan="6">日数</th><th class="grp" colspan="4">パート</th><th class="grp" colspan="5">正規</th></tr><tr>' +
@@ -103,7 +103,7 @@ function draw() {
     '<th>時間有休</th><th>残業</th><th>遅刻</th><th>早退</th><th>駐車</th></tr></thead><tbody>';
   rows.forEach((r) => {
     const t = r.t, c = t.c, p = r.set.kubun === 'パート';
-    h += '<tr class="click" data-name="' + esc(r.s.name) + '"><td class="nm">' + esc(r.s.name) + '</td><td>' + esc(r.set.kubun) + (r.unset ? '<span style="color:#7a4a00;font-size:11px">（未設定）</span>' : '') + '</td><td>' + statusBadge(t.status) +
+    h += '<tr class="click" data-name="' + esc(r.s.name) + '"><td class="nm">' + esc(r.s.name) + '</td><td>' + esc(r.set.kubun) + '<span style="color:#4a4a46;font-size:11px">（' + esc(r.set.kubunSrc) + '）</span>' + '</td><td>' + statusBadge(t.status) +
       (t.warn.length ? ' <span title="' + esc(t.warn.join('、')) + '" style="color:#7a4a00;font-size:11px">要確認</span>' : '') + '</td><td class="num">' + t.done + '/' + t.n + '</td>' +
       '<td class="num">' + c['出勤'] + '</td><td class="num">' + c['有休'] + '</td><td class="num">' + c['特休'] + '</td><td class="num">' + c['公休'] + '</td><td class="num">' + c['希望休'] + '</td><td class="num">' + (p ? '' : c['欠勤']) + '</td>' +
       (p ? '<td class="num">' + toHours(t.plan) + '</td><td class="num">' + toHours(t.diff) + '</td><td class="num">' + t.kyu + '</td><td class="num">' + t.chu + '</td><td></td><td></td><td></td><td></td><td></td>'
@@ -159,14 +159,20 @@ function openDay(name, iso) {
 /* ---------- 職員の設定 ---------- */
 $('btnSet').onclick = () => {
   let h = '<div class="row"><b style="font-size:17px">職員の設定</b><button type="button" class="btn2" id="sClose">閉じる</button></div>' +
-    '<div class="muted">区分、正規の駐車場（日割り対象）、有休・特休1日分の時間（シフトに時間が入っていない日に使います）。変えるとすぐ保存されます。</div>' +
-    '<div class="tblwrap setgrid"><table class="mt"><thead><tr><th>職員名</th><th>区分</th><th>駐車場 日割り（正規）</th><th>有休1日分の時間</th><th></th></tr></thead><tbody>';
+    '<div class="muted">ふだんは何も入れなくて大丈夫です。区分は職員マスタの雇用区分から、有休・特休1日分の時間はその月の勤務日の平均から自動で決まります。<br>' +
+    '違うときだけ、ここで変えてください（変えるとすぐ保存され、自動より優先されます）。正規の駐車場（日割り対象）だけは、ここでチェックが必要です。</div>' +
+    '<div class="tblwrap setgrid"><table class="mt"><thead><tr><th>職員名</th><th>区分</th><th>駐車場 日割り（正規）</th><th>有休・特休1日分の時間</th><th></th></tr></thead><tbody>';
   SH.staff.forEach((s) => {
-    const st = setOf(s.name), hm = splitMin(st.yukyuMin);
-    h += '<tr data-name="' + esc(s.name) + '"><td><b>' + esc(s.name) + '</b>' + (G.set[s.name] ? '' : ' <span style="color:#7a4a00;font-size:11px">未設定</span>') + '</td>' +
-      '<td><select data-k="kubun"><option' + (st.kubun === 'パート' ? ' selected' : '') + '>パート</option><option' + (st.kubun === '正規' ? ' selected' : '') + '>正規</option><option' + (st.kubun === '対象外' ? ' selected' : '') + '>対象外</option></select></td>' +
-      '<td><label><input type="checkbox" data-k="parking"' + (st.parking ? ' checked' : '') + ' style="height:20px;width:20px;vertical-align:middle"> 対象</label></td>' +
-      '<td><select data-k="yh">' + hourOpts(0, 10, hm.h) + '</select> 時間 <select data-k="ym">' + minOpts(hm.m) + '</select> 分</td><td class="ok" style="font-size:12px;color:#1e7a45"></td></tr>';
+    const st = setOf(s.name), man = G.set[s.name] || {};
+    const hm = splitMin(+man.yukyuMin > 0 ? man.yukyuMin : 0);
+    const autoK = st.masterKubun ? '自動（職員マスタ：' + st.masterKubun + '）' : '自動（マスタになし→パート）';
+    h += '<tr data-name="' + esc(s.name) + '"><td><b>' + esc(s.name) + '</b></td>' +
+      '<td><select data-k="kubun"><option value=""' + (!man.kubun ? ' selected' : '') + '>' + esc(autoK) + '</option>' +
+      ['パート', '正規', '対象外'].map((k) => '<option value="' + k + '"' + (man.kubun === k ? ' selected' : '') + '>' + k + '（手入力）</option>').join('') + '</select></td>' +
+      '<td><label><input type="checkbox" data-k="parking"' + (man.parking ? ' checked' : '') + ' style="height:20px;width:20px;vertical-align:middle"> 対象</label></td>' +
+      '<td><select data-k="yh">' + hourOpts(0, 10, hm.h) + '</select> 時間 <select data-k="ym">' + minOpts(hm.m) + '</select> 分' +
+      '<div class="yauto" style="font-size:11px;color:#4a4a46">' + (+man.yukyuMin > 0 ? '手入力' : '0:00＝自動（平均 ' + fmtJP(st.avgMin) + '）') + '</div></td>' +
+      '<td class="ok" style="font-size:12px;color:#1e7a45"></td></tr>';
   });
   h += '</tbody></table></div>';
   $('modalBody').innerHTML = h; show('modal', true);
@@ -179,9 +185,13 @@ $('btnSet').onclick = () => {
       parking: tr.querySelector('[data-k=parking]').checked,
       yukyuMin: (+tr.querySelector('[data-k=yh]').value) * 60 + (+tr.querySelector('[data-k=ym]').value)
     };
-    const ok = tr.querySelector('.ok'); ok.textContent = '保存中…';
-    try { await api('setting', { name, setting }); G.set[name] = Object.assign({ name }, setting); ok.textContent = '保存しました'; const u = tr.querySelector('td:first-child span'); if (u) u.remove(); }
-    catch (er) { ok.style.color = '#b3261e'; ok.textContent = er.message; }
+    const ok = tr.querySelector('.ok'); ok.style.color = '#1e7a45'; ok.textContent = '保存中…';
+    try {
+      await api('setting', { name, setting });
+      G.set[name] = Object.assign({ name }, setting);
+      ok.textContent = '保存しました';
+      tr.querySelector('.yauto').textContent = setting.yukyuMin > 0 ? '手入力' : '0:00＝自動（平均 ' + fmtJP(setOf(name).avgMin) + '）';
+    } catch (er) { ok.style.color = '#b3261e'; ok.textContent = er.message; }
   };
 };
 

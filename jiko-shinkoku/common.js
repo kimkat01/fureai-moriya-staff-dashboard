@@ -8,13 +8,44 @@ const JK = {
   GAS_URL: '',
   TOKEN: 'fureai_jiko_2026',          // GAS側の TOKEN と同じ文字にする
   GARDEN: 'fureai_shiodome',          // 園キー
+  FACILITY_CODE: 'S09',               // 職員マスタの施設コード（ふれあいしおどめ保育園）
   SHIFT_URL: '../index.html',         // シフトデータを読む元（職員ダッシュボード本体）
   MIN_STEP: 15,                       // 分の刻み（1・5・10・15 など）
   PART_KINDS: ['出勤', '公休', '希望休', '有休', '特休'],
   SEI_KINDS: ['出勤', '公休', '希望休', '有休', '特休', '欠勤'],
   SEI_EXTRAS: ['時間有休', '残業', '遅刻', '早退'],
-  LOCAL_KEY: 'jiko_shinkoku_demo_v1'
+  LOCAL_KEY: 'jiko_shinkoku_demo_v1',
+  // 職員マスタ（2026/10/04 取込）の写し。GASが使えるときは、GASが職員マスタを直接読んだ内容を優先する。
+  // 雇用区分「正規」→正規、「非正規・派遣」→パート、対象外（育休など）がTRUE→対象外
+  MASTER_FALLBACK: {
+    '青木真登香': 'パート', '阿部佳奈子': 'パート', '伊﨑千亜紀': 'パート', '稲浪菫花': 'パート', '井波美由紀': '正規',
+    '岩﨑愛': '正規', '植村郁子': 'パート', '内山典子': 'パート', '遠藤咲': '正規', '大川原昌子': 'パート',
+    '勝村絵里菜': '正規', '栗原美晴': 'パート', '霜田侑花': '正規', '下野結桂子': 'パート', '鈴木マユミ': 'パート',
+    '背黒美波': '正規', '高橋歩実': '正規', '高橋佳子': '正規', '土居悦子': 'パート', '登坂恵美子': '正規',
+    '中﨑杏奈': '対象外', '長妻理紗': 'パート', '成田麻里': '正規', '野村瑛美子': '対象外', '橋本奈千加': '正規',
+    '町田美明': 'パート', '宮本聡美': '対象外', '谷田貝実加': 'パート', '山口由美': 'パート', '山本晴奈': 'パート',
+    '渡邊裕里子': '正規'
+  }
 };
+function nkey(name) { return String(name || '').replace(/[\s\u3000]/g, ''); }
+
+/* ---------- 職員ごとの設定（事務の手入力 ＞ 職員マスタ ＞ 初期値） ---------- */
+// G = groupLoad の結果、staff = シフトの職員、shift = loadShift の結果
+function effSetting(name, G, staff, shift) {
+  const man = (G && G.set && G.set[name]) || {};
+  const mk = (G && G.master && G.master[nkey(name)]) || JK.MASTER_FALLBACK[nkey(name)] || '';
+  const kubun = man.kubun || mk || 'パート';
+  const kubunSrc = man.kubun ? '事務' : (mk ? '職員マスタ' : '初期値');
+  const avg = staff && shift ? avgWorkMin(shift, staff) : 0;
+  const yukyuMin = +man.yukyuMin > 0 ? +man.yukyuMin : avg;
+  return { kubun, kubunSrc, masterKubun: mk, parking: !!man.parking, yukyuMin, yukyuSrc: +man.yukyuMin > 0 ? '事務' : '自動', avgMin: avg };
+}
+// その期間の勤務日の実働の平均（有休・特休1日分の時間に使う）
+function avgWorkMin(shift, staff) {
+  let sum = 0, n = 0;
+  shift.dates.forEach((d) => { const sh = staff.shifts[d.iso]; if (sh && (sh.state === 'work' || sh.state === 'training')) { const p = planMin(sh.time); if (p > 0) { sum += p; n++; } } });
+  return n ? Math.round(sum / n) : 0;
+}
 
 /* ---------- 時間の計算 ---------- */
 // 休憩（試用版の仮ルール）：拘束6時間超→45分、8時間超→60分を引く
@@ -120,7 +151,7 @@ function calcStaff(shift, staff, recMap, setting, confirmed) {
       t.yh += +r.yh || 0; t.ot += +r.ot || 0; t.late += +r.late || 0; t.early += +r.early || 0;
     } else if (r.kind === '有休' || r.kind === '特休') {
       const p = leavePlanMin(sh, setting);
-      if (kubun === 'パート') { t.plan += p; if (!p) t.warn.push(d.md + 'の' + r.kind + 'の時間が未設定'); }
+      if (kubun === 'パート') { t.plan += p; if (!p) t.warn.push(d.md + 'の' + r.kind + 'の時間が決まりません'); }
     }
   });
   t.status = confirmed ? '確定' : (t.missing.length === 0 ? '入力完了' : (t.pastMissing > 0 ? '未申告あり' : '入力中'));
@@ -177,7 +208,7 @@ async function api(action, body) {
   const res = await fetch(JK.GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(Object.assign({ action, token: JK.TOKEN, garden: JK.GARDEN }, body))
+    body: JSON.stringify(Object.assign({ action, token: JK.TOKEN, garden: JK.GARDEN, facility: JK.FACILITY_CODE }, body))
   });
   const j = await res.json();
   if (!j.ok) throw new Error(j.error || '保存先でエラーが起きました');
@@ -185,11 +216,12 @@ async function api(action, body) {
 }
 // load の結果を { name: { iso: rec } } の形にまとめる
 function groupLoad(r) {
-  const recs = {}, conf = {}, set = {};
+  const recs = {}, conf = {}, set = {}, master = {};
   (r.recs || []).forEach((x) => { (recs[x.name] = recs[x.name] || {})[x.date] = x; });
   (r.conf || []).forEach((x) => { conf[x.name] = x.at; });
   (r.settings || []).forEach((x) => { set[x.name] = x; });
-  return { recs, conf, set };
+  (r.master || []).forEach((x) => { if (x.kubun) master[nkey(x.name)] = x.kubun; });
+  return { recs, conf, set, master };
 }
 
 /* ---------- 1日の申告フォーム ---------- */
