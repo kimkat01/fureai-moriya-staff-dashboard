@@ -84,12 +84,6 @@ main{padding:16px}
   font-family:inherit;min-height:118px;transition:transform .12s ease;position:relative;
   width:calc(50% - 6px);}
 .tile:active{transform:scale(.975)}
-/* お知らせタイル（2026-10-23）：紺地＋金の罫線、見出しは明朝 */
-.i-news{background:#1f2a52;color:#f3eee2}
-.tile.tile-news .ictop{background:#1f2a52;border-bottom:3px double #c9a95c;}
-.tile.tile-news .tileclip{background:#fdfcf8;}
-.tile.tile-news .tt{font-family:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP","Noto Serif CJK JP","BIZ UDPMincho",serif;font-weight:700;letter-spacing:.12em;color:#1f2a52;}
-.tile.tile-news .ds{color:#4a4740;}
 .tile .tileclip{display:flex;flex-direction:column;width:100%;height:100%;
   border-radius:18px;overflow:hidden;background:var(--card);}
 .tile .ictop{width:100%;height:82px;display:flex;align-items:center;justify-content:flex-start;padding-left:15px;flex:0 0 auto;}
@@ -9574,7 +9568,7 @@ function sdLog(tool,act){
 const MENU=[
  {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShiftLogin();}},flag:"🔴NEW"},
  {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(uqUrl(),"有給チェッカー","uq","i-early")},
- {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-news",cls:"tile-news",go:()=>goNews()},
+ {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-sky",go:()=>goNews()},
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-lav",go:()=>goManual()},
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
  {t:"メンタルヘルスサポート",d:"ストレスチェックやカウンセリング等の手続き",ic:"doctor",tint:"i-gold",go:()=>goMental()},
