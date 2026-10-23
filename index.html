@@ -84,6 +84,12 @@ main{padding:16px}
   font-family:inherit;min-height:118px;transition:transform .12s ease;position:relative;
   width:calc(50% - 6px);}
 .tile:active{transform:scale(.975)}
+/* お知らせタイル（2026-10-23）：紺地＋金の罫線、見出しは明朝 */
+.i-news{background:#1f2a52;color:#f3eee2}
+.tile.tile-news .ictop{background:#1f2a52;border-bottom:3px double #c9a95c;}
+.tile.tile-news .tileclip{background:#fdfcf8;}
+.tile.tile-news .tt{font-family:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP","Noto Serif CJK JP","BIZ UDPMincho",serif;font-weight:700;letter-spacing:.12em;color:#1f2a52;}
+.tile.tile-news .ds{color:#4a4740;}
 .tile .tileclip{display:flex;flex-direction:column;width:100%;height:100%;
   border-radius:18px;overflow:hidden;background:var(--card);}
 .tile .ictop{width:100%;height:82px;display:flex;align-items:center;justify-content:flex-start;padding-left:15px;flex:0 0 auto;}
@@ -444,58 +450,61 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-tonari .tngh p{margin:4px 0 0;font-size:13px;color:var(--ink-soft);}
 #screen-tonari .tnpad{padding:0 16px 16px;}
 /* ===== お知らせ（X風タイムライン・接頭辞 n/ns・アクセント=--late） ===== */
-/* お知らせ（2026-10-23：News & Topics から改称。紙面風の落ち着いた見た目に） */
-#screen-news{--ns-ink:#1f2a52;--ns-imp:#8c2f2f;--ns-mincho:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP","Noto Serif CJK JP","BIZ UDPMincho",serif;}
-#screen-news .nswrap{max-width:560px;margin:0 auto;background:var(--card);border-left:1px solid var(--line);border-right:1px solid var(--line);min-height:70vh;}
-#screen-news .nsmast{padding:22px 18px 0;text-align:center;}
-#screen-news .nsmast-eyebrow{font-size:10.5px;letter-spacing:.34em;color:var(--ink-soft);font-weight:700;padding-left:.34em;}
-#screen-news .nsmast-title{font-family:var(--ns-mincho);font-size:30px;font-weight:700;letter-spacing:.3em;padding-left:.3em;color:var(--ns-ink);margin:6px 0 10px;line-height:1.2;}
-#screen-news .nsmast-line{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--ink-soft);border-top:3px double var(--ns-ink);border-bottom:1px solid var(--ns-ink);padding:6px 2px;}
-#screen-news .nstabs{display:flex;gap:4px;padding:0 10px;border-bottom:1px solid var(--line);background:var(--card);}
-#screen-news .nstabs button{flex:1;padding:12px 0 11px;border:0;background:transparent;color:var(--ink-soft);font-size:13.5px;font-weight:700;letter-spacing:.12em;cursor:pointer;font-family:inherit;position:relative;}
-#screen-news .nstabs button.on{color:var(--ns-ink);}
-#screen-news .nstabs button.on::after{content:"";position:absolute;left:22%;right:22%;bottom:-1px;height:2px;background:var(--ns-ink);}
-#screen-news .nspost{display:block;padding:17px 18px 15px;border-bottom:1px solid var(--line);background:var(--card);cursor:pointer;text-align:left;}
-#screen-news .nspost:active{background:#f8f7f3;}
-#screen-news .nspost.pinned{background:#fbf9f4;box-shadow:inset 3px 0 0 var(--ns-imp);}
-#screen-news .nsmeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);}
-#screen-news .nstag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;padding:1px 8px;border:1px solid currentColor;line-height:1.6;}
-#screen-news .nstag.hq{color:var(--ns-ink);}
-#screen-news .nstag.garden{color:var(--brand);}
-#screen-news .nstag.imp{color:#fff;background:var(--ns-imp);border-color:var(--ns-imp);}
-#screen-news .nsdate{font-variant-numeric:tabular-nums;}
-#screen-news .nsunread{margin-left:auto;font-size:11px;font-weight:700;color:var(--ns-imp);letter-spacing:.1em;}
-#screen-news .nstitle{font-family:var(--ns-mincho);font-size:17px;font-weight:700;color:var(--ns-ink);margin:9px 0 6px;line-height:1.6;}
-#screen-news .nspost.read .nstitle{color:#3d4560;}
-#screen-news .nstext{font-size:13.5px;color:#4a4740;line-height:1.85;white-space:pre-wrap;word-break:break-word;}
-#screen-news .nstext.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
-#screen-news .nsmore{color:var(--ns-ink);font-size:12.5px;font-weight:700;margin-top:6px;letter-spacing:.04em;}
-#screen-news .nsmedia{display:flex;flex-wrap:wrap;gap:3px;margin-top:11px;overflow:hidden;}
-#screen-news .nsmedia img{flex:1 1 46%;min-width:0;height:140px;object-fit:cover;background:var(--paper);display:block;}
+#screen-news .nswrap{max-width:440px;margin:0 auto;}
+#screen-news .nstabs{display:flex;border-bottom:1px solid var(--line);background:var(--card);}
+#screen-news .nstabs button{flex:1;padding:13px 0;border:0;background:transparent;color:var(--ink-soft);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;position:relative;}
+#screen-news .nstabs button.on{color:var(--ink);}
+#screen-news .nstabs button.on::after{content:"";position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:46px;height:3px;border-radius:3px;background:var(--late);}
+#screen-news .nspost{display:flex;gap:11px;padding:14px;margin:12px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow);cursor:pointer;text-align:left;}
+#screen-news .nspost:active{background:#faf9f7;}
+#screen-news .nsact{display:flex;align-items:center;gap:22px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line);}
+#screen-news .nsviews{display:inline-flex;align-items:center;gap:5px;color:var(--ink-soft);font-size:12.5px;font-weight:700;}
+#screen-news .nsviews svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+#screen-news .nslike{display:inline-flex;align-items:center;gap:5px;background:transparent;border:0;color:var(--ink-soft);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;padding:2px 4px;}
+#screen-news .nslike svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .12s;}
+#screen-news .nslike:active svg{transform:scale(1.3);}
+#screen-news .nslike.on{color:#e0245e;}
+#screen-news .nslike.on svg{fill:#e0245e;stroke:#e0245e;}
+#screen-news .nsav{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px;}
+#screen-news .nsav svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+#screen-news .nsav.hq{background:#43a047;overflow:hidden;}
+#screen-news .nsav.hq img{width:100%;height:100%;object-fit:cover;display:block;}
+#screen-news .nsav.garden{background:var(--brand);}
+#screen-news .nsbody-col{flex:1;min-width:0;}
+#screen-news .nspin{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink-soft);font-weight:700;margin-bottom:3px;}
+#screen-news .nspin svg{width:12px;height:12px;fill:currentColor;stroke:none;}
+#screen-news .nshead{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:13.5px;line-height:1.3;}
+#screen-news .nsname{font-weight:800;color:var(--ink);}
+#screen-news .nsbadge{font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:999px;}
+#screen-news .nsbadge.hq{background:var(--late-bg);color:var(--late-ink);}
+#screen-news .nsbadge.garden{background:var(--brand-soft);color:var(--brand);}
+#screen-news .nsdot{color:var(--ink-soft);}
+#screen-news .nstime{color:var(--ink-soft);font-size:12.5px;}
+#screen-news .nsunread-dot{width:8px;height:8px;border-radius:50%;background:var(--late);margin-left:auto;flex:0 0 auto;}
+#screen-news .nstitle{font-size:14.5px;font-weight:800;color:var(--ink);margin:5px 0 2px;line-height:1.5;}
+#screen-news .nstext{font-size:14px;color:var(--ink);line-height:1.7;white-space:pre-wrap;word-break:break-word;}
+#screen-news .nstext.clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;}
+#screen-news .nsmore{color:var(--late-ink);font-size:13px;font-weight:700;margin-top:3px;}
+#screen-news .nsmedia{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;border-radius:14px;overflow:hidden;}
+#screen-news .nsmedia img{flex:1 1 46%;min-width:0;height:150px;object-fit:cover;background:var(--paper);display:block;}
 #screen-news .nsmedia.one img{flex:1 1 100%;height:190px;}
-#screen-news .nslink{display:block;margin-top:11px;border:1px solid var(--line);border-left:3px solid var(--ns-ink);overflow:hidden;cursor:pointer;background:#fcfbf8;}
-#screen-news .nslink .nslk-body{padding:10px 13px;}
+#screen-news .nslink{display:block;margin-top:10px;border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;}
+#screen-news .nslink .nslk-body{padding:11px 13px;}
 #screen-news .nslink .nslk-site{font-size:11.5px;color:var(--ink-soft);margin-bottom:3px;}
-#screen-news .nslink .nslk-title{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.5;}
+#screen-news .nslink .nslk-title{font-size:13.5px;font-weight:800;color:var(--ink);line-height:1.5;}
 #screen-news .nslink .nslk-desc{font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-#screen-news .nsact{display:flex;align-items:center;justify-content:flex-end;gap:16px;margin-top:10px;}
-#screen-news .nsviews{display:inline-flex;align-items:center;gap:4px;color:var(--ink-soft);font-size:12px;}
-#screen-news .nsviews svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-#screen-news .nslike{display:inline-flex;align-items:center;gap:4px;background:transparent;border:0;color:var(--ink-soft);font-size:12px;cursor:pointer;font-family:inherit;padding:4px 0;}
-#screen-news .nslike svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .12s;}
-#screen-news .nslike:active svg{transform:scale(1.25);}
-#screen-news .nslike.on{color:var(--ns-imp);}
-#screen-news .nslike.on svg{fill:var(--ns-imp);stroke:var(--ns-imp);}
-#screen-news .nswarn{margin:12px 14px 0;padding:9px 12px;background:var(--sun-bg);color:var(--sun-ink);font-size:12.5px;font-weight:700;}
-#screen-news .nsretry{margin-top:12px;border:1px solid var(--ns-ink);background:#fff;padding:8px 16px;font-size:13px;font-weight:700;color:var(--ns-ink);cursor:pointer;font-family:inherit;}
-#screen-news .nsempty{text-align:center;color:var(--ink-soft);font-size:13px;padding:44px 10px;line-height:1.9;}
-#screen-news .nsback{display:flex;align-items:center;gap:6px;width:100%;background:var(--card);border:0;border-bottom:1px solid var(--line);padding:13px 16px;font-size:13.5px;font-weight:700;color:var(--ns-ink);cursor:pointer;font-family:inherit;letter-spacing:.04em;}
-#screen-news .nsback svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
-#screen-news .nsdetail{padding:22px 20px 30px;}
-#screen-news .nsd-title{font-family:var(--ns-mincho);font-size:22px;font-weight:700;color:var(--ns-ink);line-height:1.55;margin:12px 0 0;padding-bottom:14px;border-bottom:1px solid var(--ns-ink);}
-#screen-news .nsd-from{font-size:12.5px;color:var(--ink-soft);text-align:right;margin:8px 0 18px;}
-#screen-news .nsd-text{font-size:15px;color:var(--ink);line-height:2;white-space:pre-wrap;word-break:break-word;}
-#screen-news .nsd-date{font-size:12px;color:var(--ink-soft);margin-top:20px;padding-top:12px;border-top:1px solid var(--line);text-align:right;}
+#screen-news .nswarn{margin:12px 12px 0;padding:9px 12px;border-radius:10px;background:var(--sun-bg);color:var(--sun-ink);font-size:12.5px;font-weight:700;}
+#screen-news .nsretry{margin-top:12px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:800;color:var(--late-ink);cursor:pointer;font-family:inherit;}
+#screen-news .nsempty{text-align:center;color:var(--ink-soft);font-size:13px;padding:40px 10px;}
+#screen-news .nsback{display:flex;align-items:center;gap:8px;background:var(--card);border:0;border-bottom:1px solid var(--line);padding:12px 14px;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;width:100%;font-family:inherit;}
+#screen-news .nsback svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+#screen-news .nsdetail{padding:15px 16px;}
+#screen-news .nsd-head{display:flex;gap:11px;align-items:center;margin-bottom:12px;}
+#screen-news .nsd-name{font-weight:800;color:var(--ink);font-size:15px;}
+#screen-news .nsd-sub{font-size:12.5px;color:var(--ink-soft);margin-top:2px;display:flex;align-items:center;gap:5px;}
+#screen-news .nsd-title{font-size:18px;font-weight:800;color:var(--ink);line-height:1.55;margin:2px 0 8px;}
+#screen-news .nsd-text{font-size:15px;color:var(--ink);line-height:1.9;white-space:pre-wrap;word-break:break-word;}
+#screen-news .nsd-date{font-size:12.5px;color:var(--ink-soft);margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
 #screen-news .nshidden{display:none;}
 /* ===== 規約・マニュアル（gd） ===== */
 #screen-manual .gdwrap{max-width:440px;margin:0 auto;padding:16px 12px 28px;}
@@ -901,11 +910,6 @@ tbody tr.me .namecol{color:var(--brand)}
     <section id="screen-news" hidden>
       <div class="nswrap">
         <div id="nsListView">
-          <div class="nsmast">
-            <div class="nsmast-eyebrow">SHIODOME GROUP</div>
-            <div class="nsmast-title">お知らせ</div>
-            <div class="nsmast-line"><span>本部・各園からの公式なお知らせ</span><span id="nsMastDate"></span></div>
-          </div>
           <div class="nstabs">
             <button id="nsFAll" class="on" onclick="nsFilter('all')">すべて</button>
             <button id="nsFHq" onclick="nsFilter('hq')">本部</button>
@@ -914,7 +918,7 @@ tbody tr.me .namecol{color:var(--brand)}
           <div id="nsList"></div>
         </div>
         <div id="nsDetailView" class="nshidden">
-          <button class="nsback" onclick="nsBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>お知らせ一覧へ戻る</button>
+          <button class="nsback" onclick="nsBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>お知らせ</button>
           <div class="nsdetail" id="nsDetailCard"></div>
         </div>
       </div>
@@ -9201,9 +9205,7 @@ function nsSortedX(){return NEWS.slice().sort(function(a,b){
   return (a.date<b.date?1:(a.date>b.date?-1:0));
 });}
 function nsName(n){return (n.scope==='garden')?nsEsc(n.garden||'園'):'しおどめグループ 本部';}
-function nsBadge(n){return (n.scope==='garden')?'<span class="nstag garden">'+nsEsc(n.garden||'園')+'</span>':'<span class="nstag hq">本部</span>';}
-function nsFrom(n){return (n.scope==='garden')?nsEsc(n.garden||'園'):'しおどめグループ 本部';}
-function nsSetMastDate(){var d=new Date(),w='日月火水木金土';var el=document.getElementById('nsMastDate');if(el)el.textContent=d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+w[d.getDay()]+'）';}
+function nsBadge(n){return (n.scope==='garden')?'<span class="nsbadge garden">園</span>':'<span class="nsbadge hq">本部</span>';}
 function nsAvatar(n){return (n.scope==='garden')?'<div class="nsav garden">'+nsEsc((n.garden||'園').slice(0,1))+'</div>':'<div class="nsav hq"><img src="https://kimkat01.github.io/staff-dashboard/icons/news-hq.png" alt="本部"></div>';}
 function nsIsLong(b){b=b||'';return b.length>90||b.split('\n').length>4;}
 function nsMedia(n){
@@ -9321,19 +9323,20 @@ function nsToggleLike(ev,id){
   nsRefreshLike(id);
 }
 function nsRenderDetail(n){
-  var imp=n.important?'<span class="nstag imp">重要</span>':'';
+  var pin=n.important?'<div class="nspin">'+NS_PIN+'固定されたお知らせ</div>':'';
   document.getElementById('nsDetailCard').innerHTML=
-    '<div class="nsmeta">'+imp+nsBadge(n)+'<span class="nsdate">'+nsFmtLong(n.date)+'</span></div>'+
+    '<div class="nsd-head">'+nsAvatar(n)+
+      '<div><div class="nsd-name">'+nsName(n)+'</div>'+
+      '<div class="nsd-sub">'+nsBadge(n)+'<span>·</span><span>'+nsFmtShort(n.date)+'</span></div></div></div>'+
+    pin+
     '<div class="nsd-title">'+nsEsc(n.title)+'</div>'+
-    '<div class="nsd-from">発信：'+nsFrom(n)+'</div>'+
     '<div class="nsd-text">'+nsEsc(n.body)+'</div>'+
     nsMedia(n)+nsLink(n)+nsActionRow(n)+
-    '<div class="nsd-date">'+nsFmtLong(n.date)+'　'+nsFrom(n)+'</div>';
+    '<div class="nsd-date">'+nsFmtLong(n.date)+'</div>';
 }
 
 function goNews(){
   document.getElementById('brandtxt').textContent='お知らせ';
-  nsSetMastDate();
   nsCurFilter='all';
   document.getElementById('nsDetailView').className='nshidden';
   document.getElementById('nsListView').className='';
@@ -9352,14 +9355,19 @@ function nsRender(){
   var list=nsSortedX().filter(function(n){return nsCurFilter==='all'?true:(n.scope===nsCurFilter);});
   var html=list.map(function(n){
     var read=nsIsRead(n.id);
-    var imp=n.important?'<span class="nstag imp">重要</span>':'';
-    var unread=read?'':'<span class="nsunread">未読</span>';
+    var pin=n.important?'<div class="nspin">'+NS_PIN+'固定</div>':'';
+    var dot=read?'':'<span class="nsunread-dot"></span>';
     var long=nsIsLong(n.body);
-    var text='<div class="nstext'+(long?' clamp':'')+'">'+nsEsc(n.body)+'</div>'+(long?'<div class="nsmore">全文を読む ›</div>':'');
-    return '<div class="nspost'+(read?' read':' unread')+(n.important?' pinned':'')+'" data-nsid="'+n.id+'" role="button" tabindex="0" onclick="nsOpen(\''+n.id+'\')">'+
-      '<div class="nsmeta">'+imp+nsBadge(n)+'<span class="nsdate">'+nsFmtLong(n.date)+'</span>'+unread+'</div>'+
-      '<div class="nstitle">'+nsEsc(n.title)+'</div>'+
-      text+nsMedia(n)+nsLink(n)+nsActionRow(n)+
+    var text='<div class="nstext'+(long?' clamp':'')+'">'+nsEsc(n.body)+'</div>'+(long?'<div class="nsmore">続きを読む</div>':'');
+    return '<div class="nspost'+(read?'':' unread')+'" data-nsid="'+n.id+'" role="button" tabindex="0" onclick="nsOpen(\''+n.id+'\')">'+
+      nsAvatar(n)+
+      '<div class="nsbody-col">'+
+        pin+
+        '<div class="nshead"><span class="nsname">'+nsName(n)+'</span>'+nsBadge(n)+
+          '<span class="nsdot">·</span><span class="nstime">'+nsFmtShort(n.date)+'</span>'+dot+'</div>'+
+        '<div class="nstitle">'+nsEsc(n.title)+'</div>'+
+        text+nsMedia(n)+nsLink(n)+nsActionRow(n)+
+      '</div>'+
     '</div>';
   }).join('');
   var empty=(NS_GAS_URL&&!nsLoaded)?'読み込み中…':'お知らせはありません。';
@@ -9566,7 +9574,7 @@ function sdLog(tool,act){
 const MENU=[
  {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShiftLogin();}},flag:"🔴NEW"},
  {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(uqUrl(),"有給チェッカー","uq","i-early")},
- {t:"お知らせ",d:"本部・各園からの公式なお知らせ",ic:"news",tint:"i-sky",go:()=>goNews()},
+ {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-news",cls:"tile-news",go:()=>goNews()},
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-lav",go:()=>goManual()},
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
  {t:"メンタルヘルスサポート",d:"ストレスチェックやカウンセリング等の手続き",ic:"doctor",tint:"i-gold",go:()=>goMental()},
@@ -9577,7 +9585,7 @@ function renderHome(){
   const tiles=MENU.map(function(m,i){
      var flag=m.flag?'<span class="flag">'+m.flag+'</span>':(m.flagId?'<span class="flag flag-pulse" id="'+m.flagId+'" style="display:none">受領</span>':'');
      var lg=m.ic==='bot'?' ic-lg':'';
-     return '<button class="tile" onclick="sdLog(MENU['+i+'].t);MENU['+i+'].go()">'+flag+
+     return '<button class="tile'+(m.cls?' '+m.cls:'')+'" onclick="sdLog(MENU['+i+'].t);MENU['+i+'].go()">'+flag+
        '<span class="tileclip">'+
        '<span class="ictop '+m.tint+'"><span class="ic '+m.tint+icClass(m.ic)+lg+'">'+icInner(m.ic)+'</span></span>'+
        '<span class="tbody"><span class="tt round">'+m.t+'</span><span class="ds">'+m.d+'</span></span>'+
