@@ -8863,14 +8863,40 @@ function tnFiltering(){return !!(TN_CAT||TN_AGE>=0||TN_Q);}
 
 function goTonari(){
   document.getElementById('brandtxt').textContent='となりの保育室';
-  TN_VIEW='list';TN_CUR=null;TN_GARDEN=null;
+  TN_VIEW='list';TN_CUR=null;TN_GARDEN=null;TN_LIST_Y=0;TN_IG_X=0;
   tnRender();
   show('tonari');
   tnIgFetch();tnIgCheckCan();
 }
-function tnOpen(id){TN_CUR=id;TN_VIEW='article';tnRender();window.scrollTo({top:0});}
-function tnOpenGarden(g){TN_GARDEN=g;TN_VIEW='garden';tnRender();window.scrollTo({top:0});}
-function tnToList(){TN_VIEW='list';tnRender();window.scrollTo({top:0});}
+/* 中の画面（記事・インスタ・園のページ・投稿）から戻るときは、ホームではなく一覧に戻す（2026-10-23）
+   ・中の画面を開くとき履歴を1つ積む → スマホの「戻る」（スワイプ・戻るボタン）でも一覧に戻る
+   ・一覧に戻ったら、開く前のスクロール位置（縦・インスタ欄の横）を復元する */
+var TN_HIST=false, TN_LIST_Y=0, TN_IG_X=0;
+function tnEnterSub(){
+  if(TN_VIEW==='list'){
+    TN_LIST_Y=window.scrollY||0;
+    var ig=document.getElementById('tnIg');TN_IG_X=ig?ig.scrollLeft:0;
+  }
+  if(!TN_HIST){try{history.pushState({tn:1},'');TN_HIST=true;}catch(e){}}
+}
+function tnShowList(){
+  TN_VIEW='list';tnRender();
+  var y=TN_LIST_Y,x=TN_IG_X;
+  var ig=document.getElementById('tnIg');if(ig){ig.scrollLeft=x;tnIgBar();}
+  window.scrollTo({top:y});
+  setTimeout(function(){window.scrollTo({top:y});var g=document.getElementById('tnIg');if(g){g.scrollLeft=x;tnIgBar();}},50);
+}
+function tnOpen(id){tnEnterSub();TN_CUR=id;TN_VIEW='article';tnRender();window.scrollTo({top:0});}
+function tnOpenGarden(g){tnEnterSub();TN_GARDEN=g;TN_VIEW='garden';tnRender();window.scrollTo({top:0});}
+function tnToList(){
+  if(TN_HIST){TN_HIST=false;try{history.back();return;}catch(e){}}
+  tnShowList();
+}
+window.addEventListener('popstate',function(){
+  var was=TN_HIST;TN_HIST=false;
+  if(typeof curScreen!=='undefined'&&curScreen==='tonari'&&TN_VIEW!=='list'){tnShowList();}
+  else if(was&&typeof curScreen!=='undefined'&&curScreen!=='tonari'){/* ホームに出たあとの残りの履歴：何もしない */}
+});
 function tnSetCat(c){TN_CAT=c;tnRenderResults();tnRenderChips();}
 function tnSetAge(a){TN_AGE=a;tnRenderResults();tnRenderChips();}
 function tnSetQ(v){TN_Q=String(v||'').trim();tnRenderResults();}
@@ -9015,7 +9041,7 @@ function tnIgPostGas(body){
 
 /* 投稿画面の入力（画面を描き直しても消えないように変数に持つ） */
 var TN_F={url:'',theme:'',cat:'',ages:{},note:'',err:'',busy:false};
-function tnIgStartPost(){TN_F={url:'',theme:'',cat:'',ages:{},note:'',err:'',busy:false};TN_VIEW='igpost';tnRender();window.scrollTo({top:0});}
+function tnIgStartPost(){tnEnterSub();TN_F={url:'',theme:'',cat:'',ages:{},note:'',err:'',busy:false};TN_VIEW='igpost';tnRender();window.scrollTo({top:0});}
 function tnIgNormUrl(v){
   var m=String(v||'').trim().match(/^https?:\/\/(?:www\.)?instagram\.com\/(?:[A-Za-z0-9_.]+\/)?(p|reel|tv)\/([A-Za-z0-9_-]+)/);
   return m?('https://www.instagram.com/'+m[1]+'/'+m[2]+'/'):'';
@@ -9105,7 +9131,7 @@ function tnIgBar(){
   var w=Math.max(12,el.clientWidth/el.scrollWidth*100),x=(el.scrollLeft/max)*(100-w);
   var t=bar.firstChild;t.style.width=w+'%';t.style.left=x+'%';
 }
-function tnOpenInsta(id){TN_IG_CUR=id;TN_VIEW='insta';tnRender();window.scrollTo({top:0});}
+function tnOpenInsta(id){tnEnterSub();TN_IG_CUR=id;TN_VIEW='insta';tnRender();window.scrollTo({top:0});}
 function tnInstaHTML(){
   var p=tnIgAll().filter(function(x){return x.id===TN_IG_CUR;})[0];
   var me=tnIgUser();
