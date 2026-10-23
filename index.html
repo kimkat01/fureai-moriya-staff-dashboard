@@ -401,7 +401,14 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-tonari .tnlike.on svg{fill:currentColor;}
 #screen-tonari .tnnocom{margin:10px 0 0;font-size:12px;color:var(--ink-soft);text-align:center;}
 /* 各園のインスタから（2026-10-16） */
-#screen-tonari .tnig{display:flex;gap:10px;overflow-x:auto;padding:0 2px 4px;-webkit-overflow-scrolling:touch;}
+#screen-tonari .tnig{display:flex;gap:10px;overflow-x:auto;padding:0 2px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+#screen-tonari .tnig::-webkit-scrollbar{display:none;}
+/* 見出しを2行に・横スクロールのバー（2026-10-23） */
+#screen-tonari .tnsec.tnsec2{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:2px;}
+#screen-tonari .tnigbar{position:relative;height:6px;margin:8px 2px 0;border-radius:3px;background:var(--line);overflow:hidden;}
+#screen-tonari .tnigbar i{position:absolute;top:0;left:0;height:100%;width:30%;border-radius:3px;background:var(--ink-soft);}
+#screen-tonari .tnigbar.tnoff{display:none;}
+#screen-tonari .tnigc b .tnigd{font-weight:400;color:var(--ink-soft);margin-left:4px;}
 #screen-tonari .tnigc{flex:0 0 140px;display:flex;flex-direction:column;gap:4px;padding:0;text-align:left;background:transparent;border:0;cursor:pointer;font-family:inherit;color:var(--ink);}
 #screen-tonari .tnigt{position:relative;width:140px;height:140px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:var(--sun-bg);color:var(--sun-ink);font-size:12px;font-weight:700;}
 #screen-tonari .tnigt img{width:100%;height:100%;object-fit:cover;display:block;}
@@ -8878,11 +8885,12 @@ function tnRender(){
     '<p class="tnlead round">ほかの園の保育を、<br>見てみよう。</p>'+
     '<p class="tnsub">グループ各園の環境づくり・手作り玩具・製作・あそびの様子を紹介しています。</p>'+
     tnInstaStripHTML()+
-    '<div class="tnflabel">カテゴリ</div><div class="tnchips" id="tnCatChips"></div>'+
     '<div id="tnResults"></div>'+
     '<p class="tnnote">記事を書けるのは、園長と園長が承認した職員です（記事の投稿機能は準備中）。<br>コメント欄はありません。気になることは自園の園長へ。</p>'+
   '</div>';
-  tnRenderChips();tnRenderResults();
+  TN_CAT='';TN_AGE=-1;TN_Q='';
+  tnRenderChips();tnRenderResults();tnIgBar();
+  setTimeout(tnIgBar,300);
 }
 function tnRenderChips(){
   var c=document.getElementById('tnCatChips'),a=document.getElementById('tnAgeChips');
@@ -9076,17 +9084,26 @@ function tnInstaSorted(){return tnIgAll().sort(function(a,b){var x=(a.date||'')+
 function tnInstaStripHTML(){
   var list=tnInstaSorted();
   var add=TN_IG_CAN?'<button type="button" class="tnigadd" onclick="tnIgStartPost()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>自園のインスタ投稿をのせる</button>':'';
-  var h='<div class="tnsec"><h3 class="round">各園のインスタから</h3><span>各園の公式アカウントより</span></div>';
+  var h='<div class="tnsec tnsec2"><h3 class="round">各園のインスタから</h3><span>各園の公式アカウントより</span></div>';
   if(!list.length)return h+'<div class="tnempty">各園のインスタ投稿を、順次ここに掲載していきます。</div>'+add;
-  return h+'<div class="tnig">'+list.map(function(p){
+  return h+'<div class="tnig" id="tnIg" onscroll="tnIgBar()">'+list.map(function(p){
     var emb=tnIgNormUrl(p.url);
     var t=p.img?'<img src="'+tnEsc(p.img)+'" alt="'+tnEsc(p.theme||'')+'" loading="lazy">'
       :('<span class="tnigph">'+TN_IG_ICO+'<span>'+tnEsc(p.cat||'インスタ')+'</span></span>'+
         (emb?'<iframe src="'+tnEsc(emb)+'embed/" title="'+tnEsc(p.theme||'インスタ投稿')+'" loading="lazy" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>':''));
     return '<button type="button" class="tnigc" onclick="tnOpenInsta(\''+p.id+'\')">'+
       '<span class="tnigt">'+t+'<span class="tnigb" aria-hidden="true">'+TN_IG_ICO+'</span></span>'+
-      '<b>'+tnEsc(tnShort(p.garden))+'</b><small>'+tnEsc(p.theme||'')+'</small></button>';
-  }).join('')+'</div>'+add;
+      '<b>'+tnEsc(tnShort(p.garden))+(p.date?'<span class="tnigd">'+tnDate(p.date)+'</span>':'')+'</b><small>'+tnEsc(p.theme||'')+'</small></button>';
+  }).join('')+'</div><div class="tnigbar" id="tnIgBar" aria-hidden="true"><i></i></div>'+add;
+}
+/* 横スクロールのバー：いまどのあたりを見ているかを下のバーで示す（2026-10-23） */
+function tnIgBar(){
+  var el=document.getElementById('tnIg'),bar=document.getElementById('tnIgBar');if(!el||!bar)return;
+  var max=el.scrollWidth-el.clientWidth;
+  if(max<=2){bar.classList.add('tnoff');return;}
+  bar.classList.remove('tnoff');
+  var w=Math.max(12,el.clientWidth/el.scrollWidth*100),x=(el.scrollLeft/max)*(100-w);
+  var t=bar.firstChild;t.style.width=w+'%';t.style.left=x+'%';
 }
 function tnOpenInsta(id){TN_IG_CUR=id;TN_VIEW='insta';tnRender();window.scrollTo({top:0});}
 function tnInstaHTML(){
