@@ -160,7 +160,7 @@ function openDay(name, iso) {
 $('btnSet').onclick = () => {
   let h = '<div class="row"><b style="font-size:17px">職員の設定</b><button type="button" class="btn2" id="sClose">閉じる</button></div>' +
     '<div class="muted">ふだんは何も入れなくて大丈夫です。区分は職員マスタの雇用区分から、有休・特休1日分の時間はその月の勤務日の平均から自動で決まります。<br>' +
-    '違うときだけ、ここで変えてください（変えるとすぐ保存され、自動より優先されます）。正規の駐車場（日割り対象）だけは、ここでチェックが必要です。</div>' +
+    '違うときだけ、ここで変えてください（変えるとすぐ保存され、自動より優先されます）。正規の駐車場（日割り対象）は、井波さん・登坂さんを固定で対象にしています。ほかに対象の人が増えたときだけチェックしてください。</div>' +
     '<div class="tblwrap setgrid"><table class="mt"><thead><tr><th>職員名</th><th>区分</th><th>駐車場 日割り（正規）</th><th>有休・特休1日分の時間</th><th></th></tr></thead><tbody>';
   SH.staff.forEach((s) => {
     const st = setOf(s.name), man = G.set[s.name] || {};
@@ -169,7 +169,7 @@ $('btnSet').onclick = () => {
     h += '<tr data-name="' + esc(s.name) + '"><td><b>' + esc(s.name) + '</b></td>' +
       '<td><select data-k="kubun"><option value=""' + (!man.kubun ? ' selected' : '') + '>' + esc(autoK) + '</option>' +
       ['パート', '正規', '対象外'].map((k) => '<option value="' + k + '"' + (man.kubun === k ? ' selected' : '') + '>' + k + '（手入力）</option>').join('') + '</select></td>' +
-      '<td><label><input type="checkbox" data-k="parking"' + (man.parking ? ' checked' : '') + ' style="height:20px;width:20px;vertical-align:middle"> 対象</label></td>' +
+      '<td><label><input type="checkbox" data-k="parking"' + (st.parking ? ' checked' : '') + (st.parkingFixed ? ' disabled' : '') + ' style="height:20px;width:20px;vertical-align:middle"> 対象' + (st.parkingFixed ? '（固定）' : '') + '</label></td>' +
       '<td><select data-k="yh">' + hourOpts(0, 10, hm.h) + '</select> 時間 <select data-k="ym">' + minOpts(hm.m) + '</select> 分' +
       '<div class="yauto" style="font-size:11px;color:#4a4a46">' + (+man.yukyuMin > 0 ? '手入力' : '0:00＝自動（平均 ' + fmtJP(st.avgMin) + '）') + '</div></td>' +
       '<td class="ok" style="font-size:12px;color:#1e7a45"></td></tr>';

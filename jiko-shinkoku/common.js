@@ -17,6 +17,8 @@ const JK = {
   LOCAL_KEY: 'jiko_shinkoku_demo_v1',
   // 職員マスタ（2026/10/04 取込）の写し。GASが使えるときは、GASが職員マスタを直接読んだ内容を優先する。
   // 雇用区分「正規」→正規、「非正規・派遣」→パート、対象外（育休など）がTRUE→対象外
+  // 正規職員のうち、駐車場が日割り対象の人（固定。事務の設定がなくても駐車場ボタンを出す）
+  PARKING_FIXED: ['井波美由紀', '登坂恵美子'],
   MASTER_FALLBACK: {
     '青木真登香': 'パート', '阿部佳奈子': 'パート', '伊﨑千亜紀': 'パート', '稲浪菫花': 'パート', '井波美由紀': '正規',
     '岩﨑愛': '正規', '植村郁子': 'パート', '内山典子': 'パート', '遠藤咲': '正規', '大川原昌子': 'パート',
@@ -38,7 +40,7 @@ function effSetting(name, G, staff, shift) {
   const kubunSrc = man.kubun ? '事務' : (mk ? '職員マスタ' : '初期値');
   const avg = staff && shift ? avgWorkMin(shift, staff) : 0;
   const yukyuMin = +man.yukyuMin > 0 ? +man.yukyuMin : avg;
-  return { kubun, kubunSrc, masterKubun: mk, parking: !!man.parking, yukyuMin, yukyuSrc: +man.yukyuMin > 0 ? '事務' : '自動', avgMin: avg };
+  return { kubun, kubunSrc, masterKubun: mk, parking: !!man.parking || JK.PARKING_FIXED.indexOf(nkey(name)) >= 0, parkingFixed: JK.PARKING_FIXED.indexOf(nkey(name)) >= 0, yukyuMin, yukyuSrc: +man.yukyuMin > 0 ? '事務' : '自動', avgMin: avg };
 }
 // その期間の勤務日の実働の平均（有休・特休1日分の時間に使う）
 function avgWorkMin(shift, staff) {
