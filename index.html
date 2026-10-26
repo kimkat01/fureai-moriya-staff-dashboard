@@ -9675,15 +9675,18 @@ function renderShift(){
     const f=document.getElementById('jk-frame');
     if(f&&f.dataset.name===staff[current].name)return;
   }
+  /* 正規職員（駐車場の対象でない人）には「給食・駐車場」タブを出さない（2026-10-26） */
+  const kpSw=kpShow(),kpTab=kpSw.meal||kpSw.park;
+  if(!kpTab&&shiftTab==='kp')shiftTab='me';
   const host=document.getElementById('screen-shift');
   host.innerHTML=`<div class="seg"><button id="tab-me" onclick="shiftTab='me';renderShift()">自分のシフト</button>
     <button id="tab-all" onclick="shiftTab='all';renderShift()">園ぜんたい</button>
-    <button id="tab-kp" onclick="shiftTab='kp';renderShift()">給食・駐車場</button>
+    ${kpTab?`<button id="tab-kp" onclick="shiftTab='kp';renderShift()">${kpSw.meal?'給食・駐車場':'駐車場'}</button>`:''}
     <button id="tab-jk" onclick="if(shiftTab!=='jk')sdLog('自己申告');shiftTab='jk';renderShift()">自己申告</button></div>
     <div id="sh-body"></div>`;
   document.getElementById('tab-me').classList.toggle('on',shiftTab==='me');
   document.getElementById('tab-all').classList.toggle('on',shiftTab==='all');
-  document.getElementById('tab-kp').classList.toggle('on',shiftTab==='kp');
+  if(kpTab)document.getElementById('tab-kp').classList.toggle('on',shiftTab==='kp');
   document.getElementById('tab-jk').classList.toggle('on',shiftTab==='jk');
   document.getElementById('sh-body').innerHTML = shiftTab==='me'?meHTML():shiftTab==='kp'?kphHTML():shiftTab==='jk'?jkHTML():allHTML();
   if(shiftTab==='kp')loadKPHist();
@@ -9760,6 +9763,7 @@ function kphHTML(){
     if(KPH_ERR===key)return nav+`<div class="kph-msg">記録を読み込めませんでした。<br>電波の良いところで、もう一度開いてください。<br><button onclick="kphRetry()">もう一度読み込む</button></div>`;
     return nav+`<div class="kph-msg">読み込み中…</div>`;
   }
+  const sw=kpShow();   /* 井波さん・登坂さん（正規・駐車場あり）は駐車場の列だけ */
   const todayIso=kpToday(),W=["日","月","火","水","木","金","土"];
   let rows="";
   for(let x=new Date(p.s);x<=p.e;x.setDate(x.getDate()+1)){
@@ -9770,12 +9774,12 @@ function kphHTML(){
       ?`<button class="kph-ed ${on?'on':''}" onclick="kphToggle('${iso}','${topic}')" aria-pressed="${!!on}">${on?txt:'ー'}</button>`
       :(on?`<span class="kph-on">${txt}</span>`:'<span class="kph-off">ー</span>');
     rows+=`<tr class="${cls}"><td class="d">${x.getMonth()+1}/${x.getDate()} <span class="${w===6?'sat':w===0?'sun':''}">(${W[w]})</span></td>
-      <td>${mk(r.meal,'食べた','meal')}</td><td>${mk(r.park,'使った','park')}</td></tr>`;
+      ${sw.meal?`<td>${mk(r.meal,'食べた','meal')}</td>`:''}${sw.park?`<td>${mk(r.park,'使った','park')}</td>`:''}</tr>`;
   }
-  return nav+`<div class="kph-sum"><div><b>${d.meal||0}<small style="font-size:13px"> 回</small></b><span>🍚 給食を食べた</span></div>
-    <div><b>${d.park||0}<small style="font-size:13px"> 回</small></b><span>🚗 駐車場を使った</span></div></div>
-    <table class="kph-tbl"><thead><tr><th style="text-align:left;padding-left:12px">日付</th><th>🍚 給食</th><th>🚗 駐車場</th></tr></thead><tbody>${rows}</tbody></table>
-    <p class="kph-note">・「自分のシフト」の「きょうの給食／駐車場」で押した内容が、この表に入ります。<br>・${KPH_OFS===0?'今月度（16日〜きょう）の日は、表のボタンを押すと直せます（押すたびに切りかわります）。':'前の月度の記録は、ここでは直せません。違っているときは園長に伝えてください。'}<br>・この回数が、月末の連絡票（給食・駐車場の回数）に使われます。</p>`;
+  return nav+`<div class="kph-sum"${sw.meal&&sw.park?'':' style="grid-template-columns:1fr"'}>${sw.meal?`<div><b>${d.meal||0}<small style="font-size:13px"> 回</small></b><span>🍚 給食を食べた</span></div>`:''}
+    ${sw.park?`<div><b>${d.park||0}<small style="font-size:13px"> 回</small></b><span>🚗 駐車場を使った</span></div>`:''}</div>
+    <table class="kph-tbl"><thead><tr><th style="text-align:left;padding-left:12px">日付</th>${sw.meal?'<th>🍚 給食</th>':''}${sw.park?'<th>🚗 駐車場</th>':''}</tr></thead><tbody>${rows}</tbody></table>
+    <p class="kph-note">・「自分のシフト」の「${sw.meal?'きょうの給食／駐車場':'きょうの駐車場'}」で押した内容が、この表に入ります。<br>・${KPH_OFS===0?'今月度（16日〜きょう）の日は、表のボタンを押すと直せます（押すたびに切りかわります）。':'前の月度の記録は、ここでは直せません。違っているときは園長に伝えてください。'}<br>・この回数が、月末の連絡票（給食・駐車場の回数）に使われます。</p>`;
 }
 /* 一覧表から過去の日を直す（今の月度だけ）。保存は「きょう」のボタンと同じ action=save に日付をつけて送る */
 function kphToggle(iso,topic){
