@@ -8425,6 +8425,8 @@ function findLoginStaffIndex(){
 }
 function goShiftLogin(){
   document.getElementById('brandtxt').textContent='シフト管理';
+  // 本部閲覧モード（本部ダッシュボードから ?view=honbu で開いたとき）はログインしていないので、職員の名前一覧から選んで見る
+  if(window.SD_HONBU_VIEW){ renderShiftLogin(); show('shiftlogin'); return; }
   var i=findLoginStaffIndex();
   if(i>=0){pickShift(i);return;}
   renderShiftNotFound();
