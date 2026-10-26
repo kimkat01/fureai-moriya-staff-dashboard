@@ -9670,17 +9670,51 @@ function renderHome(){
 
 /* SHIFT screen (personal + facility) */
 function renderShift(){
+  /* 自己申告タブを表示中で、同じ人の画面がもう開いていれば作り直さない（入力途中の内容が消えないように） */
+  if(shiftTab==='jk'&&current!==null){
+    const f=document.getElementById('jk-frame');
+    if(f&&f.dataset.name===staff[current].name)return;
+  }
   const host=document.getElementById('screen-shift');
   host.innerHTML=`<div class="seg"><button id="tab-me" onclick="shiftTab='me';renderShift()">自分のシフト</button>
     <button id="tab-all" onclick="shiftTab='all';renderShift()">園ぜんたい</button>
-    <button id="tab-kp" onclick="shiftTab='kp';renderShift()">給食・駐車場</button></div>
+    <button id="tab-kp" onclick="shiftTab='kp';renderShift()">給食・駐車場</button>
+    <button id="tab-jk" onclick="if(shiftTab!=='jk')sdLog('自己申告');shiftTab='jk';renderShift()">自己申告</button></div>
     <div id="sh-body"></div>`;
   document.getElementById('tab-me').classList.toggle('on',shiftTab==='me');
   document.getElementById('tab-all').classList.toggle('on',shiftTab==='all');
   document.getElementById('tab-kp').classList.toggle('on',shiftTab==='kp');
-  document.getElementById('sh-body').innerHTML = shiftTab==='me'?meHTML():shiftTab==='kp'?kphHTML():allHTML();
+  document.getElementById('tab-jk').classList.toggle('on',shiftTab==='jk');
+  document.getElementById('sh-body').innerHTML = shiftTab==='me'?meHTML():shiftTab==='kp'?kphHTML():shiftTab==='jk'?jkHTML():allHTML();
   if(shiftTab==='kp')loadKPHist();
 }
+
+/* ===== 自己申告（試用版・2026-10-26追加） =====
+   シフト管理の「自己申告」タブに、jiko-shinkoku/ の職員用ページを埋め込む。
+   ログインした職員の名前を渡すので、名前を選ぶ画面は出ない（ほかの人の申告は開けない）。
+   本部閲覧モード（ログインしていない）では申告できないので、事務用ページへの案内だけ出す。 */
+function jkHTML(){
+  if(current===null)return '';
+  if(window.SD_HONBU_VIEW){
+    return '<div class="jk-honbu" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:10px;font-size:14px;line-height:1.7">'+
+      '本部閲覧モードでは、自己申告の入力画面は表示しません。<br>申告の状況は事務用ページで確認できます。<br>'+
+      '<a href="jiko-shinkoku/encho.html" target="_blank" rel="noopener" style="font-weight:700">事務用ページをひらく</a></div>';
+  }
+  const nm=staff[current].name;
+  const esc=String(nm).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return '<iframe id="jk-frame" data-name="'+esc+'" title="自己申告" src="jiko-shinkoku/?embed=1&amp;name='+encodeURIComponent(nm)+'"'+
+    ' style="display:block;width:100%;height:640px;border:0;margin-top:6px;background:transparent"></iframe>';
+}
+/* 埋め込んだ自己申告ページからの知らせ（高さ合わせ・投稿の記録・画面の先頭へ） */
+window.addEventListener('message',function(e){
+  if(e.origin!==location.origin)return;
+  const d=e.data;
+  if(!d||d.src!=='jiko')return;
+  const f=document.getElementById('jk-frame');
+  if(d.type==='h'&&f){f.style.height=Math.max(320,+d.h||0)+'px';}
+  else if(d.type==='saved'){sdLog('自己申告','投稿');}
+  else if(d.type==='top'){window.scrollTo({top:0,behavior:'smooth'});}
+});
 
 /* ===== 給食・駐車場の1ヶ月一覧（2026-10-08） =====
    自分が「食べた」「使った」にした日を、連絡票と同じ 16日〜翌月15日 の1ヶ月分で一覧表示する。

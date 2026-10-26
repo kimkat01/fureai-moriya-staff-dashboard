@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>自己申告（試用版）｜ふれあいしおどめ保育園</title>
 <link rel="stylesheet" href="common.css">
+<style>
+/* 職員ダッシュボードのシフト管理「自己申告」タブの中に表示するとき（?embed=1）
+   見出しの帯を消し、背景をダッシュボードになじませる（2026-10-26追加） */
+body.embed{background:transparent}
+body.embed .hdr{display:none}
+body.embed .wrap{padding:4px 0 24px}
+</style>
 </head>
 <body>
 <div class="hdr">
@@ -57,6 +64,28 @@
 <script>
 let SH = null, ME = null, STAFF = null, SET = null, RECS = {}, CONF = null, CUR = 0;
 
+/* 職員ダッシュボードから開いたとき（2026-10-26追加）
+   ・?embed=1 … シフト管理の「自己申告」タブの中に表示する
+   ・?name=○○ … ログインした職員の名前。名前を選ぶ画面は出さず、名前も変えられない
+   ・名前を付けずにこのページを直接開いたときは、今までどおり名前を選ぶ（試用版） */
+const QP = new URLSearchParams(location.search);
+const EMBED = QP.get('embed') === '1' && window.parent !== window;
+const QNAME = QP.get('name') || '';
+if (EMBED) document.body.classList.add('embed');
+function toParent(msg) {
+  if (!EMBED) return;
+  try { window.parent.postMessage(Object.assign({ src: 'jiko' }, msg), location.origin); } catch (e) {}
+}
+function sendHeight() {
+  const w = document.querySelector('.wrap');
+  if (w) toParent({ type: 'h', h: Math.ceil(w.getBoundingClientRect().bottom + window.scrollY) });
+}
+if (EMBED) {
+  if (window.ResizeObserver) new ResizeObserver(sendHeight).observe(document.querySelector('.wrap'));
+  window.addEventListener('load', sendHeight);
+}
+function goTop() { if (EMBED) toParent({ type: 'top' }); else window.scrollTo(0, 0); }
+
 function $(id) { return document.getElementById(id); }
 function show(id, on) { $(id).classList.toggle('hidden', !on); }
 
@@ -69,8 +98,17 @@ async function init() {
   }
   $('fac').textContent = SH.facility + '　' + SH.label;
   $('whoSel').innerHTML = '<option value="">選んでください</option>' + SH.staff.map((s) => '<option>' + esc(s.name) + '</option>').join('');
-  let saved = ''; try { saved = localStorage.getItem('jiko_me') || ''; } catch (e) {}
   $('loading').classList.add('hidden');
+  if (QNAME) {
+    // ダッシュボードのログイン名で開く（空白の有無は区別しない）
+    const hit = SH.staff.find((s) => nkey(s.name) === nkey(QNAME));
+    $('whoChange').classList.add('hidden');
+    if (hit) { start(hit.name); return; }
+    show('fatal', true);
+    $('fatal').textContent = '「' + QNAME + '」さんのお名前が、今月のシフト表に見つかりませんでした。園長にお知らせください。';
+    return;
+  }
+  let saved = ''; try { saved = localStorage.getItem('jiko_me') || ''; } catch (e) {}
   if (saved && SH.staff.some((s) => s.name === saved)) start(saved); else show('who', true);
 }
 $('whoOk').onclick = () => {
@@ -116,7 +154,7 @@ function drawDay() {
   renderForm($('form'), {
     pid: SH.pid, name: ME, kubun: kubun(), parking: parking(), date: d, sh: STAFF.shifts[d.iso],
     rec: RECS[d.iso] || null, locked: !!CONF, by: '本人',
-    onSaved: (rec) => { RECS[d.iso] = rec; drawDay(); drawList(); flash(); }
+    onSaved: (rec) => { RECS[d.iso] = rec; drawDay(); drawList(); flash(); toParent({ type: 'saved' }); }
   });
 }
 function flash() {
@@ -142,7 +180,7 @@ function drawList() {
   if (b) b.onclick = async () => {
     if (t.missing.length) { $('confErr').textContent = 'まだ申告していない日が ' + t.missing.length + '日 あります'; return; }
     if (!confirm(SH.label + 'の申告を確定して提出します。よろしいですか？')) return;
-    try { await api('confirm', { pid: SH.pid, name: ME }); CONF = new Date().toISOString(); drawList(); drawDay(); }
+    try { await api('confirm', { pid: SH.pid, name: ME }); CONF = new Date().toISOString(); drawList(); drawDay(); toParent({ type: 'saved' }); }
     catch (e) { $('confErr').textContent = e.message; }
   };
 }
@@ -150,7 +188,7 @@ $('table').onclick = (e) => {
   const tr = e.target.closest('tr[data-date]');
   if (!tr) return;
   CUR = SH.dates.findIndex((d) => d.iso === tr.dataset.date);
-  setTab('day'); drawDay(); window.scrollTo(0, 0);
+  setTab('day'); drawDay(); goTop();
 };
 $('prevDay').onclick = () => { if (CUR > 0) { CUR--; drawDay(); } };
 $('nextDay').onclick = () => { if (CUR < SH.dates.length - 1) { CUR++; drawDay(); } };
