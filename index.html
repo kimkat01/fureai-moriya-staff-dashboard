@@ -9797,7 +9797,21 @@ function kphToggle(iso,topic){
   const b=document.getElementById('sh-body');if(b)b.innerHTML=kphHTML();
 }
 const KP_ON={meal:"食べた",park:"使った"},KP_OFF={meal:"食べていない",park:"使っていない"};
+/* 正規職員は「きょうの給食」「きょうの駐車場」を出さない（2026-10-26）。
+   ただし、駐車場が日割りの正規職員（KP_PARK_FIXED）には「きょうの駐車場」だけ出す。
+   名簿は職員マスタ（2026/10/04 取込）の雇用区分「正規」。自己申告（jiko-shinkoku/common.js）の写しと同じ。
+   職員が入れ替わったら、ここの名前を直す。 */
+const KP_SEIKI=['井波美由紀','岩﨑愛','遠藤咲','勝村絵里菜','霜田侑花','背黒美波','高橋歩実','高橋佳子','登坂恵美子','成田麻里','橋本奈千加','渡邊裕里子'];
+const KP_PARK_FIXED=['井波美由紀','登坂恵美子'];
+function kpShow(){
+  const nm=current!==null?normName(staff[current].name):'';
+  const has=list=>list.some(n=>normName(n)===nm);
+  if(!nm||!has(KP_SEIKI))return {meal:true,park:true};
+  return {meal:false,park:has(KP_PARK_FIXED)};
+}
 function kpHTML(){
+  const sw=kpShow();
+  if(!sw.meal&&!sw.park)return '';
   const row=(topic,icon,label)=>{
     const on=KP_STATE[topic];
     return `<div class="kp-row">
@@ -9809,8 +9823,8 @@ function kpHTML(){
     </div>`;
   };
   return `<div class="kp-wrap">
-    ${row('meal','🍚','きょうの給食')}
-    ${row('park','🚗','きょうの駐車場')}
+    ${sw.meal?row('meal','🍚','きょうの給食'):''}
+    ${sw.park?row('park','🚗','きょうの駐車場'):''}
     <div class="kp-note" id="kp-note"></div>
   </div>`;
 }
