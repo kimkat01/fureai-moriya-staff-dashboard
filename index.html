@@ -215,6 +215,8 @@ main{padding:16px}
 .kph-tbl tr.fut td{color:var(--off-ink);}
 .kph-on{display:inline-block;min-width:54px;padding:2px 8px;border-radius:999px;background:var(--mid-bg);color:var(--mid-ink);font-weight:800;font-size:13px;}
 .kph-off{color:var(--off);font-weight:700;}
+.kph-ed{min-width:72px;min-height:36px;padding:4px 8px;border-radius:999px;border:1.5px solid var(--line);background:#fff;color:var(--off-ink);font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;}
+.kph-ed.on{background:var(--mid-bg);border-color:var(--mid);color:var(--mid-ink);}
 .kph-note{font-size:12px;color:var(--ink-soft);line-height:1.6;margin:10px 2px 4px;}
 .kph-msg{padding:24px 10px;text-align:center;color:var(--ink-soft);font-size:14px;line-height:1.7;}
 .kph-msg button{margin-top:8px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 14px;font-family:inherit;font-size:14px;cursor:pointer;}
@@ -9680,7 +9682,8 @@ function renderShift(){
 
 /* ===== 給食・駐車場の1ヶ月一覧（2026-10-08） =====
    自分が「食べた」「使った」にした日を、連絡票と同じ 16日〜翌月15日 の1ヶ月分で一覧表示する。
-   ・見るだけ（過去の日の修正は職員自身ではできない。違っていたら園長へ）
+   ・今の月度（16日〜今日）は、表のボタンで過去の日も本人が直せる（2026-10-26〜）
+   ・前の月度は見るだけ（違っていたら園長へ）
    ・データは給食駐車場記録GASの action=history から取る */
 let KPH_OFS=0;            /* 0＝今の月度、-1＝前の月度 … */
 const KPH_CACHE={};       /* 月度の開始日 → 取得結果 */
@@ -9726,14 +9729,36 @@ function kphHTML(){
   for(let x=new Date(p.s);x<=p.e;x.setDate(x.getDate()+1)){
     const iso=_kpLocalDateStr(x),r=d.days[iso]||{},w=x.getDay();
     const fut=iso>todayIso,cls=iso===todayIso?'now':fut?'fut':'';
-    const mk=(on,txt)=>fut?'':on?`<span class="kph-on">${txt}</span>`:'<span class="kph-off">ー</span>';
+    const ed=KPH_OFS===0&&!fut;   /* 今の月度の、今日までの日は直せる */
+    const mk=(on,txt,topic)=>fut?'':ed
+      ?`<button class="kph-ed ${on?'on':''}" onclick="kphToggle('${iso}','${topic}')" aria-pressed="${!!on}">${on?txt:'ー'}</button>`
+      :(on?`<span class="kph-on">${txt}</span>`:'<span class="kph-off">ー</span>');
     rows+=`<tr class="${cls}"><td class="d">${x.getMonth()+1}/${x.getDate()} <span class="${w===6?'sat':w===0?'sun':''}">(${W[w]})</span></td>
-      <td>${mk(r.meal,'食べた')}</td><td>${mk(r.park,'使った')}</td></tr>`;
+      <td>${mk(r.meal,'食べた','meal')}</td><td>${mk(r.park,'使った','park')}</td></tr>`;
   }
   return nav+`<div class="kph-sum"><div><b>${d.meal||0}<small style="font-size:13px"> 回</small></b><span>🍚 給食を食べた</span></div>
     <div><b>${d.park||0}<small style="font-size:13px"> 回</small></b><span>🚗 駐車場を使った</span></div></div>
     <table class="kph-tbl"><thead><tr><th style="text-align:left;padding-left:12px">日付</th><th>🍚 給食</th><th>🚗 駐車場</th></tr></thead><tbody>${rows}</tbody></table>
-    <p class="kph-note">・「自分のシフト」の「きょうの給食／駐車場」で押した内容が、この表に入ります。<br>・過去の日の記録は、ここでは直せません。違っているときは園長に伝えてください。<br>・この回数が、月末の連絡票（給食・駐車場の回数）に使われます。</p>`;
+    <p class="kph-note">・「自分のシフト」の「きょうの給食／駐車場」で押した内容が、この表に入ります。<br>・${KPH_OFS===0?'今月度（16日〜きょう）の日は、表のボタンを押すと直せます（押すたびに切りかわります）。':'前の月度の記録は、ここでは直せません。違っているときは園長に伝えてください。'}<br>・この回数が、月末の連絡票（給食・駐車場の回数）に使われます。</p>`;
+}
+/* 一覧表から過去の日を直す（今の月度だけ）。保存は「きょう」のボタンと同じ action=save に日付をつけて送る */
+function kphToggle(iso,topic){
+  if(!KP_ENDPOINT||current===null)return;
+  const p=kphPeriod(0),key=staff[current].name+'|'+p.start,d=KPH_CACHE[key];
+  if(!d||iso>kpToday()||iso<p.start)return;
+  const r=Object.assign({meal:false,park:false},d.days[iso]||{});
+  r[topic]=!r[topic];
+  d.days[iso]=r;
+  d[topic]=Math.max(0,(d[topic]||0)+(r[topic]?1:-1));
+  if(iso===kpToday()){KP_STATE.meal=!!r.meal;KP_STATE.park=!!r.park;}
+  _kpPing(KP_ENDPOINT+"?action=save"
+    +"&date="+encodeURIComponent(iso)
+    +"&facility="+encodeURIComponent(kpFacilityId())
+    +"&name="+encodeURIComponent(staff[current].name)
+    +"&meal="+(r.meal?1:0)+"&park="+(r.park?1:0)
+    +"&_="+Date.now());
+  sdLog('シフト管理','投稿');
+  const b=document.getElementById('sh-body');if(b)b.innerHTML=kphHTML();
 }
 const KP_ON={meal:"食べた",park:"使った"},KP_OFF={meal:"食べていない",park:"使っていない"};
 function kpHTML(){
