@@ -12,7 +12,7 @@ const JK = {
   SHIFT_URL: '../index.html',         // シフトデータを読む元（職員ダッシュボード本体）
   // 2026-10-27：シフトの読み込み元（'file'＝上の index.html の埋め込み／'gas'＝ログイン用GASから受け取る）
   //   切り替え日に職員ダッシュボード（../index.html）と一緒に 'gas' にする。?shiftsrc=gas で試せる
-  SHIFT_SRC: 'file',
+  SHIFT_SRC: 'gas',
   LOGIN_GAS: 'https://script.google.com/macros/s/AKfycbwnTzHQ5XdHPPLdf9QnWJLA-Dc7oBIYzfr1MfFd-Uunyarw0QWc48WzzAme6hR1muBisg/exec',
   GARDEN_NAME: 'ふれあいしおどめ保育園',
   MIN_STEP: 15,                       // 分の刻み（1・5・10・15 など）
