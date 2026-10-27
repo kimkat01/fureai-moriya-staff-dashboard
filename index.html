@@ -9676,7 +9676,9 @@ function renderShift(){
     if(f&&f.dataset.name===staff[current].name)return;
   }
   /* 正規職員（駐車場の対象でない人）には「給食・駐車場」タブを出さない（2026-10-26） */
-  const kpSw=kpShow(),kpTab=kpSw.meal||kpSw.park;
+  /* 2026-10-27：「給食・駐車場」タブは全員分外した（給食・駐車場は自己申告タブで申告・確認する）。
+     戻すときは下の false を kpSw.meal||kpSw.park にする。 */
+  const kpSw=kpShow(),kpTab=false;
   if(!kpTab&&shiftTab==='kp')shiftTab='me';
   const host=document.getElementById('screen-shift');
   host.innerHTML=`<div class="seg"><button id="tab-me" onclick="shiftTab='me';renderShift()">自分のシフト</button>
