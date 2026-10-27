@@ -654,6 +654,20 @@ tbody tr.me .namecol{color:var(--brand)}
 </div>
 
 <script>
+/* ===== 2026-10-27：シフトの読み込み元（セキュリティ対策） =====
+   SD_SHIFT_SRC = 'file' … 今までどおり、このページに埋め込んだシフト（下の DATA）を使う
+   SD_SHIFT_SRC = 'gas'  … ログイン用GASから、ログインした人の園のシフトだけを受け取る（埋め込みは使わない）
+                           受け取ったシフトはこのスマホに保存し、次からはすぐ表示する（裏で最新を確認）
+   切り替え日（パスワード一斉再発行の日）に 'gas' にする。それまでは URL に ?shiftsrc=gas を付けると試せる
+   ※ 共通版（kimkat01/staff-dashboard の index.html）と同じ仕組み */
+window.SD_SHIFT_SRC = (function(){
+  var DEFAULT_SRC = 'file';   // ← 切り替え日に 'gas' にする
+  try{ var q = new URLSearchParams(location.search).get('shiftsrc'); if(q === 'gas' || q === 'file') return q; }catch(e){}
+  return DEFAULT_SRC;
+})();
+window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
+</script>
+<script>
 (function(){
   // ★★★ ここに、GASをデプロイして発行された「.../exec」で終わるURLを貼り付けてください ★★★
   var GAS_URL = 'https://script.google.com/macros/s/AKfycbwnTzHQ5XdHPPLdf9QnWJLA-Dc7oBIYzfr1MfFd-Uunyarw0QWc48WzzAme6hR1muBisg/exec';
@@ -665,11 +679,17 @@ tbody tr.me .namecol{color:var(--brand)}
   var SESSION_KEY = 'sd_pin_login__' + (GARDEN || 'default');
   var pgLoginId = null;
   var pgPasswordUsedToLogin = null;
+  var pgToken = '';   // 2026-10-27：ログインで受け取った通行証（パスワード変更後のセッションにも使う）
+  var pgRole = '';
 
   var gateEl = document.getElementById('pinGate');
   document.getElementById('pgFac').textContent = GARDEN || '（園名が設定されていないURLです）';
 
-  function hideGate(){ gateEl.style.display='none'; document.body.style.overflow=''; }
+  function hideGate(){ gateEl.style.display='none'; document.body.style.overflow=''; if(window.sdShiftSync) setTimeout(window.sdShiftSync, 0); }
+  function saveHonbuToken(role, token){
+    // 本部アカウントの通行証は、本部閲覧モード（どの園でも）で使えるように別にも保存する
+    if(role === '本部' && token){ try{ localStorage.setItem('sd_honbu_token', JSON.stringify({ token:token, at:Date.now() })); }catch(e){} }
+  }
 
   var saved = null;
   try{ saved = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }catch(e){}
@@ -682,7 +702,9 @@ tbody tr.me .namecol{color:var(--brand)}
       if(_hv && Date.now()-_hv < 7*24*60*60*1000) window.SD_HONBU_VIEW = true;
     }
   }catch(e){}
-  if(window.SD_HONBU_VIEW || (saved && saved.garden === GARDEN && saved.name)){
+  // 2026-10-27：GASモードの本部閲覧は、本部アカウントの通行証があるときだけログインを飛ばす
+  var honbuOk = window.SD_HONBU_VIEW && (window.SD_SHIFT_SRC !== 'gas' || (function(){ try{ return !!JSON.parse(localStorage.getItem('sd_honbu_token')||'null'); }catch(e){ return false; } })());
+  if(honbuOk || (saved && saved.garden === GARDEN && saved.name)){
     hideGate();
   } else {
     document.body.style.overflow = 'hidden';
@@ -709,13 +731,16 @@ tbody tr.me .namecol{color:var(--brand)}
         if(data && data.ok){
           pgLoginId = id;
           pgPasswordUsedToLogin = pw;
+          pgToken = data.token || '';
+          pgRole = data.role || '';
+          saveHonbuToken(pgRole, pgToken);
           if(data.mustChangePassword){
             document.getElementById('pgLoginStep').style.display = 'none';
             document.getElementById('pgChangeStep').style.display = 'block';
             document.getElementById('pgNewPassword').focus();
             // 変更完了まではセッションを保存しない（毎回パスワード変更を求めるため）
           } else {
-            try{ localStorage.setItem(SESSION_KEY, JSON.stringify({ garden:GARDEN, name:data.name, loginId:id, token:data.token })); }catch(e){}
+            try{ localStorage.setItem(SESSION_KEY, JSON.stringify({ garden:GARDEN, name:data.name, loginId:id, token:data.token, role:data.role || '' })); }catch(e){}
             hideGate();
             if(typeof sdLog === 'function') sdLog('ホーム');   // 利用状況：ログインした記録
           }
@@ -744,7 +769,8 @@ tbody tr.me .namecol{color:var(--brand)}
       .then(function(data){
         btn.disabled = false; btn.textContent = 'このパスワードに設定する';
         if(data && data.ok){
-          try{ localStorage.setItem(SESSION_KEY, JSON.stringify({ garden:GARDEN, name:data.name, loginId:pgLoginId, token:Date.now()+'' })); }catch(e){}
+          // 2026-10-27：通行証はログインのときに受け取った本物を使う（以前は日時の数字を入れていた）
+          try{ localStorage.setItem(SESSION_KEY, JSON.stringify({ garden:GARDEN, name:data.name, loginId:pgLoginId, token:pgToken || (Date.now()+''), role:pgRole })); }catch(e){}
           hideGate();
           if(typeof sdLog === 'function') sdLog('ホーム');   // 利用状況：ログインした記録
         } else {
@@ -1148,6 +1174,16 @@ tbody tr.me .namecol{color:var(--brand)}
 </div>
 
 <script src="https://kimkat01.github.io/staff-dashboard/docs/manuals.js"></script>
+<script>
+/* 2026-10-27：GASモードでは、前回GASから受け取って保存したシフトを使う（下の埋め込みは使わない） */
+(function(){
+  if(window.SD_SHIFT_SRC !== 'gas') return;
+  try{
+    var c = JSON.parse(localStorage.getItem(window.SD_SHIFT_CACHE_PREFIX + 'fureai_shiodome') || 'null');
+    if(c && c.key === 'fureai_shiodome' && c.data) window.SHIFT_OVERRIDE = c.data;
+  }catch(e){}
+})();
+</script>
 <script>
 const DATA = {
  "facility": "ふれあいしおどめ保育園",
@@ -8325,6 +8361,13 @@ const DATA = {
  "uqGarden": "ふれあいしおどめ保育園",
  "domeKey": "fureai_shiodome"
 };
+/* 2026-10-27：GASモードでは埋め込みのシフトを使わず、保存してあるシフト（無ければ空＝読み込み中）にする */
+(function(){
+  if(window.SD_SHIFT_SRC !== 'gas') return;
+  var ov = window.SHIFT_OVERRIDE;
+  if(ov && typeof ov === 'object' && Array.isArray(ov.staff)){ Object.assign(DATA, ov); return; }
+  Object.assign(DATA, { period:{ label:'', start:'', end:'' }, today:'', dates:[], staff:[] });
+})();
 function _todayLocalStr(d){
   const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
   return y+'-'+m+'-'+day;
@@ -8425,6 +8468,11 @@ function findLoginStaffIndex(){
 }
 function goShiftLogin(){
   document.getElementById('brandtxt').textContent='シフト管理';
+  // 2026-10-27：GASからシフトを受け取っている途中
+  if(!staff.length && window.SD_SHIFT_LOADING){
+    document.getElementById('screen-shiftlogin').innerHTML='<div class="login"><div class="login-card"><h2 class="round">シフト管理</h2><p class="login-hint"><b>シフトを読み込んでいます…</b><br>少しお待ちください。</p><button class="pin-btn" onclick="goHome()">ホームに戻る</button></div></div>';
+    show('shiftlogin'); return;
+  }
   // 本部閲覧モード（本部ダッシュボードから ?view=honbu で開いたとき）はログインしていないので、職員の名前一覧から選んで見る
   if(window.SD_HONBU_VIEW){ renderShiftLogin(); show('shiftlogin'); return; }
   var i=findLoginStaffIndex();
@@ -10000,6 +10048,62 @@ renderHome();goHome();sdLog('ホーム');
   // 有給チェッカー：本部閲覧モードで開く（職員を選んで見るだけ・申請は送らない。仕組みは uqcheck/staff_standalone.html 側）
   var _uqUrl = window.uqUrl;
   window.uqUrl = function(){ return _uqUrl() + '&view=honbu'; };
+})();
+</script>
+<script>
+/* ===== 2026-10-27：シフトをログイン用GASから受け取る（SD_SHIFT_SRC='gas' のときだけ動く。共通版と同じ仕組み） ===== */
+(function(){
+  if(window.SD_SHIFT_SRC !== 'gas') return;
+  var LOGIN_GAS = 'https://script.google.com/macros/s/AKfycbwnTzHQ5XdHPPLdf9QnWJLA-Dc7oBIYzfr1MfFd-Uunyarw0QWc48WzzAme6hR1muBisg/exec';
+  var G = { key:'fureai_shiodome', name:'ふれあいしおどめ保育園' };
+  var CKEY = window.SD_SHIFT_CACHE_PREFIX + G.key;
+  var SKEY = 'sd_pin_login__' + G.name;
+  var busy = false;
+  window.SD_SHIFT_LOADING = !window.SHIFT_OVERRIDE;
+  function readJson(k){ try{ return JSON.parse(localStorage.getItem(k) || 'null'); }catch(e){ return null; } }
+  function pickToken(){
+    var s = readJson(SKEY);
+    if(s && s.token) return { token:s.token, from:'session' };
+    var h = readJson('sd_honbu_token');
+    if(window.SD_HONBU_VIEW && h && h.token) return { token:h.token, from:'honbu' };
+    return null;
+  }
+  window.sdShiftSync = function(){
+    if(busy) return;
+    var t = pickToken();
+    if(!t) return;
+    busy = true;
+    fetch(LOGIN_GAS, { method:'POST', body: JSON.stringify({ action:'shift', token:t.token, garden:G.name }), redirect:'follow' })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        busy = false;
+        if(res && res.error === 'auth'){
+          try{
+            localStorage.removeItem(CKEY);
+            if(t.from === 'session') localStorage.removeItem(SKEY); else localStorage.removeItem('sd_honbu_token');
+          }catch(e){}
+          location.reload();
+          return;
+        }
+        if(!res || !res.ok) return;
+        var cur = readJson(CKEY);
+        var curStr = cur && cur.data ? JSON.stringify(cur.data) : '';
+        if(!res.data){
+          window.SD_SHIFT_LOADING = false;
+          if(cur){ try{ localStorage.removeItem(CKEY); }catch(e){} location.reload(); }
+          return;
+        }
+        var newStr = JSON.stringify(res.data);
+        if(newStr === curStr) return;
+        try{ localStorage.setItem(CKEY, JSON.stringify({ key:G.key, at:Date.now(), data:res.data })); }catch(e){}
+        var saved = readJson(CKEY);
+        if(saved && saved.data && JSON.stringify(saved.data) === newStr){ location.reload(); return; }
+        window.SD_SHIFT_LOADING = false;
+      })
+      .catch(function(){ busy = false; });
+  };
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ window.sdShiftSync(); });
+  else window.sdShiftSync();
 })();
 </script>
 </body>

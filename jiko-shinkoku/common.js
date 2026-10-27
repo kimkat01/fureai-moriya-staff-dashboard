@@ -10,6 +10,11 @@ const JK = {
   GARDEN: 'fureai_shiodome',          // 園キー
   FACILITY_CODE: 'S09',               // 職員マスタの施設コード（ふれあいしおどめ保育園）
   SHIFT_URL: '../index.html',         // シフトデータを読む元（職員ダッシュボード本体）
+  // 2026-10-27：シフトの読み込み元（'file'＝上の index.html の埋め込み／'gas'＝ログイン用GASから受け取る）
+  //   切り替え日に職員ダッシュボード（../index.html）と一緒に 'gas' にする。?shiftsrc=gas で試せる
+  SHIFT_SRC: 'file',
+  LOGIN_GAS: 'https://script.google.com/macros/s/AKfycbwnTzHQ5XdHPPLdf9QnWJLA-Dc7oBIYzfr1MfFd-Uunyarw0QWc48WzzAme6hR1muBisg/exec',
+  GARDEN_NAME: 'ふれあいしおどめ保育園',
   MIN_STEP: 15,                       // 分の刻み（1・5・10・15 など）
   PART_KINDS: ['出勤', '公休', '希望休', '有休', '特休'],
   SEI_KINDS: ['出勤', '公休', '希望休', '有休', '特休', '欠勤'],
@@ -79,7 +84,38 @@ function todayIso() {
 function dowClass(dow) { return dow === '日' ? 'sun' : dow === '土' ? 'sat' : ''; }
 
 /* ---------- シフトデータの読み込み（職員ダッシュボード本体の DATA を使う） ---------- */
+/* 2026-10-27：シフトの読み込み元を決める（URL → 埋め込み元の職員ダッシュボード → 開いた元 → JK.SHIFT_SRC） */
+function shiftSrc() {
+  try { const q = new URLSearchParams(location.search).get('shiftsrc'); if (q === 'gas' || q === 'file') return q; } catch (e) {}
+  try { if (window.parent !== window && window.parent.SD_SHIFT_SRC) return window.parent.SD_SHIFT_SRC; } catch (e) {}
+  try { if (window.opener && window.opener.SD_SHIFT_SRC) return window.opener.SD_SHIFT_SRC; } catch (e) {}
+  return JK.SHIFT_SRC;
+}
+/* GASモード：職員ダッシュボードが保存したシフト → 無ければ通行証でGASから受け取る */
+async function loadShiftFromGas() {
+  const CKEY = 'sd_shift_cache__' + JK.GARDEN;
+  const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
+  const s = read('sd_pin_login__' + JK.GARDEN_NAME), h = read('sd_honbu_token');
+  const token = (s && s.token) || (h && h.token) || '';
+  if (token) {
+    try {
+      const r = await fetch(JK.LOGIN_GAS, { method: 'POST', body: JSON.stringify({ action: 'shift', token: token, garden: JK.GARDEN_NAME }), redirect: 'follow' });
+      const res = await r.json();
+      if (res && res.ok && res.data) {
+        try { localStorage.setItem(CKEY, JSON.stringify({ key: JK.GARDEN, at: Date.now(), data: res.data })); } catch (e) {}
+        return res.data;
+      }
+    } catch (e) {}
+  }
+  const c = read(CKEY);
+  if (c && c.data) return c.data;
+  throw new Error('シフトを読み込めませんでした。職員ダッシュボードにログインしてから、もう一度開いてください');
+}
 async function loadShift() {
+  const data = shiftSrc() === 'gas' ? await loadShiftFromGas() : await loadShiftFromFile();
+  return shapeShift(data);
+}
+async function loadShiftFromFile() {
   const res = await fetch(JK.SHIFT_URL, { cache: 'no-store' });
   if (!res.ok) throw new Error('シフトデータを読めませんでした（' + res.status + '）');
   const s = await res.text();
@@ -95,7 +131,9 @@ async function loadShift() {
     else if (ch === '{') depth++;
     else if (ch === '}') { depth--; if (depth === 0) { end = j; break; } }
   }
-  const data = JSON.parse(s.slice(st, end + 1));
+  return JSON.parse(s.slice(st, end + 1));
+}
+function shapeShift(data) {
   const dates = data.dates.map((d) => ({ iso: d.iso, md: d.md, dow: d.dow, event: d.event || '' }));
   const staff = data.staff.map((p) => {
     const m = {}; (p.shifts || []).forEach((x) => { m[x.iso] = x; });
