@@ -9779,7 +9779,7 @@ function kphHTML(){
   return nav+`<div class="kph-sum"${sw.meal&&sw.park?'':' style="grid-template-columns:1fr"'}>${sw.meal?`<div><b>${d.meal||0}<small style="font-size:13px"> 回</small></b><span>🍚 給食を食べた</span></div>`:''}
     ${sw.park?`<div><b>${d.park||0}<small style="font-size:13px"> 回</small></b><span>🚗 駐車場を使った</span></div>`:''}</div>
     <table class="kph-tbl"><thead><tr><th style="text-align:left;padding-left:12px">日付</th>${sw.meal?'<th>🍚 給食</th>':''}${sw.park?'<th>🚗 駐車場</th>':''}</tr></thead><tbody>${rows}</tbody></table>
-    <p class="kph-note">・「自分のシフト」の「${sw.meal?'きょうの給食／駐車場':'きょうの駐車場'}」で押した内容が、この表に入ります。<br>・${KPH_OFS===0?'今月度（16日〜きょう）の日は、表のボタンを押すと直せます（押すたびに切りかわります）。':'前の月度の記録は、ここでは直せません。違っているときは園長に伝えてください。'}<br>・この回数が、月末の連絡票（給食・駐車場の回数）に使われます。</p>`;
+    <p class="kph-note">・10月26日までに「自分のシフト」のボタンで押した記録です。これからの給食・駐車場は「自己申告」タブで申告してください。<br>・${KPH_OFS===0?'今月度（16日〜きょう）の日は、表のボタンを押すと直せます（押すたびに切りかわります）。':'前の月度の記録は、ここでは直せません。違っているときは園長に伝えてください。'}<br>・この回数が、月末の連絡票（給食・駐車場の回数）に使われます。</p>`;
 }
 /* 一覧表から過去の日を直す（今の月度だけ）。保存は「きょう」のボタンと同じ action=save に日付をつけて送る */
 function kphToggle(iso,topic){
@@ -9881,8 +9881,9 @@ function meHTML(){
         <div class="rail"><div class="span" style="left:${a}%;width:${w}%;background:${col}"></div></div>
         <div class="cap">この時間帯に勤務</div></div>`;}}
   const ev=td.event?`<div class="ev">📌 きょうの予定 ・ ${td.event}</div>`:"";
-  /* 給食・駐車場は休日（公休・有休）でも表示する（行事などで出勤する日があるため） */
-  const kp=kpHTML();
+  /* 2026-10-27：「きょうの給食／駐車場」ボタンは外した（自己申告タブで申告するため。二重入力を防ぐ）。
+     kpHTML() は残してあるので、戻すときは下の '' を kpHTML() にする。 */
+  const kp='';
   const staleNote=TODAY_IN_RANGE?"":`<div class="ev" style="color:#c0392b">⚠ シフトデータが未更新です（${DATA.period&&DATA.period.label||""}：${DATA.period&&DATA.period.start||""}〜${DATA.period&&DATA.period.end||""}）。上の日付は今日ではありません。</div>`;
   const hero=`<div class="today2"><div class="eyebrow">
      <span class="date round">${td.md?td.md.replace('/','月')+'日（'+td.dow+'）':''} ・ きょうのあなた</span>
