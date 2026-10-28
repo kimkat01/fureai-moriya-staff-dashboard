@@ -4,9 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>職員ダッシュボード｜しおどめグループ</title>
+<!-- ホーム画面アイコン「ANSHIN KUN」（2026-10-28）。manifestは使わない（?garden= 付きのURLのまま追加されるように） -->
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<meta name="apple-mobile-web-app-title" content="ANSHIN KUN">
+<meta name="application-name" content="ANSHIN KUN">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --ink:#2b2a28; --ink-soft:#6f6a62; --line:#e7e2d9; --paper:#f4f1ec; --card:#ffffff;
@@ -37,6 +43,13 @@ header.topbar{position:sticky;top:0;z-index:20;background:#2A8CF4;color:#fff;
   padding:calc(env(safe-area-inset-top,0px) + 15px) 16px 15px;}
 .tb-title{flex:1;min-width:0;font-size:19px;font-weight:800;color:#fff;letter-spacing:.01em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* HOMEタイトルのロゴ「ANSHIN KUN」（Audiowide、2026-10-28）
+   ・ANSHINを大きく、KUNを小さく、キャラクターの足元に文字の下端をそろえる */
+.brand-logo{font-family:"Audiowide",sans-serif;font-weight:400;font-size:24px;letter-spacing:.02em;
+  line-height:1;white-space:nowrap;display:block;position:relative;top:4px;}
+#brandtxt:has(.brand-logo){align-self:stretch;display:flex;align-items:flex-end;overflow:visible;}
+.brand-logo small{font-size:.62em;letter-spacing:.04em;margin-left:.06em;}
+
 .tb-mascot{height:38px;width:auto;flex:0 0 auto;display:block;}
 .tb-home{flex:0 0 auto;display:none;align-items:center;gap:5px;border:1.5px solid rgba(255,255,255,.8);
   background:transparent;color:#fff;font-size:12.5px;font-weight:800;padding:6px 12px 6px 9px;
@@ -791,7 +804,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
 <div class="wrap">
   <header class="topbar">
     <img class="tb-mascot" id="brandmascot" src="" alt="">
-    <div class="tb-title" id="brandtxt">職員ダッシュボード</div>
+    <div class="tb-title" id="brandtxt" aria-label="ANSHIN KUN"><span class="brand-logo">ANSHIN<small>KUN</small></span></div>
     <button class="tb-home" id="homebtn" onclick="goHome()" aria-label="ホームに戻る">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 11L12 4L20 11"></path>
@@ -8523,7 +8536,7 @@ function show(name){
   document.getElementById('brandmascot').style.display=(name==="home")?"":"none";
   window.scrollTo({top:0});
 }
-function goHome(){document.getElementById('brandtxt').textContent='職員ダッシュボード';show("home");if(typeof omCheckPending==='function')omCheckPending();}
+function goHome(){document.getElementById('brandtxt').innerHTML='<span class="brand-logo">ANSHIN<small>KUN</small></span>';show("home");if(typeof omCheckPending==='function')omCheckPending();}
 function goShift(){document.getElementById('brandtxt').textContent='シフト管理';renderShift();show("shift");}
 function goStub(title,icon,tint){
   document.getElementById('brandtxt').textContent=title;
