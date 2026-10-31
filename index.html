@@ -9712,6 +9712,13 @@ function sdShowHiroba(){
   try{var s=getPinSession();return !!(s&&s.role==='本部');}catch(e){return false;}
 }
 function openHiroba(){
+  /* 2026-11-01：本部の入室記録用に、ログイン中の職員の情報（園・ログインID・名前）をひろばへ渡す。
+     URLには載せず、同じ kimkat01.github.io のブラウザ保存領域で受け渡す。ほかの参加者には見えない */
+  try{
+    var ps=getPinSession();
+    if(ps&&ps.name) localStorage.setItem('hiroba_who',JSON.stringify({garden:ps.garden||'',loginId:ps.loginId||'',name:ps.name}));
+    else localStorage.removeItem('hiroba_who');
+  }catch(e){}
   var back=location.origin+location.pathname+location.search;
   location.href=HIROBA_URL+"?home="+encodeURIComponent(back);
 }
