@@ -158,6 +158,8 @@ main{padding:16px}
 .tile-compact .tbody{padding:0;gap:0;flex:1;min-width:0;}
 .tile-compact .tt{font-size:13px;line-height:1.3;}
 .tile-compact .ds{display:none;}
+.tile-compact .ictop .ic.i-img{width:30px;height:30px;}
+.tile-compact .ictop .ic.i-img img{width:30px;height:30px;}
 
 .soon{margin-top:20px;background:transparent;border:1px dashed var(--line);border-radius:16px;padding:13px 14px;}
 .soon .k{font-size:11px;font-weight:800;color:var(--brand);}
@@ -9677,6 +9679,45 @@ function sdLog(tool,act){
   }catch(e){}
 }
 
+/* ===== しおどめひろば（試作・2026-10-31） =====
+   職員の匿名ひろば（3Dアバターで集まる場）の試作。まだ職員には見せないため、本部の人だけに表示する。
+   表示する条件：本部ダッシュボードから開いた本部閲覧モード（SD_HONBU_VIEW）か、本部アカウントでログインしているとき。
+   表示中は「ご意見箱」の位置に「しおどめひろば」を置き、ご意見箱は小さいカードにして危機管理対応状況の下へ移す。
+   職員に公開するときは sdShowHiroba() が常に true を返すようにする（ひろば側の HIROBA_OPEN も true にする）。 */
+const HIROBA_URL="https://kimkat01.github.io/staff-dashboard/hiroba/";
+IMG.hiroba="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">'+
+  '<ellipse cx="47" cy="86" rx="40" ry="6" fill="#000" opacity=".08"/>'+
+  '<rect x="56" y="5" width="34" height="21" rx="10.5" fill="#fff" stroke="#4169e2" stroke-width="2.4"/>'+
+  '<path d="M64 25.5l-2.5 7 8.5-7" fill="#fff" stroke="#4169e2" stroke-width="2.4" stroke-linejoin="round"/>'+
+  '<circle cx="66" cy="15.5" r="2.4" fill="#4169e2"/><circle cx="73" cy="15.5" r="2.4" fill="#4169e2"/><circle cx="80" cy="15.5" r="2.4" fill="#4169e2"/>'+
+  '<ellipse cx="29" cy="72" rx="14" ry="13" fill="#5aa2d6"/>'+
+  '<ellipse cx="22.5" cy="29" rx="5" ry="12" fill="#f8f6f2" stroke="#d6d0c6" stroke-width="1.6"/><ellipse cx="22.5" cy="30" rx="2.2" ry="8" fill="#f4b6c2"/>'+
+  '<ellipse cx="35.5" cy="29" rx="5" ry="12" fill="#f8f6f2" stroke="#d6d0c6" stroke-width="1.6"/><ellipse cx="35.5" cy="30" rx="2.2" ry="8" fill="#f4b6c2"/>'+
+  '<circle cx="29" cy="50" r="16" fill="#f8f6f2" stroke="#d6d0c6" stroke-width="1.6"/>'+
+  '<circle cx="23.5" cy="49" r="2.3" fill="#2b2b2b"/><circle cx="34.5" cy="49" r="2.3" fill="#2b2b2b"/>'+
+  '<ellipse cx="19" cy="55" rx="3" ry="1.8" fill="#f6a5b0"/><ellipse cx="39" cy="55" rx="3" ry="1.8" fill="#f6a5b0"/>'+
+  '<path d="M27 54.5q2 2 4 0" fill="none" stroke="#2b2b2b" stroke-width="1.4" stroke-linecap="round"/>'+
+  '<ellipse cx="65" cy="74" rx="14" ry="12" fill="#e8846b"/>'+
+  '<path d="M51 47l2-15 10 8z" fill="#f2c48d"/><path d="M79 47l-2-15-10 8z" fill="#f2c48d"/>'+
+  '<path d="M54 44l1.2-8 5 4z" fill="#f4b6c2"/><path d="M76 44l-1.2-8-5 4z" fill="#f4b6c2"/>'+
+  '<circle cx="65" cy="54" r="16" fill="#f2c48d"/>'+
+  '<ellipse cx="65" cy="59" rx="7" ry="4.5" fill="#fff6ea"/>'+
+  '<circle cx="59.5" cy="52" r="2.3" fill="#2b2b2b"/><circle cx="70.5" cy="52" r="2.3" fill="#2b2b2b"/>'+
+  '<circle cx="65" cy="57.5" r="1.6" fill="#e98a9a"/>'+
+  '<ellipse cx="55" cy="59" rx="3" ry="1.8" fill="#f6a5b0"/><ellipse cx="75" cy="59" rx="3" ry="1.8" fill="#f6a5b0"/>'+
+  '</svg>');
+IC.hiroba='<svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16.5" cy="9" r="2.5"/><path d="M2.5 20c0-3.2 2.4-5.4 5.5-5.4s5.5 2.2 5.5 5.4"/><path d="M14 15.3c.8-.5 1.6-.7 2.5-.7 2.6 0 4.5 2 4.5 5.4"/></svg>';
+function sdShowHiroba(){
+  if(window.SD_HONBU_VIEW) return true;
+  try{var s=getPinSession();return !!(s&&s.role==='本部');}catch(e){return false;}
+}
+function openHiroba(){
+  var back=location.origin+location.pathname+location.search;
+  location.href=HIROBA_URL+"?home="+encodeURIComponent(back);
+}
+const HIROBA_MENU={t:"しおどめひろば",d:"アバターで集まる職員のひろば",ic:"hiroba",flag:"試作",tint:"i-sky",go:()=>openHiroba()};
+let HOME_MENU=[];
+
 const MENU=[
  {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShiftLogin();}}},
  {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(uqUrl(),"有給チェッカー","uq","i-early")},
@@ -9688,10 +9729,12 @@ const MENU=[
  {t:"となりの保育室",d:"ほかの園の保育を見てみよう",ic:"tonari",tint:"i-pink",go:()=>goTonari()},
 ];
 function renderHome(){
-  const tiles=MENU.map(function(m,i){
+  const HB=sdShowHiroba();
+  HOME_MENU=HB?MENU.map(function(m){return m.t==="ご意見箱"?HIROBA_MENU:m;}):MENU.slice();
+  const tiles=HOME_MENU.map(function(m,i){
      var flag=m.badge?'<span class="flag flag-blink">'+m.badge+'</span>':m.flag?'<span class="flag">'+m.flag+'</span>':(m.flagId?'<span class="flag flag-pulse" id="'+m.flagId+'" style="display:none">受領</span>':'');
      var lg=m.ic==='bot'?' ic-lg':'';
-     return '<button class="tile'+(m.cls?' '+m.cls:'')+'" onclick="sdLog(MENU['+i+'].t);MENU['+i+'].go()">'+flag+
+     return '<button class="tile'+(m.cls?' '+m.cls:'')+'" onclick="sdLog(HOME_MENU['+i+'].t);HOME_MENU['+i+'].go()">'+flag+
        '<span class="tileclip">'+
        '<span class="ictop '+m.tint+'"><span class="ic '+m.tint+icClass(m.ic)+lg+'">'+icInner(m.ic)+'</span></span>'+
        '<span class="tbody"><span class="tt round">'+m.t+'</span><span class="ds">'+m.d+'</span></span>'+
@@ -9716,6 +9759,14 @@ function renderHome(){
       '<span class="tbody"><span class="tt round">コーポレートブック</span></span>'+
     '</span></button>';
 
+  /* しおどめひろば表示中だけ：ご意見箱を小さいカードにして危機管理対応状況の下へ */
+  const omCard=HB?
+    '<button class="tile tile-compact" onclick="sdLog(\'ご意見箱\');goOmeyasu()">'+
+    '<span class="tileclip">'+
+      '<span class="ictop"><span class="ic i-mid'+icClass('box')+'">'+icInner('box')+'</span></span>'+
+      '<span class="tbody"><span class="tt round">ご意見箱</span></span>'+
+    '</span></button>':'';
+
   const dnow=new Date();
   const dwn=["日","月","火","水","木","金","土"][dnow.getDay()];
   const dateStr=(dnow.getMonth()+1)+"月"+dnow.getDate()+"日（"+dwn+"）";
@@ -9723,7 +9774,7 @@ function renderHome(){
   document.getElementById('screen-home').innerHTML=`
    <div class="sec-label home-date-row" style="margin-top:6px"><span></span><span class="home-date round">${dateStr}</span></div>
    <div class="home-notice" id="omHomeNotice" style="display:none">ご意見箱：本部がご意見を受領しました。投稿ありがとうございます。</div>
-   <div class="grid">${tiles}${anpiCard}${corpCard}</div>
+   <div class="grid">${tiles}${anpiCard}${corpCard}${omCard}</div>
    <p class="foot"><b>これは試作です。</b>ログイン（園→名前）は共通で、全メニューに有効。1つの入口・1回のログインで全部ひらきます。</p>`;
   if(typeof omUpdateHomeNotice==='function')omUpdateHomeNotice();
   if(typeof anpiCheckActive==='function')anpiCheckActive();
