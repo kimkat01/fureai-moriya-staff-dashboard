@@ -422,6 +422,17 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-tonari .tnlike.on{background:var(--early-ink);color:#fff;}
 #screen-tonari .tnlike.on svg{fill:currentColor;}
 #screen-tonari .tnnocom{margin:10px 0 0;font-size:12px;color:var(--ink-soft);text-align:center;}
+/* 各園のインスタを見る（2026-11-01）：投稿URLを貼らなくても、各園の公式アカウントへ直接飛べるボタン */
+#screen-tonari .tnacct{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+#screen-tonari .tnacct a{display:flex;align-items:center;gap:10px;min-height:56px;padding:9px 10px;background:var(--card);border:1px solid var(--line);border-radius:12px;color:var(--ink);text-decoration:none;}
+#screen-tonari .tnacct a .tnaci{flex:0 0 34px;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#fff;background:linear-gradient(45deg,#f9b44a,#ee4d6f 50%,#a35bd8);}
+#screen-tonari .tnacct a .tnaci svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;}
+#screen-tonari .tnacct a span.tnact{min-width:0;display:flex;flex-direction:column;}
+#screen-tonari .tnacct a b{font-size:14px;line-height:1.35;}
+#screen-tonari .tnacct a small{font-size:12px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#screen-tonari .tnacct a.tnmyg{border:1.5px solid #ee4d6f;}
+#screen-tonari .tnacct a.tnmyg b::after{content:'自園';margin-left:5px;padding:0 6px;border-radius:8px;font-size:11px;font-weight:800;color:#c2335a;background:#fde4ea;}
+#screen-tonari .tnacctnote{margin:8px 2px 0;font-size:12px;line-height:1.6;color:var(--ink-soft);}
 /* 各園のインスタから（2026-10-16） */
 #screen-tonari .tnig{display:flex;gap:10px;overflow-x:auto;padding:0 2px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
 #screen-tonari .tnig::-webkit-scrollbar{display:none;}
@@ -8982,6 +8993,7 @@ function tnRender(){
   host.innerHTML='<div class="tnwrap">'+
     '<p class="tnlead round">ほかの園の保育を、<br>見てみよう。</p>'+
     '<p class="tnsub">グループ各園の環境づくり・手作り玩具・製作・あそびの様子を紹介しています。</p>'+
+    tnAcctHTML()+
     tnInstaStripHTML()+
     '<div id="tnResults"></div>'+
     '<p class="tnnote">記事を書けるのは、園長と園長が承認した職員です（記事の投稿機能は準備中）。<br>コメント欄はありません。気になることは自園の園長へ。</p>'+
@@ -9179,11 +9191,30 @@ function tnIgDelete(id){
 }
 
 function tnInstaSorted(){return tnIgAll().sort(function(a,b){var x=(a.date||'')+(a.at||''),y=(b.date||'')+(b.at||'');return x<y?1:x>y?-1:0;});}
+/* 各園のインスタを見る（2026-11-01）
+   園長から「投稿URLをのせる手間がかけられない」との声があり、各園の公式アカウントへ直接飛べるボタンを追加。
+   アカウント名は gardens.js（園マスタ）の insta 欄で一括管理。空欄の園はボタンを出さない。自園は先頭に「自園」印つきで出す。 */
+function tnAcctHTML(){
+  var list=(typeof GARDEN_MASTER!=='undefined'?GARDEN_MASTER:[]).filter(function(g){return g&&g.insta;});
+  if(!list.length)return '';
+  var me=tnIgUser(),my='';
+  if(me&&me.garden)my=String(me.garden);
+  else{try{var gu=(typeof gardenFromUrl==='function')?gardenFromUrl():null;if(gu)my=gu.name;}catch(e){}}
+  var norm=function(t){return String(t||'').replace(/[\s　]/g,'');};
+  list=list.slice().sort(function(a,b){return (norm(b.name)===norm(my))-(norm(a.name)===norm(my));});
+  return '<div class="tnsec tnsec2"><h3 class="round">各園のインスタを見る</h3><span>タップすると各園の公式インスタが開きます</span></div>'+
+    '<div class="tnacct">'+list.map(function(g){
+      var h=String(g.insta).replace(/^@/,'');
+      var own=norm(g.name)===norm(my);
+      return '<a class="'+(own?'tnmyg':'')+'" href="https://www.instagram.com/'+encodeURIComponent(h).replace(/%2E/gi,'.')+'/" target="_blank" rel="noopener">'+
+        '<span class="tnaci">'+TN_IG_ICO+'</span><span class="tnact"><b>'+tnEsc(tnShort(g.name).replace(/^認定こども園/,'').replace(/保育園$/,''))+'</b><small>@'+tnEsc(h)+'</small></span></a>';
+    }).join('')+'</div>';
+}
 function tnInstaStripHTML(){
   var list=tnInstaSorted();
   var add=TN_IG_CAN?'<button type="button" class="tnigadd" onclick="tnIgStartPost()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>自園のインスタ投稿をのせる</button>':'';
   var h='<div class="tnsec tnsec2"><h3 class="round">各園のインスタから</h3><span>各園の公式アカウントより</span></div>';
-  if(!list.length)return h+'<div class="tnempty">各園のインスタ投稿を、順次ここに掲載していきます。</div>'+add;
+  if(!list.length)return add?(h+'<div class="tnempty">各園のインスタ投稿を、順次ここに掲載していきます。</div>'+add):'';
   return h+'<div class="tnig" id="tnIg" onscroll="tnIgBar()">'+list.map(function(p){
     var emb=tnIgNormUrl(p.url);
     var t=p.img?'<img src="'+tnEsc(p.img)+'" alt="'+tnEsc(p.theme||'')+'" loading="lazy">'
