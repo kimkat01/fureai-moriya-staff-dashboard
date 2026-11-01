@@ -148,7 +148,7 @@ main{padding:16px}
 .i-red-soft{background:#f0d9d6;color:#a9685f}
 .i-gray-soft{background:#e6e9ed;color:#767f8c}
 
-/* 危機管理対応状況／コーポレートブック：最下段・控えめな2分割コンパクト行
+/* 災害報告／コーポレートブック：最下段・控えめな2分割コンパクト行
    （滅多に使わないため、通常タイルより天地を大きく圧縮し、彩度も落としている） */
 .tile-compact{min-height:0;}
 .tile-compact .tileclip{flex-direction:row;align-items:center;gap:10px;padding:12px 13px;}
@@ -9559,7 +9559,7 @@ const GD_DOCS_BASE="https://kimkat01.github.io/staff-dashboard/docs/";
 /* PDF内をキーワードで検索するビューア。?garden=園名 を付けて、その園の資料だけを検索する。 */
 const GD_VIEWER=GD_DOCS_BASE+"viewer.html";
 /* コーポレートブック（完成済みのHTMLフリップブック）。タイルから新タブで開くだけ。 */
-/* ===== 危機管理対応状況（安否確認：kimkat01/anpi） ===== */
+/* ===== 災害報告（安否確認：kimkat01/anpi） ===== */
 const ANPI_URL="https://kimkat01.github.io/anpi/anpi.html";
 const ANPI_GAS="https://script.google.com/macros/s/AKfycbyr8b-l2TlgUMWOopYqfYmIp5pgs1ftTLpsXWYVLl_-VFJiMr_haxk0L3LcraWalHOvGg/exec";
 /* 園名：このリポジトリはふれあいしおどめ保育園専用なので、URLの ?garden= に関係なく固定 */
@@ -9682,7 +9682,7 @@ function sdLog(tool,act){
 /* ===== しおどめひろば（試作・2026-10-31） =====
    職員の匿名ひろば（3Dアバターで集まる場）の試作。まだ職員には見せないため、本部の人だけに表示する。
    表示する条件：本部ダッシュボードから開いた本部閲覧モード（SD_HONBU_VIEW）か、本部アカウントでログインしているとき。
-   表示中は「ご意見箱」の位置に「しおどめひろば」を置き、ご意見箱は小さいカードにして危機管理対応状況の下へ移す。
+   表示中は「ご意見箱」の位置に「しおどめひろば」を置き、ご意見箱は小さいカードにして災害報告の下へ移す。
    職員に公開するときは sdShowHiroba() が常に true を返すようにする（ひろば側の HIROBA_OPEN も true にする）。 */
 const HIROBA_URL="https://kimkat01.github.io/staff-dashboard/hiroba/";
 IMG.hiroba="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">'+
@@ -9748,14 +9748,14 @@ function renderHome(){
        '</span></button>';
   }).join("");
 
-  /* 危機管理対応状況・コーポレートブック（最下段・控えめな2分割コンパクト行）。
-     危機管理対応状況は anpi.html（kimkat01/anpi）を開く。園長が安否確認を開始していれば
+  /* 災害報告・コーポレートブック（最下段・控えめな2分割コンパクト行）。
+     災害報告は anpi.html（kimkat01/anpi）を開く。園長が安否確認を開始していれば
      自動で「🔴実施中」を表示する（anpiCheckActive が GAS に問い合わせる）。 */
   const anpiCard=
-    '<button class="tile tile-compact" id="anpiTile" onclick="sdLog(\'危機管理対応状況\');openAnpi()">'+
+    '<button class="tile tile-compact" id="anpiTile" onclick="sdLog(\'災害報告\');openAnpi()">'+
     '<span class="tileclip">'+
       '<span class="ictop"><span class="ic i-red-soft">'+IC.anpi+'</span></span>'+
-      '<span class="tbody"><span class="tt round">危機管理対応状況</span></span>'+
+      '<span class="tbody"><span class="tt round">災害報告</span></span>'+
     '</span></button>';
 
   /* コーポレートブック（既存の完成済みフリップブックを新タブで開くだけ。パスワードなし） */
@@ -9766,7 +9766,7 @@ function renderHome(){
       '<span class="tbody"><span class="tt round">コーポレートブック</span></span>'+
     '</span></button>';
 
-  /* しおどめひろば表示中だけ：ご意見箱を小さいカードにして危機管理対応状況の下へ */
+  /* しおどめひろば表示中だけ：ご意見箱を小さいカードにして災害報告の下へ */
   const omCard=HB?
     '<button class="tile tile-compact" onclick="sdLog(\'ご意見箱\');goOmeyasu()">'+
     '<span class="tileclip">'+
