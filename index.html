@@ -10,6 +10,10 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <meta name="apple-mobile-web-app-title" content="ANSHIN KUN">
 <meta name="application-name" content="ANSHIN KUN">
+<!-- 通知・アイコンの未読数（2026-11-01）：共通版と同じ push-client.js。ふれあい（S09）は PUSH_GARDENS に入れるまで動かない -->
+<script src="https://kimkat01.github.io/staff-dashboard/gardens.js"></script>
+<script src="https://kimkat01.github.io/staff-dashboard/push-client.js"></script>
+<script>try{ if(window.ShiodomePush && typeof findGarden==='function') ShiodomePush.head(findGarden('fureai_shiodome'), 'manifests/'); }catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
@@ -10230,6 +10234,19 @@ renderHome();goHome();sdLog('ホーム');
   };
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ window.sdShiftSync(); });
   else window.sdShiftSync();
+})();
+</script>
+<script>
+/* 通知・アイコンの未読数（2026-11-01）：共通版と同じ。この専用版はふれあいしおどめ保育園（S09）固定 */
+(function(){
+  if(!window.ShiodomePush || typeof findGarden !== 'function') return;
+  var g = findGarden('fureai_shiodome'); if(!g) return;
+  ShiodomePush.init({
+    app: 'anshin',
+    garden: { code: g.code, key: g.key, name: g.name },
+    user: function(){ var s = (typeof getPinSession === 'function') ? getPinSession() : null; return s ? { loginId: s.loginId, name: s.name } : {}; },
+    swUrl: 'sw.js'
+  });
 })();
 </script>
 </body>
