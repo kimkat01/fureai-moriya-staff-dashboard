@@ -9755,8 +9755,11 @@ function sdShowHiroba(){
 function openHiroba(){
   /* 2026-11-01：本部の入室記録用に、ログイン中の職員の情報（園・ログインID・名前）をひろばへ渡す。
      URLには載せず、同じ kimkat01.github.io のブラウザ保存領域で受け渡す。ほかの参加者には見えない */
+  /* 2026-11-04：本部閲覧モード（本部ダッシュボードから開いたとき）は、このブラウザに残っている職員のログイン情報を渡さない。
+     渡すと、操作しているのは本部の人なのに、以前ここでログインした職員の名前で記録されてしまうため。
+     本部の人は、ひろばの入室状況画面で本部アカウントにログインしておくと、その名前で記録される */
   try{
-    var ps=getPinSession();
+    var ps=window.SD_HONBU_VIEW?null:getPinSession();
     if(ps&&ps.name) localStorage.setItem('hiroba_who',JSON.stringify({garden:ps.garden||'',loginId:ps.loginId||'',name:ps.name}));
     else localStorage.removeItem('hiroba_who');
   }catch(e){}
