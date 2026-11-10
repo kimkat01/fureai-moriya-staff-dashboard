@@ -16,7 +16,7 @@ const JK = {
   LOGIN_GAS: 'https://script.google.com/macros/s/AKfycbwnTzHQ5XdHPPLdf9QnWJLA-Dc7oBIYzfr1MfFd-Uunyarw0QWc48WzzAme6hR1muBisg/exec',
   GARDEN_NAME: 'ふれあいしおどめ保育園',
   MIN_STEP: 15,                       // 分の刻み（1・5・10・15 など）
-  PART_KINDS: ['出勤', '公休', '希望休', '有休', '特休'],
+  PART_KINDS: ['出勤', '公休', '希望休', '有休', '特休', '欠勤'],   // 2026-11-10：パートにも欠勤を追加
   SEI_KINDS: ['出勤', '公休', '希望休', '有休', '特休', '欠勤'],
   SEI_EXTRAS: ['時間有休', '残業', '遅刻', '早退'],
   LOCAL_KEY: 'jiko_shinkoku_demo_v1',
@@ -157,7 +157,7 @@ function defaultKind(sh, kubun) {
   if (code === '夏休') return '特休';
   if (code.indexOf('有休') >= 0 || sh.state === 'leave') return '有休';
   if (code === '希望休') return '希望休';
-  if (code === '欠勤') return kubun === '正規' ? '欠勤' : '';
+  if (code === '欠勤') return '欠勤';
   if (code === '育休') return '';
   return '公休';
 }
