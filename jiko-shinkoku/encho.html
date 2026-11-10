@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>自己申告の集計（試用版・事務用）｜ふれあいしおどめ保育園</title>
+<title>シフト集計｜ふれあいしおどめ保育園</title>
 <link rel="stylesheet" href="common.css">
 <style>
 .top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
@@ -23,7 +23,7 @@ table.mt th.grp{text-align:center;background:#dfe6fb}
 </head>
 <body>
 <div class="hdr">
-  <div><div class="ttl">自己申告の集計（試用版・事務用）</div><div class="sub" id="fac">ふれあいしおどめ保育園</div></div>
+  <div><div class="ttl">シフト集計</div><div class="sub" id="fac">ふれあいしおどめ保育園</div></div>
 </div>
 <div class="wrap wide">
   <div class="demo hidden" id="demo">お試しモード：この端末のブラウザに保存された申告だけが表示されます（同じ端末の職員用ページで入力した内容）。</div>
@@ -259,7 +259,7 @@ async function makeXlsx() {
   const HEAD = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE9EEFC' } };
   const n = SH.dates.length;
   const wb = new ExcelJS.Workbook();
-  wb.creator = '自己申告（試用版）';
+  wb.creator = 'シフト集計';
 
   /* --- パート（事務のひな形と同じ並び） --- */
   const ws = wb.addWorksheet('パート');
