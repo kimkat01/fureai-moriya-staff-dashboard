@@ -9867,6 +9867,7 @@ function renderShift(){
     ${kpTab?`<button id="tab-kp" onclick="shiftTab='kp';renderShift()">${kpSw.meal?'給食・駐車場':'駐車場'}</button>`:''}
     <button id="tab-jk" onclick="if(shiftTab!=='jk')sdLog('自己申告');shiftTab='jk';renderShift()">自己申告</button></div>
     <div id="sh-body"></div>`;
+  jkMarkTab();
   document.getElementById('tab-me').classList.toggle('on',shiftTab==='me');
   document.getElementById('tab-all').classList.toggle('on',shiftTab==='all');
   if(kpTab)document.getElementById('tab-kp').classList.toggle('on',shiftTab==='kp');
@@ -9891,6 +9892,29 @@ function jkHTML(){
   return '<iframe id="jk-frame" data-name="'+esc+'" title="自己申告" src="jiko-shinkoku/?embed=1&amp;name='+encodeURIComponent(nm)+'"'+
     ' style="display:block;width:100%;height:640px;border:0;margin-top:6px;background:transparent"></iframe>';
 }
+/* 事務から差し戻しがあれば、「自己申告」タブに印を付ける（2026-11-10追加）
+   自己申告のGAS（jiko-shinkoku/common.js の GAS_URL と同じ）に、本人の分だけ問い合わせる。
+   1人につき1回だけ聞く（再提出したら印を消す）。 */
+const JK_GAS='https://script.google.com/macros/s/AKfycbxDo2C4wiZKgDlwemLO_9CynXuSI05PwWNg8UuYTsmwUuppUvgGSFnvtqDRlds9mj4N/exec';
+const JK_BACK={};   /* 名前 → true（差し戻し中）／false／'loading' */
+function jkMarkTab(){
+  if(current===null||window.SD_HONBU_VIEW)return;
+  const nm=staff[current].name;
+  const t=document.getElementById('tab-jk');
+  if(t&&JK_BACK[nm]===true&&!t.querySelector('.jk-dot'))
+    t.insertAdjacentHTML('beforeend',' <span class="jk-dot" style="display:inline-block;background:#d9590f;color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;vertical-align:1px">差し戻し</span>');
+  if(JK_BACK[nm]!==undefined)return;
+  let pid='';try{pid=DATA.dates[0].iso;}catch(e){}
+  if(!pid)return;
+  JK_BACK[nm]='loading';
+  fetch(JK_GAS,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({action:'load',token:'fureai_jiko_2026',garden:'fureai_shiodome',facility:'S09',pid:pid,name:nm})})
+  .then(r=>r.json()).then(j=>{
+    const on=!!(j&&j.ok&&(j.backs||[]).some(b=>b.name===nm)&&!(j.conf||[]).some(c=>c.name===nm));
+    JK_BACK[nm]=on;
+    if(on&&current!==null&&staff[current].name===nm)jkMarkTab();
+  }).catch(()=>{JK_BACK[nm]=false;});
+}
 /* 埋め込んだ自己申告ページからの知らせ（高さ合わせ・投稿の記録・画面の先頭へ） */
 window.addEventListener('message',function(e){
   if(e.origin!==location.origin)return;
@@ -9899,6 +9923,11 @@ window.addEventListener('message',function(e){
   const f=document.getElementById('jk-frame');
   if(d.type==='h'&&f){f.style.height=Math.max(320,+d.h||0)+'px';}
   else if(d.type==='saved'){sdLog('自己申告','投稿');}
+  else if(d.type==='resubmitted'){
+    /* 差し戻しを直して再提出したら、タブの印を消す（2026-11-10追加） */
+    if(current!==null)JK_BACK[staff[current].name]=false;
+    const dot=document.querySelector('#tab-jk .jk-dot');if(dot)dot.remove();
+  }
   else if(d.type==='top'){window.scrollTo({top:0,behavior:'smooth'});}
 });
 

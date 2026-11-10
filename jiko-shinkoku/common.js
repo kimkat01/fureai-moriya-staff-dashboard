@@ -169,7 +169,8 @@ function leavePlanMin(sh, setting) {
 }
 
 /* ---------- 集計 ---------- */
-function calcStaff(shift, staff, recMap, setting, confirmed) {
+// back = 差し戻し中の内容（{ days, msg, at }）。確定していなくて差し戻し中なら「差し戻し中」（2026-11-10追加）
+function calcStaff(shift, staff, recMap, setting, confirmed, back) {
   const kubun = (setting && setting.kubun) || 'パート';
   const today = todayIso();
   const t = { kubun, n: shift.dates.length, done: 0, missing: [], pastMissing: 0, warn: [],
@@ -194,18 +195,19 @@ function calcStaff(shift, staff, recMap, setting, confirmed) {
       if (kubun === 'パート') { t.plan += p; if (!p) t.warn.push(d.md + 'の' + r.kind + 'の時間が決まりません'); }
     }
   });
-  t.status = confirmed ? '確定' : (t.missing.length === 0 ? '入力完了' : (t.pastMissing > 0 ? '未申告あり' : '入力中'));
+  t.status = confirmed ? '確定' : back ? '差し戻し中' : (t.missing.length === 0 ? '入力完了' : (t.pastMissing > 0 ? '未申告あり' : '入力中'));
   return t;
 }
 function statusBadge(st) {
   if (st === '対象外') return '<span class="badge" style="background:#ecebe6;color:#57564f">対象外</span>';
+  if (st === '差し戻し中') return '<span class="badge b-back">差し戻し中</span>';
   const cls = st === '確定' ? 'b-ok' : st === '未申告あり' ? 'b-ng' : st === '入力完了' ? 'b-blue' : 'b-mid';
   return '<span class="badge ' + cls + '">' + esc(st) + '</span>';
 }
 
 /* ---------- 保存先（GAS か、お試しモードの端末保存） ---------- */
 function isDemo() { return !JK.GAS_URL; }
-function lsGet() { try { return JSON.parse(localStorage.getItem(JK.LOCAL_KEY)) || { recs: {}, conf: {}, set: {} }; } catch (e) { return { recs: {}, conf: {}, set: {} }; } }
+function lsGet() { let d; try { d = JSON.parse(localStorage.getItem(JK.LOCAL_KEY)); } catch (e) {} d = d || { recs: {}, conf: {}, set: {} }; d.back = d.back || {}; return d; }
 function lsPut(db) { try { localStorage.setItem(JK.LOCAL_KEY, JSON.stringify(db)); } catch (e) {} }
 function localApi(action, b) {
   const db = lsGet();
@@ -225,7 +227,12 @@ function localApi(action, b) {
       const [g, name] = key.split('|');
       if (g === JK.GARDEN) settings.push(Object.assign({ name }, db.set[key]));
     });
-    return { ok: true, recs, conf, settings };
+    const backs = [];
+    Object.keys(db.back).forEach((key) => {
+      const [g, pid, name] = key.split('|');
+      if (g === JK.GARDEN && pid === b.pid && (!b.name || b.name === name)) backs.push(Object.assign({ name }, db.back[key]));
+    });
+    return { ok: true, recs, conf, settings, backs };
   }
   if (action === 'save') {
     if (db.conf[k(b.name)] && b.by !== '事務') return { ok: false, error: '確定済みのため変更できません' };
@@ -233,7 +240,12 @@ function localApi(action, b) {
     db.recs[k(b.name)][b.rec.date] = Object.assign({}, b.rec, { by: b.by, ts: new Date().toISOString() });
     lsPut(db); return { ok: true };
   }
-  if (action === 'confirm') { db.conf[k(b.name)] = new Date().toISOString(); lsPut(db); return { ok: true }; }
+  if (action === 'confirm') { db.conf[k(b.name)] = new Date().toISOString(); delete db.back[k(b.name)]; lsPut(db); return { ok: true }; }
+  if (action === 'sendback') {
+    if (!String(b.msg || '').trim()) return { ok: false, error: '差し戻す理由を入れてください' };
+    delete db.conf[k(b.name)]; db.back[k(b.name)] = { days: b.days || [], msg: String(b.msg).trim(), at: new Date().toISOString() }; lsPut(db); return { ok: true };
+  }
+  if (action === 'clearback') { delete db.back[k(b.name)]; lsPut(db); return { ok: true }; }
   if (action === 'unconfirm') { delete db.conf[k(b.name)]; lsPut(db); return { ok: true }; }
   if (action === 'setting') { db.set[JK.GARDEN + '|' + b.name] = b.setting; lsPut(db); return { ok: true }; }
   return { ok: false, error: 'unknown' };
@@ -256,12 +268,13 @@ async function api(action, body) {
 }
 // load の結果を { name: { iso: rec } } の形にまとめる
 function groupLoad(r) {
-  const recs = {}, conf = {}, set = {}, master = {};
+  const recs = {}, conf = {}, set = {}, master = {}, back = {};
   (r.recs || []).forEach((x) => { (recs[x.name] = recs[x.name] || {})[x.date] = x; });
   (r.conf || []).forEach((x) => { conf[x.name] = x.at; });
   (r.settings || []).forEach((x) => { set[x.name] = x; });
   (r.master || []).forEach((x) => { if (x.kubun) master[nkey(x.name)] = x.kubun; });
-  return { recs, conf, set, master };
+  (r.backs || []).forEach((x) => { back[x.name] = { days: x.days || [], msg: x.msg || '', at: x.at || '' }; });
+  return { recs, conf, set, master, back };
 }
 
 /* ---------- 1日の申告フォーム ---------- */
@@ -419,15 +432,18 @@ function renderForm(el, ctx) {
 }
 
 /* ---------- 1か月の表 ---------- */
-function monthTableHTML(shift, staff, recMap, kubun, parking) {
+// backDays = 差し戻しで「直してほしい日」の配列（その行に印を付ける）
+function monthTableHTML(shift, staff, recMap, kubun, parking, backDays) {
   const today = todayIso();
+  const bd = backDays || [];
   let h = '<div class="tblwrap"><table class="mt"><thead><tr><th>日付</th><th>シフト</th><th>区分</th>';
   h += kubun === '正規' ? '<th>時有</th><th>残業</th><th>遅刻</th><th>早退</th>' + (parking ? '<th>駐車</th>' : '') : '<th>勤務</th><th>給食</th><th>駐車</th>';
   h += '</tr></thead><tbody>';
   shift.dates.forEach((d) => {
     const r = recMap[d.iso], sh = staff.shifts[d.iso];
-    const cls = (d.iso === today ? 'today ' : '') + (!r && d.iso <= today ? 'miss ' : '') + 'click';
-    h += '<tr class="' + cls + '" data-date="' + d.iso + '"><td><b class="' + dowClass(d.dow) + '">' + esc(d.md) + ' ' + esc(d.dow) + '</b></td><td style="font-size:12px;color:#4a4a46">' + esc(shiftText(sh)) + '</td>';
+    const isBack = bd.indexOf(d.iso) >= 0;
+    const cls = (isBack ? 'back ' : '') + (d.iso === today ? 'today ' : '') + (!r && d.iso <= today ? 'miss ' : '') + 'click';
+    h += '<tr class="' + cls + '" data-date="' + d.iso + '"><td><b class="' + dowClass(d.dow) + '">' + esc(d.md) + ' ' + esc(d.dow) + '</b>' + (isBack ? ' <span class="bk">要修正</span>' : '') + '</td><td style="font-size:12px;color:#4a4a46">' + esc(shiftText(sh)) + '</td>';
     if (!r) {
       const cols = kubun === '正規' ? (parking ? 5 : 4) : 3;
       h += '<td colspan="' + (cols + 1) + '" style="color:' + (d.iso <= today ? '#b3261e' : '#8a8a85') + ';font-weight:700">' + (d.iso <= today ? '未申告（押して入力）' : '—') + '</td></tr>';
@@ -450,4 +466,15 @@ function statsHTML(t) {
     : [[fmtHM(t.work), '勤務合計'], [t.kyu + '回', '給食'], [t.chu + '回', '駐車場']];
   return '<div class="stats">' + cells.map((c) => '<div><b>' + esc(c[0]) + '</b><span>' + c[1] + '</span></div>').join('') +
     '<div><b class="r">' + t.missing.length + '日</b><span>未申告</span></div></div>';
+}
+
+/* ---------- 差し戻しのお知らせ（2026-11-10追加） ---------- */
+// 日付（2026-11-03）→「11/3（火）」
+function backDayLabel(shift, iso) {
+  const d = shift.dates.find((x) => x.iso === iso);
+  return d ? d.md + '（' + d.dow + '）' : iso;
+}
+function backAt(at) {
+  const m = String(at || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? (+m[2]) + '/' + (+m[3]) : '';
 }

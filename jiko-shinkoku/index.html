@@ -36,6 +36,8 @@ body.embed .wrap{padding:4px 0 24px}
       <button type="button" class="btn2" id="whoChange">名前を変える</button>
     </div>
     <div class="muted" id="kubunNote"></div>
+    <!-- 事務からの差し戻し（2026-11-10追加） -->
+    <div id="backArea" class="hidden"></div>
     <div class="seg" role="tablist">
       <button type="button" id="tabDay" class="on">きょうの申告</button>
       <button type="button" id="tabList">1か月の一覧</button>
@@ -47,6 +49,7 @@ body.embed .wrap{padding:4px 0 24px}
         <div class="c"><b id="dayTitle"></b><span id="daySub"></span></div>
         <button type="button" id="nextDay" aria-label="次の日">›</button>
       </div>
+      <div id="dayBack"></div>
       <div id="form"></div>
     </div>
 
@@ -62,7 +65,7 @@ body.embed .wrap{padding:4px 0 24px}
 
 <script src="common.js"></script>
 <script>
-let SH = null, ME = null, STAFF = null, SET = null, RECS = {}, CONF = null, CUR = 0;
+let SH = null, ME = null, STAFF = null, SET = null, RECS = {}, CONF = null, BACK = null, CUR = 0;
 
 /* 職員ダッシュボードから開いたとき（2026-10-26追加）
    ・?embed=1 … シフト管理の「自己申告」タブの中に表示する
@@ -124,7 +127,7 @@ async function start(name) {
   show('who', false); show('loading', true);
   try {
     const g = groupLoad(await api('load', { pid: SH.pid, name }));
-    RECS = g.recs[name] || {}; CONF = g.conf[name] || null; SET = effSetting(name, g, STAFF, SH);
+    RECS = g.recs[name] || {}; CONF = g.conf[name] || null; BACK = g.back[name] || null; SET = effSetting(name, g, STAFF, SH);
   } catch (e) { show('loading', false); show('fatal', true); $('fatal').textContent = e.message; return; }
   show('loading', false); show('main', true);
   $('meName').textContent = name;
@@ -140,8 +143,32 @@ async function start(name) {
   const t = todayIso();
   const idx = SH.dates.findIndex((d) => d.iso === t);
   CUR = idx >= 0 ? idx : 0;
-  drawDay(); drawList();
+  // 差し戻しがあるときは、直してほしい最初の日を開く
+  if (BACK && !CONF && BACK.days.length) { const bi = SH.dates.findIndex((d) => d.iso === BACK.days[0]); if (bi >= 0) CUR = bi; }
+  drawBack(); drawDay(); drawList();
 }
+
+/* ---------- 事務からの差し戻し（2026-11-10追加） ---------- */
+function drawBack() {
+  const on = !!(BACK && !CONF);
+  show('backArea', on);
+  if (!on) { $('backArea').innerHTML = ''; return; }
+  let h = '<div class="backbox" role="alert"><div class="bt">事務から修正のお願いがあります' + (backAt(BACK.at) ? '（' + backAt(BACK.at) + '）' : '') + '</div>' +
+    '<div class="bm">' + esc(BACK.msg) + '</div>';
+  if (BACK.days.length) {
+    h += '<div class="muted">直してほしい日（押すとその日を開きます）</div><div class="bdays">' +
+      BACK.days.map((iso) => '<button type="button" data-go="' + esc(iso) + '">' + esc(backDayLabel(SH, iso)) + '</button>').join('') + '</div>';
+  }
+  h += '<div class="muted">直したら、「1か月の一覧」の下にある<b>「直したので、もう一度提出」</b>を押してください。</div></div>';
+  $('backArea').innerHTML = h;
+}
+$('backArea').onclick = (e) => {
+  const b = e.target.closest('[data-go]');
+  if (!b) return;
+  const i = SH.dates.findIndex((d) => d.iso === b.dataset.go);
+  if (i >= 0) { CUR = i; setTab('day'); drawDay(); }
+};
+function backDays() { return BACK && !CONF ? BACK.days : []; }
 function kubun() { return SET.kubun; }
 function parking() { return kubun() === 'パート' ? true : !!SET.parking; }
 
@@ -151,6 +178,7 @@ function drawDay() {
   $('daySub').textContent = d.iso === todayIso() ? 'きょう' : (d.iso < todayIso() ? '過去の日' : 'これからの日');
   $('prevDay').disabled = CUR === 0;
   $('nextDay').disabled = CUR === SH.dates.length - 1;
+  $('dayBack').innerHTML = backDays().indexOf(d.iso) >= 0 ? '<div class="backbox"><div class="bt">この日は、事務から修正のお願いがあります</div><div class="bm">' + esc(BACK.msg) + '</div></div>' : '';
   renderForm($('form'), {
     pid: SH.pid, name: ME, kubun: kubun(), parking: parking(), date: d, sh: STAFF.shifts[d.iso],
     rec: RECS[d.iso] || null, locked: !!CONF, by: '本人',
@@ -163,24 +191,24 @@ function flash() {
   document.querySelector('#form .box').appendChild(el);
 }
 function drawList() {
-  const t = calcStaff(SH, STAFF, RECS, SET, !!CONF);
+  const t = calcStaff(SH, STAFF, RECS, SET, !!CONF, BACK);
   $('perTitle').textContent = SH.label;
   $('perSub').textContent = SH.start + '〜' + SH.end + '（' + t.n + '日）';
   $('stats').innerHTML = statsHTML(t);
-  $('table').innerHTML = monthTableHTML(SH, STAFF, RECS, kubun(), parking());
+  $('table').innerHTML = monthTableHTML(SH, STAFF, RECS, kubun(), parking(), backDays());
   let h = '';
   if (CONF) {
     h = '<div class="sum" style="text-align:center"><span class="badge b-ok">確定済み</span><div class="muted" style="margin-top:6px">直したいときは、事務に連絡してください。</div></div>';
   } else {
-    h = '<button type="button" class="btn" id="confBtn">今月分を確定して提出</button><div class="err" id="confErr"></div>' +
+    h = (BACK ? '<button type="button" class="btn back" id="confBtn">直したので、もう一度提出</button>' : '<button type="button" class="btn" id="confBtn">今月分を確定して提出</button>') + '<div class="err" id="confErr"></div>' +
         '<div class="muted">全部の日を申告すると確定できます。確定したあとに直したいときは、事務に連絡してください。</div>';
   }
   $('confArea').innerHTML = h;
   const b = $('confBtn');
   if (b) b.onclick = async () => {
     if (t.missing.length) { $('confErr').textContent = 'まだ申告していない日が ' + t.missing.length + '日 あります'; return; }
-    if (!confirm(SH.label + 'の申告を確定して提出します。よろしいですか？')) return;
-    try { await api('confirm', { pid: SH.pid, name: ME }); CONF = new Date().toISOString(); drawList(); drawDay(); toParent({ type: 'saved' }); }
+    if (!confirm(SH.label + 'の申告を' + (BACK ? '直して、もう一度提出' : '確定して提出') + 'します。よろしいですか？')) return;
+    try { const wasBack = !!BACK; await api('confirm', { pid: SH.pid, name: ME }); CONF = new Date().toISOString(); BACK = null; drawBack(); drawList(); drawDay(); toParent({ type: 'saved' }); if (wasBack) toParent({ type: 'resubmitted' }); }
     catch (e) { $('confErr').textContent = e.message; }
   };
 }

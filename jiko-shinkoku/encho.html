@@ -10,7 +10,7 @@
 .top h2{margin:0;font-size:18px}
 .acts{display:flex;flex-wrap:wrap;gap:8px}
 .acts .btn{width:auto;padding:0 18px;height:44px;font-size:15px}
-.stats4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.stats4{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 .stats4 div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
 .stats4 b{display:block;font-size:22px;color:var(--blue-d)}
 .stats4 span{font-size:12px;font-weight:700;color:var(--ink2)}
@@ -59,7 +59,7 @@ table.mt th.grp{text-align:center;background:#dfe6fb}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="common.js"></script>
 <script>
-let SH = null, G = { recs: {}, conf: {}, set: {} }, FILT = 'all', ROWS = [];
+let SH = null, G = { recs: {}, conf: {}, set: {}, back: {} }, FILT = 'all', ROWS = [];
 function $(id) { return document.getElementById(id); }
 function show(id, on) { $(id).classList.toggle('hidden', !on); }
 function setOf(name) { return effSetting(name, G, SH.staff.find((x) => x.name === name), SH); }
@@ -79,7 +79,7 @@ async function reload() { G = groupLoad(await api('load', { pid: SH.pid })); }
 function compute() {
   ROWS = SH.staff.map((s) => {
     const set = setOf(s.name);
-    const t = calcStaff(SH, s, G.recs[s.name] || {}, set, !!G.conf[s.name]);
+    const t = calcStaff(SH, s, G.recs[s.name] || {}, set, !!G.conf[s.name], G.back[s.name]);
     if (set.kubun === '対象外') t.status = '対象外';
     return { s, set, t, unset: set.kubunSrc === '初期値' };
   });
@@ -94,6 +94,7 @@ function draw() {
     '<div><b>' + cnt((r) => r.t.status === '確定') + ' / ' + act.length + '</b><span>確定済み（対象外 ' + (ROWS.length - act.length) + '名を除く）</span></div>' +
     '<div><b>' + cnt((r) => r.t.status === '入力中' || r.t.status === '入力完了') + '</b><span>入力中・未確定</span></div>' +
     '<div><b style="color:#b3261e">' + cnt((r) => r.t.status === '未申告あり') + '</b><span>未申告の日あり</span></div>' +
+    '<div><b style="color:#8a3200">' + cnt((r) => r.t.status === '差し戻し中') + '</b><span>差し戻し中（本人が修正中）</span></div>' +
     '<div><b style="color:#7a4a00">' + cnt((r) => r.unset) + '</b><span>職員マスタに区分なし</span></div>';
   const rows = ROWS.filter((r) => FILT === 'all' || (FILT === 'ng' ? (r.t.status !== '確定' && r.t.status !== '対象外') : r.set.kubun === FILT));
   let h = '<div class="tblwrap"><table class="mt"><thead><tr><th rowspan="2">職員名</th><th rowspan="2">区分</th><th rowspan="2">状態</th><th rowspan="2">入力</th>' +
@@ -126,24 +127,72 @@ function openStaff(name, dayIso) {
   const set = setOf(name);
   const recs = G.recs[name] || {};
   const conf = !!G.conf[name];
-  const t = calcStaff(SH, s, recs, set, conf);
+  const back = G.back[name] || null;
+  const t = calcStaff(SH, s, recs, set, conf, back);
   const park = set.kubun === 'パート' ? true : !!set.parking;
   let h = '<div class="row"><div><b style="font-size:17px">' + esc(name) + '</b> <span class="badge b-blue">' + esc(set.kubun) + '</span> ' + statusBadge(t.status) + '</div>' +
     '<button type="button" class="btn2" id="mClose">閉じる</button></div>';
   h += statsHTML(t);
   if (t.warn.length) h += '<div class="demo">' + esc(t.warn.join('、')) + '。「職員の設定」で有休1日分の時間を入れてください。</div>';
-  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;align-items:start"><div id="mTable">' + monthTableHTML(SH, s, recs, set.kubun, park) + '</div><div id="mForm"><div class="note">左の表で日付を押すと、その日の申告を直せます。</div></div></div>';
-  h += '<div class="acts">' + (conf ? '<button type="button" class="btn2" id="mUnconf">確定を取り消す（本人が直せるように戻す）</button>' : '<button type="button" class="btn2" id="mConf">事務が代わりに確定する</button>') + '</div>';
+  if (back && !conf) {
+    h += '<div class="backbox"><div class="bt">差し戻し中（' + esc(backAt(back.at)) + '）— 本人が直して、もう一度提出するのを待っています</div>' +
+      '<div class="bm">' + esc(back.msg) + '</div>' +
+      (back.days.length ? '<div class="muted">直してほしい日：' + back.days.map((iso) => esc(backDayLabel(SH, iso))).join('、') + '</div>' : '') +
+      '<div><button type="button" class="btn2" id="mBackClear">差し戻しを取り消す（お知らせを消す）</button></div></div>';
+  }
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;align-items:start"><div id="mTable">' + monthTableHTML(SH, s, recs, set.kubun, park, back && !conf ? back.days : []) + '</div><div id="mForm"><div class="note">左の表で日付を押すと、その日の申告を直せます。<br>本人に直してもらいたいときは、下の「差し戻す」を押してください。</div></div></div>';
+  h += '<div class="acts"><button type="button" class="btn2" id="mBack" style="border-color:#d9590f;color:#8a3200">差し戻す（本人に直してもらう）</button>' +
+    (conf ? '' : '<button type="button" class="btn2" id="mConf">事務が代わりに確定する</button>') + '</div>';
   $('modalBody').innerHTML = h; show('modal', true);
   $('mClose').onclick = closeModal;
   const mt = $('mTable');
   mt.onclick = (e) => { const tr = e.target.closest('tr[data-date]'); if (tr) openDay(name, tr.dataset.date); };
-  const u = $('mUnconf'); if (u) u.onclick = async () => { if (!confirm('確定を取り消しますか？')) return; await api('unconfirm', { pid: SH.pid, name }); delete G.conf[name]; openStaff(name); };
+  $('mBack').onclick = () => openBackForm(name);
+  const bc = $('mBackClear'); if (bc) bc.onclick = async () => {
+    if (!confirm('差し戻しを取り消しますか？（本人の画面のお知らせが消えます。確定はされません）')) return;
+    try { await api('clearback', { pid: SH.pid, name }); delete G.back[name]; openStaff(name); } catch (e) { alert(e.message); }
+  };
   const c = $('mConf'); if (c) c.onclick = async () => {
     if (t.missing.length && !confirm('未申告の日が ' + t.missing.length + '日 あります。このまま確定しますか？')) return;
-    await api('confirm', { pid: SH.pid, name }); G.conf[name] = new Date().toISOString(); openStaff(name);
+    await api('confirm', { pid: SH.pid, name }); G.conf[name] = new Date().toISOString(); delete G.back[name]; openStaff(name);
   };
   if (dayIso) openDay(name, dayIso);
+}
+/* ---------- 差し戻し（2026-11-10追加） ----------
+   理由を書き、必要なら直してほしい日を選んで、本人に差し戻す。
+   確定済みでも入力完了でも使える。差し戻すと確定が外れ、本人が直せるようになる。 */
+function openBackForm(name) {
+  const sel = {};
+  const back = G.back[name];
+  if (back) back.days.forEach((d) => { sel[d] = true; });
+  function chips() {
+    return SH.dates.map((d) => '<button type="button" class="chip sm' + (sel[d.iso] ? ' on' : '') + '" data-d="' + d.iso + '" aria-pressed="' + !!sel[d.iso] + '">' + esc(d.md) + ' ' + esc(d.dow) + '</button>').join('');
+  }
+  $('mForm').innerHTML = '<div class="backbox"><div class="bt">' + esc(name) + 'さんに差し戻す</div>' +
+    '<div class="lbl" style="margin:0">理由・直してほしいこと（本人の画面にそのまま出ます）</div>' +
+    '<textarea class="in" id="bMsg" placeholder="例）11/5は早番ではなく日勤でした。勤務時間を直してください。">' + esc(back ? back.msg : '') + '</textarea>' +
+    '<div class="lbl" style="margin:0">直してほしい日（わかれば選ぶ・いくつでも）</div><div class="chips" id="bDays">' + chips() + '</div>' +
+    '<div class="muted">左の表で日付を押しても選べます。差し戻すと「確定」が外れ、本人が直して、もう一度提出できるようになります。</div>' +
+    '<button type="button" class="btn back" id="bSend">差し戻す</button><div class="err" id="bErr"></div>' +
+    '<div><button type="button" class="btn2" id="bCancel">やめる</button></div></div>';
+  const mt = $('mTable');
+  const toggle = (iso) => { sel[iso] = !sel[iso]; if (!sel[iso]) delete sel[iso]; $('bDays').innerHTML = chips(); };
+  $('bDays').onclick = (e) => { const b = e.target.closest('[data-d]'); if (b) toggle(b.dataset.d); };
+  mt.onclick = (e) => { const tr = e.target.closest('tr[data-date]'); if (tr) toggle(tr.dataset.date); };
+  $('bCancel').onclick = () => openStaff(name);
+  $('bSend').onclick = async () => {
+    const msg = $('bMsg').value.trim();
+    if (!msg) { $('bErr').textContent = '理由・直してほしいことを入れてください'; return; }
+    const days = SH.dates.map((d) => d.iso).filter((iso) => sel[iso]);
+    if (!confirm(name + 'さんに差し戻します。よろしいですか？')) return;
+    $('bSend').disabled = true; $('bErr').textContent = '';
+    try {
+      await api('sendback', { pid: SH.pid, name, msg, days });
+      delete G.conf[name]; G.back[name] = { days, msg, at: new Date().toISOString().slice(0, 10) };
+      openStaff(name);
+    } catch (e) { $('bSend').disabled = false; $('bErr').textContent = e.message; }
+  };
+  $('mForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 function openDay(name, iso) {
   const s = SH.staff.find((x) => x.name === name);

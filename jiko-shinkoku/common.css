@@ -75,3 +75,15 @@ table.mt td.num{text-align:right;font-variant-numeric:tabular-nums}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:20px 10px}
 .modal{background:var(--bg);border-radius:16px;max-width:520px;width:100%;padding:14px;display:flex;flex-direction:column;gap:12px}
 .modal.big{max-width:900px}
+/* 差し戻し（2026-11-10追加） */
+.b-back{background:#ffe1cc;color:#8a3200}
+.backbox{border:2px solid #d9590f;background:#fff4ec;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.backbox .bt{font-size:15px;font-weight:700;color:#8a3200}
+.backbox .bm{font-size:14px;line-height:1.7;background:#fff;border-radius:10px;padding:8px 10px;white-space:pre-wrap;word-break:break-word}
+.backbox .bdays{display:flex;flex-wrap:wrap;gap:6px}
+.backbox .bdays button{min-height:40px;padding:0 12px;border-radius:999px;border:1.5px solid #d9590f;background:#fff;color:#8a3200;font-size:14px;font-weight:700;cursor:pointer}
+table.mt tr.back td{background:#fff4ec}
+table.mt .bk{font-size:11px;font-weight:700;color:#fff;background:#d9590f;border-radius:999px;padding:1px 7px}
+textarea.in{width:100%;min-height:90px;font-size:16px;border:1px solid #b9b8b1;border-radius:10px;padding:8px 10px;background:#fff;font-family:inherit;line-height:1.6}
+.chip.sm{min-height:36px;padding:0 10px;font-size:13px}
+.btn.back{background:#d9590f}
