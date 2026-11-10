@@ -55,8 +55,8 @@ function avgWorkMin(shift, staff) {
 }
 
 /* ---------- 時間の計算 ---------- */
-// 休憩（試用版の仮ルール）：拘束6時間超→45分、8時間以上→60分を引く
-function breakMin(span) { return span >= 480 ? 60 : (span > 360 ? 45 : 0); }
+// 休憩：ふれあいは変形労働・短時間勤務も含め全職員60分。拘束6時間以下の短いシフトは休憩なし
+function breakMin(span) { return span > 360 ? 60 : 0; }
 // "8:30-17:30" → 実働の分
 function planMin(time) {
   const m = /(\d{1,2}):(\d{2})\s*[-〜~～]\s*(\d{1,2}):(\d{2})/.exec(time || '');
