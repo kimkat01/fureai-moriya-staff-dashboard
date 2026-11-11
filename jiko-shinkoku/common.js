@@ -43,27 +43,36 @@ function effSetting(name, G, staff, shift) {
   const mk = (G && G.master && G.master[nkey(name)]) || JK.MASTER_FALLBACK[nkey(name)] || '';
   const kubun = man.kubun || mk || 'パート';
   const kubunSrc = man.kubun ? '事務' : (mk ? '職員マスタ' : '初期値');
-  const avg = staff && shift ? avgWorkMin(shift, staff) : 0;
+  const avg = staff && shift ? avgWorkMin(shift, staff, kubun) : 0;
   const yukyuMin = +man.yukyuMin > 0 ? +man.yukyuMin : avg;
   return { kubun, kubunSrc, masterKubun: mk, parking: !!man.parking || JK.PARKING_FIXED.indexOf(nkey(name)) >= 0, parkingFixed: JK.PARKING_FIXED.indexOf(nkey(name)) >= 0, yukyuMin, yukyuSrc: +man.yukyuMin > 0 ? '事務' : '自動', avgMin: avg };
 }
 // その期間の勤務日の実働の平均（有休・特休1日分の時間に使う）
-function avgWorkMin(shift, staff) {
+function avgWorkMin(shift, staff, kubun) {
   let sum = 0, n = 0;
-  shift.dates.forEach((d) => { const sh = staff.shifts[d.iso]; if (sh && (sh.state === 'work' || sh.state === 'training')) { const p = planMin(sh.time); if (p > 0) { sum += p; n++; } } });
+  shift.dates.forEach((d) => { const sh = staff.shifts[d.iso]; if (sh && (sh.state === 'work' || sh.state === 'training')) { const p = planMin(sh.time, kubun); if (p > 0) { sum += p; n++; } } });
   return n ? Math.round(sum / n) : 0;
 }
 
 /* ---------- 時間の計算 ---------- */
-// 休憩：ふれあいは変形労働・短時間勤務も含め全職員60分。拘束6時間以下の短いシフトは休憩なし
-function breakMin(span) { return span > 360 ? 60 : 0; }
-// "8:30-17:30" → 実働の分
-function planMin(time) {
+// 休憩（ふれあいのルール、2026-11-11）
+//   正規：短時間勤務・変形労働も含め、全員60分
+//   パート：実働6時間未満→休憩なし／実働6時間以上〜8時間未満→45分／実働8時間以上→60分
+//     拘束時間でいうと：6時間以下→なし、6時間超〜9時間未満→45分、9時間以上→60分
+//     （例：8:30-17:00 拘束8時間30分→45分で実働7時間45分、8:00-17:00 拘束9時間→60分で実働8時間）
+function breakMin(span, kubun) {
+  if (kubun === '正規') return span > 60 ? 60 : 0;
+  if (span >= 540) return 60;
+  if (span > 360) return 45;
+  return 0;
+}
+// "8:30-17:30" → 実働の分（kubun＝'正規'／'パート'／'対象外'。正規以外はパートのルール）
+function planMin(time, kubun) {
   const m = /(\d{1,2}):(\d{2})\s*[-〜~～]\s*(\d{1,2}):(\d{2})/.exec(time || '');
   if (!m) return 0;
   const span = (+m[3] * 60 + +m[4]) - (+m[1] * 60 + +m[2]);
   if (span <= 0) return 0;
-  return span - breakMin(span);
+  return span - breakMin(span, kubun);
 }
 function fmtHM(min) {
   min = Math.round(min || 0);
@@ -163,7 +172,7 @@ function defaultKind(sh, kubun) {
 }
 // 有休・特休の日に支給する時間（シフトに時間があればそれ、なければ職員設定の値）
 function leavePlanMin(sh, setting) {
-  const p = planMin(sh && sh.time);
+  const p = planMin(sh && sh.time, setting && setting.kubun);
   if (p > 0) return p;
   return (setting && +setting.yukyuMin) || 0;
 }
@@ -183,7 +192,7 @@ function calcStaff(shift, staff, recMap, setting, confirmed, back) {
     t.done++;
     t.c[r.kind] = (t.c[r.kind] || 0) + 1;
     if (r.kind === '出勤') {
-      const p = planMin(sh && (sh.state === 'work' || sh.state === 'training') ? sh.time : '');
+      const p = planMin(sh && (sh.state === 'work' || sh.state === 'training') ? sh.time : '', kubun);
       t.plan += p;
       if (r.mode === 'edit') t.diff += (+r.min || 0) - p;
       t.work += r.mode === 'edit' ? (+r.min || 0) : p;
@@ -292,7 +301,7 @@ function splitMin(min) { min = +min || 0; return { h: String(Math.floor(min / 60
   ctx = { pid, name, kubun, parking, date:{iso,md,dow,event}, sh, rec, locked, by, onSaved }
 */
 function renderForm(el, ctx) {
-  const p = planMin(ctx.sh && (ctx.sh.state === 'work' || ctx.sh.state === 'training') ? ctx.sh.time : '');
+  const p = planMin(ctx.sh && (ctx.sh.state === 'work' || ctx.sh.state === 'training') ? ctx.sh.time : '', ctx.kubun);
   const r = ctx.rec || {};
   const sp = splitMin(r.mode === 'edit' ? r.min : p);
   const st = {
