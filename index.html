@@ -711,6 +711,7 @@ html.law-y #screen-mental .aic-topics-btns button{background:#eef8ef;border-colo
 @keyframes aicbop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
 #screen-mental .aic .aimc-inp{padding:8px 12px 12px;border-top:1px solid #e5e9f2;background:#fff;flex-shrink:0;}
 #screen-mental .aic .aimc-send{right:17px;}
+#screen-mental .aimc-note{font-size:11px;line-height:1.6;color:var(--ink-soft);margin:-4px 2px 10px;}
 /* AIカード：入力行の前の話題ボタン（チャット画面の話題ボタンと同じ見た目） */
 #screen-mental .aimc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
 #screen-mental .aimc-chips button{background:#eef2ff;border:1.5px solid #c7d2fe;border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:600;color:#3451b2;cursor:pointer;font-family:inherit;}
@@ -1082,7 +1083,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
       <div id="mh-top">
 
         <!-- 2026-11-11：プライバシーの一言をいちばん上に -->
-        <div class="mhsafe top">🔒 <b>相談内容や診断結果が、園長・本部に伝わることはありません。</b></div>
+        <div class="mhsafe top">🔒 <b>ストレスチェックの結果やカウンセリングの内容が、園長・本部に伝わることはありません。</b></div>
 
         <!-- ===== AIメンタルカウンセリング（入力行はドメボットと同じ。送信するとチャット画面 mh-ai へ） ===== -->
         <div class="aimc">
@@ -1108,6 +1109,8 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
               <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
           </div>
+          <!-- 2026-11-11：会話の記録について（本部の限られた担当者が閲覧のみ・ドメボットと同じ形） -->
+          <div class="aimc-note">※AIとの会話は記録され、本部の限られた担当者（閲覧のみ）が確認することがあります。</div>
         </div>
 
         <!-- ===== メンタルヘルスサポート（既存メニューを1枚のカードに集約・箇条書き） ===== -->
@@ -1143,7 +1146,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
               <div class="aic-name">AIメンタルカウンセリング</div>
             </div>
           </div>
-          <div class="aic-note">AIは医師・カウンセラーではありません。つらさが強いときは、カウンセリングや電話相談窓口をご利用ください。</div>
+          <div class="aic-note">AIは医師・カウンセラーではありません。つらさが強いときは、カウンセリングや電話相談窓口をご利用ください。会話は記録され、本部の限られた担当者（閲覧のみ）が確認することがあります。</div>
           <div class="aic-body" id="aicBody">
             <div class="aic-topics">
               <div class="aic-topics-lbl">💬 話したいことを選んでもOK</div>
@@ -1174,7 +1177,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
         el.addEventListener('input',function(){ el.style.height='38px'; el.style.height=Math.min(el.scrollHeight,90)+'px'; });
       });
       var AIC_ICON='<img src="icons/aimc-doctor.png" alt="AIカウンセラー">';
-      var AIC_WELCOME='こんにちは。ここでは、仕事のことや気持ちのことを、なんでも話してください。\nうまくまとまっていなくても大丈夫です。';
+      var AIC_WELCOME='こんにちは。ここでは、仕事のことや気持ちのことを、なんでも話してください。\nうまくまとまっていなくても大丈夫です。\n\n（この会話は記録され、本部の限られた担当者（閲覧のみ）が確認することがあります。）';
       var AIC_PENDING='話してくれてありがとうございます。\n\n（AIの返答機能は現在準備中です）\nお急ぎのときは、メンタルヘルスサポートの「カウンセリング」や「電話相談窓口」をご利用ください。';
       var aicStarted=false;
       function aicEsc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
