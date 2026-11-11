@@ -107,7 +107,8 @@ main{padding:16px}
   font-family:inherit;min-height:118px;transition:transform .12s ease;position:relative;
   width:calc(50% - 6px);}
 .tile:active{transform:scale(.975)}
-/* カード右上の点滅バッジ（2026-10-23：お知らせ=NEW、ドメボット=Update）。消すときは MENU の badge を外す */
+/* カード右上の点滅バッジ。2026-11-11：お知らせ（NEW）・ドメボット（Update）のバッジを外した。
+   また付けるときは、MENU の該当カードに badge:"NEW" や badge:"Update" を足す（例：ic:"news",badge:"NEW",） */
 .tile .flag.flag-blink{color:#fff;background:#e53935;font-size:10px;letter-spacing:.03em;animation:tbBlink 1.2s ease-in-out infinite;}
 @keyframes tbBlink{0%,100%{opacity:1}50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){.tile .flag.flag-blink{animation:none}}
@@ -9774,9 +9775,9 @@ let HOME_MENU=[];
 const MENU=[
  {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShiftLogin();}}},
  {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(uqUrl(),"有給チェッカー","uq","i-early")},
- {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",badge:"NEW",tint:"i-sky",go:()=>goNews()},
+ {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-sky",go:()=>goNews()},
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-lav",go:()=>goManual()},
- {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",badge:"Update",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
+ {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
  {t:"メンタルヘルスサポート",d:"ストレスチェックやカウンセリング等の手続き",ic:"doctor",tint:"i-gold",go:()=>goMental()},
  {t:"ご意見箱",d:"匿名で本部に届ける",ic:"box",tint:"i-mid",go:()=>goOmeyasu()},
  {t:"となりの保育室",d:"ほかの園の保育を見てみよう",ic:"tonari",tint:"i-pink",go:()=>goTonari()},
