@@ -9749,6 +9749,8 @@ IMG.hiroba="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.o
   '</svg>');
 IC.hiroba='<svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16.5" cy="9" r="2.5"/><path d="M2.5 20c0-3.2 2.4-5.4 5.5-5.4s5.5 2.2 5.5 5.4"/><path d="M14 15.3c.8-.5 1.6-.7 2.5-.7 2.6 0 4.5 2 4.5 5.4"/></svg>';
 function sdShowHiroba(){
+  /* 2026-11-11：しおどめひろばは開発中止。ホームには出さず、ご意見箱を元の位置に戻す（本部の人にも出さない） */
+  return false;
   if(window.SD_HONBU_VIEW) return true;
   try{var s=getPinSession();return !!(s&&s.role==='本部');}catch(e){return false;}
 }
