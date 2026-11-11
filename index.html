@@ -634,6 +634,83 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-mental .done p{font-size:13px;color:var(--ink-soft);line-height:1.7;margin:0 0 12px;}
 #screen-mental a.mhrow{text-decoration:none;}
 #screen-mental .hidden{display:none}
+
+/* ===== AIメンタルカウンセリング（2026-11-11追加・接頭辞 aimc） =====
+   メンタルヘルスサポート画面のいちばん上のカード。タイトル＋サブタイトル＋入力行。
+   入力行はドメボット（dome-chat の .inp-area）と同じ見た目：丸い入力枠の右下に紙飛行機の送信ボタンを重ねる。
+   色は法人色（柴学園＝青／雄雅会＝緑、--brand-blue）に合わせる。 */
+#screen-mental .aimc{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:14px 14px 4px;margin-bottom:14px;}
+#screen-mental .aimc-hd{display:flex;gap:11px;align-items:flex-start;}
+#screen-mental .aimc-ic{flex:0 0 auto;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#e3e5fb;color:var(--brand-blue);}
+html.law-y #screen-mental .aimc-ic{background:#dff3e2;}
+/* 2026-11-11：吹き出しアイコンの代わりにキャラクター（白衣のANSHIN KUN）を左に置く。画像は icons/aimc-doctor.png */
+#screen-mental .aimc-hd{align-items:center;}
+#screen-mental .aimc-chara{flex:0 0 auto;width:58px;margin:-4px 2px -6px 0;}
+#screen-mental .aimc-chara img{display:block;width:100%;height:auto;}
+#screen-mental .aimc-hd h2{margin:0 0 3px;font-size:16px;font-weight:800;}
+#screen-mental .aimc-hd p{margin:0;font-size:12.5px;line-height:1.6;color:var(--ink-soft);}
+#screen-mental .aimc-inp{position:relative;padding:12px 0 12px;display:flex;align-items:flex-end;}
+#screen-mental .aimc-inp textarea{flex:1;width:auto;min-height:0;resize:none;border:2px solid var(--brand-blue);border-radius:20px;padding:8px 48px 8px 14px;font-size:13px;font-family:inherit;line-height:1.5;height:38px;max-height:90px;overflow-y:hidden;background:#f0f4ff;color:#1a1a1a;font-weight:500;}
+html.law-y #screen-mental .aimc-inp textarea{background:#eef8ef;}
+#screen-mental .aimc-inp textarea::placeholder{color:#7b93d4;font-weight:400;}
+html.law-y #screen-mental .aimc-inp textarea::placeholder{color:#7fb383;}
+#screen-mental .aimc-inp textarea:focus{outline:none;background:#fff;box-shadow:0 0 0 3px rgba(65,105,225,.15);}
+html.law-y #screen-mental .aimc-inp textarea:focus{box-shadow:0 0 0 3px rgba(67,160,71,.18);}
+#screen-mental .aimc-send{position:absolute;right:5px;bottom:17px;width:28px;height:28px;border-radius:50%;background:var(--brand-blue);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;padding:0;}
+#screen-mental .aimc-send:hover{opacity:.85;transform:scale(1.05);}
+#screen-mental .aimc-send svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+#screen-mental .aimc-msg{font-size:12px;color:var(--ink-soft);line-height:1.6;margin:-4px 4px 10px;}
+#screen-mental .aimc-msg:empty{display:none;}
+
+/* ===== メンタルヘルスサポート：まとめカード（2026-11-11 既存メニューを1枚のカード＋箇条書きに集約） ===== */
+#screen-mental .mhsafe.top{margin:0 0 12px;}
+#screen-mental .mhbox{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:14px 14px 6px;}
+#screen-mental .mhbox-hd{display:flex;gap:11px;align-items:flex-start;margin-bottom:8px;}
+#screen-mental .mhbox-hd h2{margin:0 0 3px;font-size:16px;font-weight:800;}
+#screen-mental .mhbox-hd p{margin:0;font-size:12.5px;line-height:1.6;color:var(--ink-soft);}
+#screen-mental ul.mhlist{list-style:none;margin:0;padding:0;}
+#screen-mental ul.mhlist li{border-top:1px solid var(--line);}
+#screen-mental ul.mhlist button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 2px;background:transparent;border:0;font-family:inherit;font-size:14px;font-weight:700;color:var(--ink);text-align:left;cursor:pointer;}
+#screen-mental ul.mhlist button::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50%;background:var(--gold);}
+#screen-mental ul.mhlist button:active{background:#faf9f7;}
+#screen-mental ul.mhlist .lt{flex:1;min-width:0;}
+#screen-mental ul.mhlist .ls{font-size:11.5px;font-weight:500;color:var(--ink-soft);margin-left:4px;}
+#screen-mental ul.mhlist .chev{flex:0 0 auto;color:var(--ink-soft);font-weight:400;}
+
+/* ===== AIメンタルカウンセリング：チャット画面（ドメボットの見た目に合わせる・接頭辞 aic） ===== */
+#screen-mental .aic{display:flex;flex-direction:column;height:calc(100dvh - 140px);min-height:440px;border-radius:16px;overflow:hidden;background:#f0f4f8;box-shadow:0 2px 10px rgba(0,0,0,.08);border:1px solid var(--line);}
+#screen-mental .aic-hdr{background:var(--brand-blue);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#screen-mental .aic-av-l{width:46px;height:46px;border-radius:50%;background:#fff;flex-shrink:0;display:grid;place-items:center;color:var(--brand-blue);box-shadow:0 2px 6px rgba(0,0,0,.15);}
+#screen-mental .aic-av-l svg{width:24px;height:24px;}
+#screen-mental .aic-ttl{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.88);line-height:1.3;}
+#screen-mental .aic-name{font-size:16px;font-weight:800;color:#fff;letter-spacing:.03em;margin-top:1px;}
+#screen-mental .aic-note{flex-shrink:0;font-size:11px;line-height:1.55;color:#5b6475;background:#fff;border-bottom:1px solid #e5e9f2;padding:7px 14px;}
+#screen-mental .aic-body{flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column;}
+#screen-mental .aic-topics{background:#fff;border-radius:14px;padding:12px 14px;margin:10px 14px 2px;border:1.5px solid #e8edf5;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+#screen-mental .aic-topics-lbl{font-size:11px;color:var(--brand-blue);font-weight:700;margin-bottom:8px;}
+#screen-mental .aic-topics-btns{display:flex;flex-wrap:wrap;gap:6px;}
+#screen-mental .aic-topics-btns button{background:#eef2ff;border:1.5px solid #c7d2fe;border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:600;color:#3451b2;cursor:pointer;font-family:inherit;}
+html.law-y #screen-mental .aic-topics-btns button{background:#eef8ef;border-color:#bfe3c2;color:#2e7d32;}
+#screen-mental .aic-topics-btns button:active{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue);}
+#screen-mental .aic-msgs{flex:1;padding:10px 14px;display:flex;flex-direction:column;gap:10px;}
+#screen-mental .aic-row{display:flex;align-items:flex-end;gap:6px;}
+#screen-mental .aic-row.user{flex-direction:row-reverse;}
+#screen-mental .aic-av{width:34px;height:34px;border-radius:50%;flex-shrink:0;background:#fff;display:grid;place-items:center;color:var(--brand-blue);box-shadow:0 1px 3px rgba(0,0,0,.09);}
+#screen-mental .aic-av svg{width:18px;height:18px;}
+/* 2026-11-11：AIのアイコンを白衣のキャラクターに（丸の中に頭が入るよう上寄せで切り抜き） */
+#screen-mental .aic-av,#screen-mental .aic-av-l{overflow:hidden;}
+#screen-mental .aic-av img,#screen-mental .aic-av-l img{width:100%;height:100%;object-fit:cover;object-position:50% 6%;}
+#screen-mental .aic-bub{padding:9px 13px;border-radius:18px;font-size:13px;line-height:1.75;max-width:78%;white-space:pre-wrap;word-break:break-word;}
+#screen-mental .aic-row.bot .aic-bub{background:#fff;color:#1a1a1a;border-bottom-left-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.09);}
+#screen-mental .aic-row.user .aic-bub{background:var(--brand-blue);color:#fff;border-bottom-right-radius:4px;}
+#screen-mental .aic-ts{font-size:10px;color:#aaa;margin:0 4px 2px;white-space:nowrap;}
+#screen-mental .aic-typing{padding:9px 13px;background:#fff;border-radius:18px;border-bottom-left-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.09);display:flex;gap:5px;align-items:center;}
+#screen-mental .aic-dot{width:7px;height:7px;background:#93c5fd;border-radius:50%;animation:aicbop .9s infinite;}
+#screen-mental .aic-dot:nth-child(2){animation-delay:.18s}
+#screen-mental .aic-dot:nth-child(3){animation-delay:.36s}
+@keyframes aicbop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+#screen-mental .aic .aimc-inp{padding:8px 12px 12px;border-top:1px solid #e5e9f2;background:#fff;flex-shrink:0;}
+#screen-mental .aic .aimc-send{right:17px;}
 </style>
 <!-- 利用状況（アクセスログ・2026-10-20追加）：共通版と同じ送信スクリプトを読み込む（起動時の記録に間に合うよう head で読む） -->
 <script src="https://kimkat01.github.io/staff-dashboard/access-log.js"></script>
@@ -998,63 +1075,127 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
 
       <!-- ========== トップ（規約・マニュアルと同じ並び） ========== -->
       <div id="mh-top">
-        <div class="mhintro">
-          <div class="mhic"><svg class="i" viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg></div>
-          <div>
-            <h2 class="round">メンタルヘルスサポート</h2>
-            <p>法人が契約している<b class="svc"></b>を使って、ストレスチェックの受検や、専門カウンセラーへの相談ができます。費用は法人負担です。</p>
+
+        <!-- 2026-11-11：プライバシーの一言をいちばん上に -->
+        <div class="mhsafe top">🔒 <b>相談内容や診断結果が、園長・本部に伝わることはありません。</b></div>
+
+        <!-- ===== AIメンタルカウンセリング（入力行はドメボットと同じ。送信するとチャット画面 mh-ai へ） ===== -->
+        <div class="aimc">
+          <div class="aimc-hd">
+            <div class="aimc-chara"><img src="icons/aimc-doctor.png" alt="AIカウンセラー"></div>
+            <div>
+              <h2 class="round">AIメンタルカウンセリング</h2>
+              <p>仕事の悩みやモヤモヤを、AIにいつでも話せます。</p>
+            </div>
+          </div>
+          <div class="aimc-inp">
+            <textarea id="aimcInp" class="aimc-ta" placeholder="いまの気持ちや悩みを入力..." rows="1"></textarea>
+            <button class="aimc-send" onclick="aimcStart()" aria-label="送信">
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
           </div>
         </div>
-        <div class="mhsafe">🔒 <b>相談内容や診断結果が、園長・本部に伝わることはありません。</b>本部が受け取るのは、あなたが「本部経由」を選んだ申込みの日程調整に必要な情報だけです。</div>
 
-        <div class="mhgroup">
-          <div class="mhglabel">ストレスチェック</div>
-          <button class="mhrow" onclick="mhShow('sc')">
-            <span class="mhfic"><svg class="i" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h11"/></svg></span>
-            <span class="mhmeta"><span class="mht">2026年度 ストレスチェックを受ける</span><span class="mhd">受検期間 10/1〜10/31 ・ 所要 約10分</span><span class="mhpill warn">未受検</span></span>
-            <span class="mhchev">›</span>
-          </button>
-        </div>
-
-        <div class="mhgroup">
-          <div class="mhglabel">カウンセリング</div>
-          <button class="mhrow" onclick="mhShow('cs')">
-            <span class="mhfic"><svg class="i" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span>
-            <span class="mhmeta"><span class="mht">カウンセリングを予約する</span><span class="mhd">対面・オンライン・電話から選べます</span><span class="mhpill to-hq">本部経由</span> <span class="mhpill to-ext">直接予約も可</span></span>
-            <span class="mhchev">›</span>
-          </button>
-          <button class="mhrow" onclick="mhShow('mine')">
-            <span class="mhfic"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span>
-            <span class="mhmeta"><span class="mht">わたしの申込み状況</span><span class="mhd">日程が確定すると、ここに表示されます</span></span>
-            <span class="mhchev">›</span>
-          </button>
-        </div>
-
-        <div class="mhgroup">
-          <div class="mhglabel">医師による面接指導</div>
-          <button class="mhrow" onclick="mhShow('md')">
-            <span class="mhfic"><svg class="i" viewBox="0 0 24 24"><path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v3a4 4 0 0 0 8 0v-2"/><circle cx="18" cy="12" r="2"/></svg></span>
-            <span class="mhmeta"><span class="mht">面接指導を申し出る</span><span class="mhd">ストレスチェックで「高ストレス」と判定された方</span><span class="mhpill to-hq">本部あて</span></span>
-            <span class="mhchev">›</span>
-          </button>
-        </div>
-
-        <div class="mhgroup">
-          <div class="mhglabel">すぐに話したいとき</div>
-          <a class="mhrow tel" href="#" onclick="return false;">
-            <span class="mhfic"><svg class="i" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></span>
-            <span class="mhmeta"><span class="mht">電話相談窓口（24時間）</span><span class="mhd">0120-XXX-XXX ・ 予約不要・匿名OK</span><span class="mhpill to-ext">直接つながります</span></span>
-            <span class="mhchev">›</span>
-          </a>
-          <a class="mhrow tel" href="#" onclick="return false;">
-            <span class="mhfic"><svg class="i" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></span>
-            <span class="mhmeta"><span class="mht"><span class="svc"></span> 職員用サイトを開く</span><span class="mhd">WEB・メール相談、セルフケア記事など</span><span class="mhpill to-ext">外部サイト</span></span>
-            <span class="mhchev">›</span>
-          </a>
+        <!-- ===== メンタルヘルスサポート（既存メニューを1枚のカードに集約・箇条書き） ===== -->
+        <div class="mhbox">
+          <div class="mhbox-hd">
+            <div class="mhic"><svg class="i" viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg></div>
+            <div>
+              <h2 class="round">メンタルヘルスサポート</h2>
+              <p><b class="svc"></b>（法人契約・費用は法人負担）</p>
+            </div>
+          </div>
+          <ul class="mhlist">
+            <li><button onclick="mhShow('sc')"><span class="lt">ストレスチェックを受ける</span><span class="chev">›</span></button></li>
+            <li><button onclick="mhShow('cs')"><span class="lt">カウンセリングを予約する</span><span class="chev">›</span></button></li>
+            <li><button onclick="mhShow('mine')"><span class="lt">わたしの申込み状況</span><span class="chev">›</span></button></li>
+            <li><button onclick="mhShow('md')"><span class="lt">医師の面接指導を申し出る<span class="ls">高ストレスの方</span></span><span class="chev">›</span></button></li>
+            <li><button onclick="return false;"><span class="lt">電話相談窓口<span class="ls">24時間・匿名OK</span></span><span class="chev">›</span></button></li>
+            <li><button onclick="return false;"><span class="lt"><span class="svc"></span> 職員用サイト<span class="ls">外部サイト</span></span><span class="chev">›</span></button></li>
+          </ul>
         </div>
 
         <div class="mhfoot">ご不明な点は本部 人事担当までお問い合わせください。<br>体調がすぐれないときは、無理をせず園長・本部に一言お知らせください。</div>
       </div>
+
+      <!-- ========== AIメンタルカウンセリング：チャット（ドメボットと同じ見た目） ========== -->
+      <div id="mh-ai" class="hidden">
+        <button class="mhback" onclick="mhShow('top')">‹ メンタルヘルスサポートに戻る</button>
+        <div class="aic">
+          <div class="aic-hdr">
+            <div class="aic-av-l"><img src="icons/aimc-doctor.png" alt="AIカウンセラー"></div>
+            <div>
+              <div class="aic-ttl">しおどめグループ メンタルヘルスサポート</div>
+              <div class="aic-name">AIメンタルカウンセリング</div>
+            </div>
+          </div>
+          <div class="aic-note">AIは医師・カウンセラーではありません。つらさが強いときは、カウンセリングや電話相談窓口をご利用ください。</div>
+          <div class="aic-body" id="aicBody">
+            <div class="aic-topics">
+              <div class="aic-topics-lbl">💬 話したいことを選んでもOK</div>
+              <div class="aic-topics-btns">
+                <button onclick="aicAsk('保護者対応がつらいです')">保護者対応</button>
+                <button onclick="aicAsk('職場の人間関係で悩んでいます')">職場の人間関係</button>
+                <button onclick="aicAsk('仕事が多くて余裕がありません')">仕事量・時間</button>
+                <button onclick="aicAsk('新人で不安なことが多いです')">新人で不安</button>
+                <button onclick="aicAsk('疲れが取れず、よく眠れません')">疲れ・眠れない</button>
+                <button onclick="aicAsk('なんとなく、しんどいです')">なんとなくしんどい</button>
+              </div>
+            </div>
+            <div class="aic-msgs" id="aicMsgs"></div>
+          </div>
+          <div class="aimc-inp">
+            <textarea id="aicInp" class="aimc-ta" placeholder="いまの気持ちや悩みを入力..." rows="1"></textarea>
+            <button class="aimc-send" onclick="aicSend()" aria-label="送信">
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <script>
+      /* ===== AIメンタルカウンセリング（2026-11-11） =====
+         ・入力欄の高さはドメボットと同じ（38px〜最大90px）
+         ・AIの返答はまだ未実装。いまは「準備中」の定型文を返すだけ（会話はどこにも送信・保存しない） */
+      document.querySelectorAll('#screen-mental .aimc-ta').forEach(function(el){
+        el.addEventListener('input',function(){ el.style.height='38px'; el.style.height=Math.min(el.scrollHeight,90)+'px'; });
+      });
+      var AIC_ICON='<img src="icons/aimc-doctor.png" alt="AIカウンセラー">';
+      var AIC_WELCOME='こんにちは。ここでは、仕事のことや気持ちのことを、なんでも話してください。\nうまくまとまっていなくても大丈夫です。';
+      var AIC_PENDING='話してくれてありがとうございます。\n\n（AIの返答機能は現在準備中です）\nお急ぎのときは、メンタルヘルスサポートの「カウンセリング」や「電話相談窓口」をご利用ください。';
+      var aicStarted=false;
+      function aicEsc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+      function aicTime(){var d=new Date();return d.getHours()+':'+('0'+d.getMinutes()).slice(-2);}
+      function aicScroll(){var b=document.getElementById('aicBody'); if(b) b.scrollTop=b.scrollHeight;}
+      function aicAdd(who,text){
+        var row=document.createElement('div'); row.className='aic-row '+who;
+        row.innerHTML=(who==='bot'?'<div class="aic-av">'+AIC_ICON+'</div>':'')+'<div class="aic-bub">'+aicEsc(text)+'</div><div class="aic-ts">'+aicTime()+'</div>';
+        document.getElementById('aicMsgs').appendChild(row); aicScroll();
+      }
+      function aicOpen(){
+        if(!aicStarted){ aicStarted=true; aicAdd('bot',AIC_WELCOME); }
+        mhShow('ai');
+      }
+      function aicAsk(q){
+        if(!q) return;
+        aicAdd('user',q);
+        var t=document.createElement('div'); t.className='aic-row bot';
+        t.innerHTML='<div class="aic-av">'+AIC_ICON+'</div><div class="aic-typing"><span class="aic-dot"></span><span class="aic-dot"></span><span class="aic-dot"></span></div>';
+        document.getElementById('aicMsgs').appendChild(t); aicScroll();
+        setTimeout(function(){ t.remove(); aicAdd('bot',AIC_PENDING); },900);
+      }
+      function aicSend(){
+        var el=document.getElementById('aicInp'); var q=el.value.trim();
+        if(!q){ el.focus(); return; }
+        el.value=''; el.style.height='38px'; aicAsk(q);
+      }
+      /* トップのカードから送信：チャット画面を開いて、その内容を最初の発言にする */
+      function aimcStart(){
+        var el=document.getElementById('aimcInp'); var q=el.value.trim();
+        aicOpen();
+        if(q){ el.value=''; el.style.height='38px'; aicAsk(q); }
+        else { var c=document.getElementById('aicInp'); if(c) c.focus(); }
+      }
+      </script>
 
       <!-- ========== ストレスチェック ========== -->
       <div id="mh-sc" class="hidden">
@@ -9558,7 +9699,7 @@ function nsBack(){
                      空のうちは送信せず「受付準備中」と表示する（RF_SUBMIT_URL と同じ作法）。 */
 var MH_SERVICE_NAME="リモート産業保健";
 var MH_SUBMIT_URL="";
-var MH_VIEWS=['top','sc','cs','md','mine','done'];
+var MH_VIEWS=['top','ai','sc','cs','md','mine','done'];
 function goMental(){
   document.getElementById('brandtxt').textContent='メンタルヘルスサポート';
   document.querySelectorAll('#screen-mental .svc').forEach(function(el){el.textContent=MH_SERVICE_NAME;});
