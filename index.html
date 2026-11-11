@@ -711,6 +711,11 @@ html.law-y #screen-mental .aic-topics-btns button{background:#eef8ef;border-colo
 @keyframes aicbop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
 #screen-mental .aic .aimc-inp{padding:8px 12px 12px;border-top:1px solid #e5e9f2;background:#fff;flex-shrink:0;}
 #screen-mental .aic .aimc-send{right:17px;}
+/* AIカード：入力行の前の話題ボタン（チャット画面の話題ボタンと同じ見た目） */
+#screen-mental .aimc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+#screen-mental .aimc-chips button{background:#eef2ff;border:1.5px solid #c7d2fe;border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:600;color:#3451b2;cursor:pointer;font-family:inherit;}
+html.law-y #screen-mental .aimc-chips button{background:#eef8ef;border-color:#bfe3c2;color:#2e7d32;}
+#screen-mental .aimc-chips button:active{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue);}
 </style>
 <!-- 利用状況（アクセスログ・2026-10-20追加）：共通版と同じ送信スクリプトを読み込む（起動時の記録に間に合うよう head で読む） -->
 <script src="https://kimkat01.github.io/staff-dashboard/access-log.js"></script>
@@ -1088,6 +1093,15 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
               <p>仕事の悩みやモヤモヤを、AIにいつでも話せます。</p>
             </div>
           </div>
+          <!-- 2026-11-11：入力行の前に話題の例（押すとチャットが開き、その内容で会話が始まる） -->
+          <div class="aimc-chips">
+            <button onclick="aimcPick('保護者対応がつらいです')">保護者対応</button>
+            <button onclick="aimcPick('職場の人間関係で悩んでいます')">職場の人間関係</button>
+            <button onclick="aimcPick('仕事が多くて余裕がありません')">仕事量・時間</button>
+            <button onclick="aimcPick('新人で不安なことが多いです')">新人で不安</button>
+            <button onclick="aimcPick('疲れが取れず、よく眠れません')">疲れ・眠れない</button>
+            <button onclick="aimcPick('なんとなく、しんどいです')">なんとなくしんどい</button>
+          </div>
           <div class="aimc-inp">
             <textarea id="aimcInp" class="aimc-ta" placeholder="いまの気持ちや悩みを入力..." rows="1"></textarea>
             <button class="aimc-send" onclick="aimcStart()" aria-label="送信">
@@ -1189,6 +1203,8 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
         el.value=''; el.style.height='38px'; aicAsk(q);
       }
       /* トップのカードから送信：チャット画面を開いて、その内容を最初の発言にする */
+      /* カードの話題ボタン：チャット画面を開いて、その話題を最初の発言にする */
+      function aimcPick(q){ aicOpen(); aicAsk(q); }
       function aimcStart(){
         var el=document.getElementById('aimcInp'); var q=el.value.trim();
         aicOpen();
