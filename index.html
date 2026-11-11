@@ -1183,20 +1183,113 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
       function aicScroll(){var b=document.getElementById('aicBody'); if(b) b.scrollTop=b.scrollHeight;}
       function aicAdd(who,text){
         var row=document.createElement('div'); row.className='aic-row '+who;
-        row.innerHTML=(who==='bot'?'<div class="aic-av">'+AIC_ICON+'</div>':'')+'<div class="aic-bub">'+aicEsc(text)+'</div><div class="aic-ts">'+aicTime()+'</div>';
+        row.innerHTML=(who==='bot'?'<div class="aic-av">'+AIC_ICON+'</div>':'')+'<div class="aic-bub">'+aicEsc(text).replace(/(https:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')+'</div><div class="aic-ts">'+aicTime()+'</div>';
         document.getElementById('aicMsgs').appendChild(row); aicScroll();
       }
       function aicOpen(){
         if(!aicStarted){ aicStarted=true; aicAdd('bot',AIC_WELCOME); }
         mhShow('ai');
       }
+      /* ===== AIの返答（2026-11-11 試験版） =====
+         ・試験スイッチ（URLに ?aic=test を付けて開く）が入っている端末だけ、AIが返答する。
+           それ以外の職員には、これまでどおり「準備中」の定型文を返す。?aic=off でスイッチを切る。
+         ・AIはドメボットと同じ中継サーバー（Cloudflare Workers）経由で呼ぶ。
+         ・知識と対応ルールは staff-dashboard/aic/knowledge.md（学習データ要約集から書き出し）を読む。
+         ・会話は AIC_LOG_URL（GAS「AIカウンセリング記録」）に、園名・氏名つきで1往復ずつ記録する。 */
+      var AIC_WORKER_URL='https://snowy-sky-07f1.cryk0289.workers.dev';
+      var AIC_MODEL='claude-sonnet-4-6';
+      var AIC_KB_URL='https://kimkat01.github.io/staff-dashboard/aic/knowledge.md';
+      var AIC_LOG_URL=''; /* ← GAS「AIカウンセリング記録」のウェブアプリURLを貼る（空のあいだは記録しない） */
+      var AIC_HISTORY_MAX=20;
+      var AIC_DANGER=/死にたい|しにたい|死のう|消えたい|きえたい|自殺|いなくなりたい|生きていたくない|生きるのがつらい|自傷|リスカ|リストカット|首を(つ|吊)|飛び降り|オーバードーズ/;
+      var AIC_SAFETY='あなたの安全がいちばん大切です。いま、ひとりで抱えなくて大丈夫です。\n\n・#いのちSOS　0120-061-338（毎日24時間・無料）\n・よりそいホットライン　0120-279-338（24時間・無料）\n\n差し迫った危険があるときは、迷わず119番に電話してください。\nほかの相談先：https://www.mhlw.go.jp/mamorouyokokoro/';
+      var aicHistory=[], aicKB=null, aicBusy=false;
+      var aicConvId='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+      function aicTestOn(){
+        try{
+          var p=new URLSearchParams(location.search).get('aic');
+          if(p==='test') sessionStorage.setItem('aic_test','1');
+          if(p==='off') sessionStorage.removeItem('aic_test');
+          return sessionStorage.getItem('aic_test')==='1';
+        }catch(e){ return false; }
+      }
+      aicTestOn();
+      /* ログイン中の職員（園名・氏名・ログインID）。画面には出さず、記録にだけ使う。AIには送らない。 */
+      function aicViewer(){
+        var list=[];
+        try{
+          for(var i=0;i<localStorage.length;i++){
+            var k=localStorage.key(i); if(!/^sd_pin_login__/.test(k)) continue;
+            var s=JSON.parse(localStorage.getItem(k)||'null');
+            if(s && s.name && !(s.exp && s.exp<Date.now())) list.push(s);
+          }
+        }catch(e){}
+        var g=''; try{ g=new URLSearchParams(location.search).get('garden')||''; if(typeof findGarden==='function'){ var m=findGarden(g); if(m) g=m.name; } }catch(e){}
+        var hit=null; for(var j=0;j<list.length;j++){ if(list[j].garden===g){ hit=list[j]; break; } }
+        if(!hit && list.length===1) hit=list[0];
+        return hit?{garden:hit.garden||g,name:hit.name||'',loginId:String(hit.loginId||'')}:{garden:g,name:'',loginId:''};
+      }
+      function aicNow(){ return new Date().toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}); }
+      function aicLog(q,a,alert){
+        if(!AIC_LOG_URL) return;
+        var v=aicViewer();
+        try{
+          fetch(AIC_LOG_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
+            body:JSON.stringify({datetime:aicNow(),garden:v.garden,name:v.name,loginId:v.loginId,convId:aicConvId,question:q,answer:a,alert:alert?'要注意':''})}).catch(function(){});
+        }catch(e){}
+      }
+      function aicLoadKB(){
+        if(aicKB) return Promise.resolve(aicKB);
+        return fetch(AIC_KB_URL,{cache:'no-cache'}).then(function(r){ if(!r.ok) throw new Error('kb '+r.status); return r.text(); })
+          .then(function(t){ aicKB=t; return t; });
+      }
+      function aicSystem(kb){
+        return 'あなたは、保育園グループ「しおどめグループ」の職員向け相談チャット「AIメンタルカウンセリング」です。相手は保育士などの職員です。\n'
+          +'下の資料のうち「H. ボットの対応ルール」を最優先で守り、A〜Gの知識に基づいて答えてください。\n\n'
+          +'【返答の形】\n'
+          +'・日本語で、やさしく短く（目安3〜6文）。見出し・太字・記号の箇条書きは使わない。\n'
+          +'・質問は1回に1つまで。\n'
+          +'・資料にないことを事実として言い切らない。わからないことはわからないと言う。\n'
+          +'・相談者の名前や園名は聞かない。\n'
+          +'・命に関わる言葉が出たら、H-5の手順に従う（窓口の案内は画面にも自動で表示される）。\n\n'
+          +'【資料】\n'+kb;
+      }
+      function aicClean(t){ return String(t||'').replace(/\*\*/g,'').replace(/^#+\s*/gm,'').trim(); }
+      function aicTyping(){
+        var t=document.createElement('div'); t.className='aic-row bot';
+        t.innerHTML='<div class="aic-av">'+AIC_ICON+'</div><div class="aic-typing"><span class="aic-dot"></span><span class="aic-dot"></span><span class="aic-dot"></span></div>';
+        document.getElementById('aicMsgs').appendChild(t); aicScroll(); return t;
+      }
       function aicAsk(q){
         if(!q) return;
         aicAdd('user',q);
-        var t=document.createElement('div'); t.className='aic-row bot';
-        t.innerHTML='<div class="aic-av">'+AIC_ICON+'</div><div class="aic-typing"><span class="aic-dot"></span><span class="aic-dot"></span><span class="aic-dot"></span></div>';
-        document.getElementById('aicMsgs').appendChild(t); aicScroll();
-        setTimeout(function(){ t.remove(); aicAdd('bot',AIC_PENDING); },900);
+        var t=aicTyping();
+        if(!aicTestOn()){ setTimeout(function(){ t.remove(); aicAdd('bot',AIC_PENDING); },900); return; }
+        if(aicBusy){ t.remove(); return; }
+        aicBusy=true;
+        var danger=AIC_DANGER.test(q);
+        aicHistory.push({role:'user',content:q});
+        aicLoadKB().then(function(kb){
+          var msgs=aicHistory.slice(-AIC_HISTORY_MAX);
+          while(msgs.length && msgs[0].role!=='user') msgs.shift();
+          return fetch(AIC_WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({model:AIC_MODEL,max_tokens:1000,system:aicSystem(kb),messages:msgs})}).then(function(r){ return r.json(); });
+        }).then(function(data){
+          if(!data || data.error || !data.content) throw new Error((data && data.error && (data.error.message||data.error.type)) || 'no content');
+          var a=aicClean(data.content.filter(function(b){ return b && b.type==='text'; }).map(function(b){ return b.text; }).join(''));
+          if(!a) throw new Error('empty');
+          aicHistory.push({role:'assistant',content:a});
+          t.remove(); aicAdd('bot',a);
+          if(danger) aicAdd('bot',AIC_SAFETY);
+          aicLog(q,a+(danger?'\n\n【画面に相談窓口を自動表示】':''),danger);
+        }).catch(function(err){
+          aicHistory.pop();
+          t.remove();
+          var msg='ごめんなさい、いまうまくつながりませんでした。少し時間をおいて、もう一度送ってください。';
+          if(danger) msg+='\n\n'+AIC_SAFETY;
+          aicAdd('bot',msg);
+          aicLog(q,'（エラー）'+(err && err.message||''),danger);
+        }).then(function(){ aicBusy=false; });
       }
       function aicSend(){
         var el=document.getElementById('aicInp'); var q=el.value.trim();
