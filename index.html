@@ -1200,6 +1200,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
       var AIC_MODEL='claude-sonnet-4-6';
       var AIC_KB_URL='https://kimkat01.github.io/staff-dashboard/aic/knowledge.md';
       var AIC_LOG_URL=''; /* ← GAS「AIカウンセリング記録」のウェブアプリURLを貼る（空のあいだは記録しない） */
+      var AIC_LIVE=true; /* 2026-11-12 本番化：全職員にAIが返答する。false に戻すと、?aic=test の端末以外は「準備中」に戻る */
       var AIC_HISTORY_MAX=20;
       var AIC_DANGER=/死にたい|しにたい|死のう|消えたい|きえたい|自殺|いなくなりたい|生きていたくない|生きるのがつらい|自傷|リスカ|リストカット|首を(つ|吊)|飛び降り|オーバードーズ/;
       var AIC_SAFETY='あなたの安全がいちばん大切です。いま、ひとりで抱えなくて大丈夫です。\n\n・#いのちSOS　0120-061-338（毎日24時間・無料）\n・よりそいホットライン　0120-279-338（24時間・無料）\n\n差し迫った危険があるときは、迷わず119番に電話してください。\nほかの相談先：https://www.mhlw.go.jp/mamorouyokokoro/';
@@ -1264,7 +1265,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
         if(!q) return;
         aicAdd('user',q);
         var t=aicTyping();
-        if(!aicTestOn()){ setTimeout(function(){ t.remove(); aicAdd('bot',AIC_PENDING); },900); return; }
+        if(!AIC_LIVE && !aicTestOn()){ setTimeout(function(){ t.remove(); aicAdd('bot',AIC_PENDING); },900); return; }
         if(aicBusy){ t.remove(); return; }
         aicBusy=true;
         var danger=AIC_DANGER.test(q);
