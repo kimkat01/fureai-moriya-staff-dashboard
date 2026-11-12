@@ -1227,6 +1227,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
       function aicNow(){ return new Date().toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}); }
       function aicLog(q,a,alert){
         if(!AIC_LOG_URL) return;
+        if(window.SD_HONBU_VIEW) return;  /* 2026-11-12：本部閲覧モード（本部ダッシュボードから開いた画面）は、ログインしていないので記録しない */
         var v=aicViewer();
         try{
           fetch(AIC_LOG_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
