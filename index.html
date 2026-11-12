@@ -1215,20 +1215,14 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
         }catch(e){ return false; }
       }
       aicTestOn();
-      /* ログイン中の職員（園名・氏名・ログインID）。画面には出さず、記録にだけ使う。AIには送らない。 */
+      /* ログイン中の職員（園名・氏名・ログインID）。画面には出さず、記録にだけ使う。AIには送らない。
+         2026-11-12修正：このページ（ふれあいしおどめ保育園専用）のログイン情報だけを見る。
+         同じ kimkat01.github.io の他園（つくば等）のログインが残っていても、それは使わない。 */
       function aicViewer(){
-        var list=[];
-        try{
-          for(var i=0;i<localStorage.length;i++){
-            var k=localStorage.key(i); if(!/^sd_pin_login__/.test(k)) continue;
-            var s=JSON.parse(localStorage.getItem(k)||'null');
-            if(s && s.name && !(s.exp && s.exp<Date.now())) list.push(s);
-          }
-        }catch(e){}
-        var g=''; try{ g=new URLSearchParams(location.search).get('garden')||''; if(typeof findGarden==='function'){ var m=findGarden(g); if(m) g=m.name; } }catch(e){}
-        var hit=null; for(var j=0;j<list.length;j++){ if(list[j].garden===g){ hit=list[j]; break; } }
-        if(!hit && list.length===1) hit=list[0];
-        return hit?{garden:hit.garden||g,name:hit.name||'',loginId:String(hit.loginId||'')}:{garden:g,name:'',loginId:''};
+        var G='ふれあいしおどめ保育園', s=null;
+        try{ s=JSON.parse(localStorage.getItem('sd_pin_login__'+G)||'null'); }catch(e){}
+        if(s && s.exp && s.exp<Date.now()) s=null;
+        return s?{garden:G,name:s.name||'',loginId:String(s.loginId||'')}:{garden:G,name:'',loginId:''};
       }
       function aicNow(){ return new Date().toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}); }
       function aicLog(q,a,alert){
