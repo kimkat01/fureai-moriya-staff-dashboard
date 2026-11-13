@@ -8170,8 +8170,9 @@ const DATA = {
  ],
  "uqGarden": "ふれあいしおどめ保育園",
  "domeKey": "fureai_shiodome"
-};/* 2026-11-13：前の月度のシフト（DATA_PREV）。
-   ・新しい月度（DATA）が始まる前の日は、こちらを「今の月度」として表示する（シフトデータ未更新の表示を出さないため）
+};
+/* 2026-11-13：前の月度のシフト（DATA_PREV）。
+   ・ANSHIN KUNのシフト表は、届いた月度（DATA）をすぐ表示する（2026-11-13：前の月度の自動表示はやめた）
    ・自己申告（jiko-shinkoku）の「前の月度」もここから読む（月末の締め・確定のため）
    ・毎月の更新：今の DATA の中身をここ（DATA_PREV）へ移し、DATA に新しい月度を入れる */
 const DATA_PREV = {
@@ -15350,18 +15351,6 @@ const DATA_PREV = {
  "uqGarden": "ふれあいしおどめ保育園",
  "domeKey": "fureai_shiodome"
 };
-/* 新しい月度の開始日より前なら、前の月度を表示する（ファイルモードのときだけ） */
-(function(){
-  if(window.SD_SHIFT_SRC === 'gas') return;
-  try{
-    var d=new Date(), t=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    var first=(DATA.dates[0]||{}).iso||'';
-    if(first && t<first && (DATA_PREV.dates||[]).some(function(x){return x.iso===t;})){
-      window.SD_SHIFT_NEXT = { period:DATA.period, today:DATA.today, dates:DATA.dates, staff:DATA.staff };
-      Object.assign(DATA, { period:DATA_PREV.period, today:DATA_PREV.today, dates:DATA_PREV.dates, staff:DATA_PREV.staff });
-    }
-  }catch(e){}
-})();
 
 /* 2026-10-27：GASモードでは埋め込みのシフトを使わず、保存してあるシフト（無ければ空＝読み込み中）にする */
 (function(){
