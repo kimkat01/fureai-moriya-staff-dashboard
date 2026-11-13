@@ -98,7 +98,7 @@ function draw() {
     '<div><b style="color:#8a3200">' + cnt((r) => r.t.status === '差し戻し中') + '</b><span>差し戻し中（本人が修正中）</span></div>' +
     '<div><b style="color:#7a4a00">' + cnt((r) => r.unset) + '</b><span>職員マスタに区分なし</span></div>';
   const rows = ROWS.filter((r) => FILT === 'all' || (FILT === 'ng' ? (r.t.status !== '確定' && r.t.status !== '対象外') : r.set.kubun === FILT));
-  let h = '<div class="tblwrap"><table class="mt"><thead><tr><th rowspan="2">職員名</th><th rowspan="2">区分</th><th rowspan="2">状態</th><th rowspan="2">入力</th>' +
+  let h = '<div class="tblwrap"><table class="mt sumtbl"><thead><tr><th rowspan="2">職員名</th><th rowspan="2">区分</th><th rowspan="2">状態</th><th rowspan="2">入力</th>' +
     '<th class="grp" colspan="7">日数</th><th class="grp" colspan="4">パート</th><th class="grp" colspan="5">正規</th></tr><tr>' +
     '<th>①出勤</th><th>②有休</th><th>③特休</th><th>④公休</th><th>⑤希望休</th><th>欠勤</th><th title="正規職員のみ：（①出勤＋②有休＋③特休）×8時間">(①+②+③)<br>×8h</th>' +
     '<th>⑥予定h</th><th>⑦差h</th><th>⑧給食</th><th>⑨駐車</th>' +

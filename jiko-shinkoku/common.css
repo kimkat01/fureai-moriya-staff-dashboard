@@ -87,3 +87,12 @@ table.mt .bk{font-size:11px;font-weight:700;color:#fff;background:#d9590f;border
 textarea.in{width:100%;min-height:90px;font-size:16px;border:1px solid #b9b8b1;border-radius:10px;padding:8px 10px;background:#fff;font-family:inherit;line-height:1.6}
 .chip.sm{min-height:36px;padding:0 10px;font-size:13px}
 .btn.back{background:#d9590f}
+
+/* 2026-11-13：シフト集計の一覧に、日数・パート・正規のまとまりがわかる縦の罫線（網がけはしない） */
+table.sumtbl{--gl:#7d87a8}
+table.sumtbl tbody td:nth-child(5),table.sumtbl tbody td:nth-child(12),table.sumtbl tbody td:nth-child(16){border-left:1.5px solid var(--gl)}
+table.sumtbl tbody td:last-child{border-right:1.5px solid var(--gl)}
+table.sumtbl thead tr:first-child th.grp{box-shadow:inset 1.5px 0 0 var(--gl);text-align:center}
+table.sumtbl thead tr:first-child th.grp:last-child{box-shadow:inset 1.5px 0 0 var(--gl),inset -1.5px 0 0 var(--gl)}
+table.sumtbl thead tr:nth-child(2) th:nth-child(1),table.sumtbl thead tr:nth-child(2) th:nth-child(8),table.sumtbl thead tr:nth-child(2) th:nth-child(12){box-shadow:inset 1.5px 0 0 var(--gl)}
+table.sumtbl thead tr:nth-child(2) th:last-child{box-shadow:inset -1.5px 0 0 var(--gl)}
