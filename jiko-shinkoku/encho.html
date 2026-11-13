@@ -99,8 +99,8 @@ function draw() {
     '<div><b style="color:#7a4a00">' + cnt((r) => r.unset) + '</b><span>職員マスタに区分なし</span></div>';
   const rows = ROWS.filter((r) => FILT === 'all' || (FILT === 'ng' ? (r.t.status !== '確定' && r.t.status !== '対象外') : r.set.kubun === FILT));
   let h = '<div class="tblwrap"><table class="mt"><thead><tr><th rowspan="2">職員名</th><th rowspan="2">区分</th><th rowspan="2">状態</th><th rowspan="2">入力</th>' +
-    '<th class="grp" colspan="6">日数</th><th class="grp" colspan="4">パート</th><th class="grp" colspan="5">正規</th></tr><tr>' +
-    '<th>①出勤</th><th>②有休</th><th>③特休</th><th>④公休</th><th>⑤希望休</th><th>欠勤</th>' +
+    '<th class="grp" colspan="7">日数</th><th class="grp" colspan="4">パート</th><th class="grp" colspan="5">正規</th></tr><tr>' +
+    '<th>①出勤</th><th>②有休</th><th>③特休</th><th>④公休</th><th>⑤希望休</th><th>欠勤</th><th title="正規職員のみ：（①出勤＋②有休＋③特休）×8時間">(①+②+③)<br>×8h</th>' +
     '<th>⑥予定h</th><th>⑦差h</th><th>⑧給食</th><th>⑨駐車</th>' +
     '<th>時間有休</th><th>残業</th><th>遅刻</th><th>早退</th><th>駐車</th></tr></thead><tbody>';
   rows.forEach((r) => {
@@ -108,6 +108,7 @@ function draw() {
     h += '<tr class="click" data-name="' + esc(r.s.name) + '"><td class="nm">' + esc(r.s.name) + '</td><td>' + esc(r.set.kubun) + '<span style="color:#4a4a46;font-size:11px">（' + esc(r.set.kubunSrc) + '）</span>' + '</td><td>' + statusBadge(t.status) +
       (t.warn.length ? ' <span title="' + esc(t.warn.join('、')) + '" style="color:#7a4a00;font-size:11px">要確認</span>' : '') + '</td><td class="num">' + t.done + '/' + t.n + '</td>' +
       '<td class="num">' + c['出勤'] + '</td><td class="num">' + c['有休'] + '</td><td class="num">' + c['特休'] + '</td><td class="num">' + c['公休'] + '</td><td class="num">' + c['希望休'] + '</td><td class="num">' + c['欠勤'] + '</td>' +
+      '<td class="num">' + (r.set.kubun === '正規' ? ((c['出勤'] + c['有休'] + c['特休']) * 8) + 'h' : '') + '</td>' +
       (p ? '<td class="num">' + toHours(t.plan) + '</td><td class="num">' + toHours(t.diff) + '</td><td class="num">' + t.kyu + '</td><td class="num">' + t.chu + '</td><td></td><td></td><td></td><td></td><td></td>'
          : '<td></td><td></td><td></td><td></td><td class="num">' + (t.yh ? t.yh + 'h' : '') + '</td><td class="num">' + (t.ot ? fmtHM(t.ot) : '') + '</td><td class="num">' + (t.late ? fmtHM(t.late) : '') + '</td><td class="num">' + (t.early ? fmtHM(t.early) : '') + '</td><td class="num">' + (r.set.parking ? t.chu : '') + '</td>') +
       '</tr>';
@@ -313,20 +314,20 @@ async function makeXlsx() {
 
   /* --- 正規 --- */
   const w2 = wb.addWorksheet('正規');
-  const h2 = ['職員名', '出勤', '公休', '希望休', '有休', '特休', '欠勤', '時間有休（時間）', '残業（時間）', '遅刻（時間）', '早退（時間）', '駐車場（日割り）', '日数確認', '状態'];
-  w2.columns = h2.map((x, i) => ({ width: i === 0 ? 18 : (i >= 7 && i <= 11 ? 15 : 10) }));
+  const h2 = ['職員名', '出勤', '公休', '希望休', '有休', '特休', '欠勤', '（出勤＋有休＋特休）×8h（時間）', '時間有休（時間）', '残業（時間）', '遅刻（時間）', '早退（時間）', '駐車場（日割り）', '日数確認', '状態'];
+  w2.columns = h2.map((x, i) => ({ width: i === 0 ? 18 : (i >= 7 && i <= 12 ? 15 : 10) }));
   w2.getRow(1).values = h2;
   r = 2;
   ROWS.filter((x) => x.set.kubun === '正規').forEach((x) => {
     const t = x.t, c = t.c;
-    w2.getRow(r).values = [x.s.name, c['出勤'], c['公休'], c['希望休'], c['有休'], c['特休'], c['欠勤'], t.yh, toHours(t.ot), toHours(t.late), toHours(t.early), x.set.parking ? t.chu : '対象外', null, t.status];
-    w2.getRow(r).getCell(13).value = { formula: 'IF(SUM(B' + r + ':G' + r + ')=' + n + ',"OK","NG（"&SUM(B' + r + ':G' + r + ')&"日）")' };
+    w2.getRow(r).values = [x.s.name, c['出勤'], c['公休'], c['希望休'], c['有休'], c['特休'], c['欠勤'], (c['出勤'] + c['有休'] + c['特休']) * 8, t.yh, toHours(t.ot), toHours(t.late), toHours(t.early), x.set.parking ? t.chu : '対象外', null, t.status];
+    w2.getRow(r).getCell(14).value = { formula: 'IF(SUM(B' + r + ':G' + r + ')=' + n + ',"OK","NG（"&SUM(B' + r + ':G' + r + ')&"日）")' };
     r++;
   });
   for (let i = 1; i < Math.max(r, 2); i++) for (let j = 1; j <= h2.length; j++) {
     const cell = w2.getRow(i).getCell(j); cell.font = i === 1 ? BOLD : FONT; cell.border = BORDER;
     if (i === 1) { cell.fill = HEAD; cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; }
-    if (i > 1 && j >= 9 && j <= 11) cell.numFmt = '0.00';
+    if (i > 1 && j >= 10 && j <= 12) cell.numFmt = '0.00';
   }
   const r2 = w2.getRow(r + 1); r2.getCell(1).value = '期間'; r2.getCell(2).value = SH.label + '（' + SH.start + '〜' + SH.end + '、' + n + '日）'; r2.getCell(1).font = BOLD; r2.getCell(2).font = FONT;
   const r3 = w2.getRow(r + 2); r3.getCell(1).value = '注'; r3.getCell(2).value = '遅刻・早退は時間有休を使った分を含めない。時間は小数（1.5＝1時間30分）'; r3.getCell(1).font = BOLD; r3.getCell(2).font = FONT;
