@@ -32,7 +32,7 @@ table.mt th.grp{text-align:center;background:#dfe6fb}
 
   <div id="main" class="hidden" style="display:flex;flex-direction:column;gap:14px">
     <div class="top">
-      <div><h2 id="perTitle"></h2><div class="muted" id="perSub"></div></div>
+      <div><h2 id="perTitle"></h2><div class="muted" id="perSub"></div><div id="perNav"></div></div>
       <div class="acts">
         <button type="button" class="btn2" id="btnReload">最新にする</button>
         <button type="button" class="btn2" id="btnSet">職員の設定</button>
@@ -72,6 +72,7 @@ async function init() {
   $('fac').textContent = SH.facility;
   $('perTitle').textContent = SH.label;
   $('perSub').textContent = SH.start + '〜' + SH.end + '（' + SH.dates.length + '日）';
+  drawMonthNav('perNav', SH);
   draw();
 }
 async function reload() { G = groupLoad(await api('load', { pid: SH.pid })); }

@@ -54,7 +54,7 @@ body.embed .wrap{padding:4px 0 24px}
     </div>
 
     <div id="viewList" class="hidden" style="display:flex;flex-direction:column;gap:12px">
-      <div style="text-align:center"><b id="perTitle" style="font-size:17px"></b><div class="muted" id="perSub"></div></div>
+      <div style="text-align:center"><b id="perTitle" style="font-size:17px"></b><div class="muted" id="perSub"></div><div id="perNav"></div></div>
       <div id="stats"></div>
       <div id="table"></div>
       <div class="muted">行を押すと、その日の申告を開きます（確定するまでは直せます）。○＝食べた・利用</div>
@@ -194,6 +194,7 @@ function drawList() {
   const t = calcStaff(SH, STAFF, RECS, SET, !!CONF, BACK);
   $('perTitle').textContent = SH.label;
   $('perSub').textContent = SH.start + '〜' + SH.end + '（' + t.n + '日）';
+  drawMonthNav('perNav', SH);
   $('stats').innerHTML = statsHTML(t);
   $('table').innerHTML = monthTableHTML(SH, STAFF, RECS, kubun(), parking(), backDays());
   let h = '';

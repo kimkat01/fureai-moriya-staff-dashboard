@@ -120,17 +120,44 @@ async function loadShiftFromGas() {
   if (c && c.data) return c.data;
   throw new Error('シフトを読み込めませんでした。職員ダッシュボードにログインしてから、もう一度開いてください');
 }
+/* 2026-11-13：月度の切り替え。職員ダッシュボードに「今の月度（DATA）」と「前の月度（DATA_PREV）」がある。
+   ・はじめは、きょうが入っている月度を開く（新しい月度が始まる前の日は前の月度）
+   ・URLの ?m=開始日（例 ?m=2026-10-16）で、どちらの月度を開くか選べる（画面の「前の月度／今の月度」ボタン） */
+let SHIFT_MONTHS = [];
 async function loadShift() {
-  const data = shiftSrc() === 'gas' ? await loadShiftFromGas() : await loadShiftFromFile();
-  return shapeShift(data);
+  if (shiftSrc() === 'gas') { SHIFT_MONTHS = []; return shapeShift(await loadShiftFromGas()); }
+  const all = await loadShiftFromFile();
+  const list = all.filter((x) => x && x.dates && x.dates.length);
+  SHIFT_MONTHS = list.map((x) => ({ pid: x.dates[0].iso, label: (x.period && x.period.label) || '' }));
+  let want = '';
+  try { want = new URLSearchParams(location.search).get('m') || ''; } catch (e) {}
+  const t = todayIso();
+  let pick = list.find((x) => x.dates[0].iso === want)
+    || list.find((x) => x.dates.some((d) => d.iso === t))
+    || list[list.length - 1];
+  return shapeShift(pick);
 }
-async function loadShiftFromFile() {
-  const res = await fetch(JK.SHIFT_URL, { cache: 'no-store' });
-  if (!res.ok) throw new Error('シフトデータを読めませんでした（' + res.status + '）');
-  const s = await res.text();
-  const key = 'const DATA = ';
+// 月度を切り替えるボタン（前の月度があるときだけ出す）
+function drawMonthNav(id, SH) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const others = SHIFT_MONTHS.filter((m) => m.pid !== SH.pid);
+  if (!others.length) { el.innerHTML = ''; return; }
+  el.innerHTML = others.map((m) => {
+    const word = m.pid < SH.pid ? '前の月度' : '次の月度';
+    return '<button type="button" class="btn2" style="margin-top:6px" data-m="' + esc(m.pid) + '">' + word + '（' + esc(m.label) + '）を開く</button>';
+  }).join(' ');
+  el.querySelectorAll('button[data-m]').forEach((b) => {
+    b.onclick = () => {
+      const u = new URL(location.href);
+      u.searchParams.set('m', b.getAttribute('data-m'));
+      location.href = u.toString();
+    };
+  });
+}
+function extractObj(s, key) {
   const i = s.indexOf(key);
-  if (i < 0) throw new Error('シフトデータが見つかりませんでした');
+  if (i < 0) return null;
   const st = i + key.length;
   let depth = 0, inStr = false, escp = false, end = -1;
   for (let j = st; j < s.length; j++) {
@@ -141,6 +168,16 @@ async function loadShiftFromFile() {
     else if (ch === '}') { depth--; if (depth === 0) { end = j; break; } }
   }
   return JSON.parse(s.slice(st, end + 1));
+}
+// [前の月度, 今の月度] を返す（前の月度が無ければ [今の月度] だけ）
+async function loadShiftFromFile() {
+  const res = await fetch(JK.SHIFT_URL, { cache: 'no-store' });
+  if (!res.ok) throw new Error('シフトデータを読めませんでした（' + res.status + '）');
+  const s = await res.text();
+  const cur = extractObj(s, 'const DATA = ');
+  if (!cur) throw new Error('シフトデータが見つかりませんでした');
+  const prev = extractObj(s, 'const DATA_PREV = ');
+  return prev ? [prev, cur] : [cur];
 }
 function shapeShift(data) {
   const dates = data.dates.map((d) => ({ iso: d.iso, md: d.md, dow: d.dow, event: d.event || '' }));
