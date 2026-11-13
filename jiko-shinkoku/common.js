@@ -221,7 +221,7 @@ function calcStaff(shift, staff, recMap, setting, confirmed, back) {
   const today = todayIso();
   const t = { kubun, n: shift.dates.length, done: 0, missing: [], pastMissing: 0, warn: [],
     c: { '出勤': 0, '公休': 0, '希望休': 0, '有休': 0, '特休': 0, '欠勤': 0 },
-    plan: 0, diff: 0, work: 0, kyu: 0, chu: 0, yh: 0, ot: 0, late: 0, early: 0 };
+    plan: 0, diff: 0, chg: 0, work: 0, kyu: 0, chu: 0, yh: 0, ot: 0, late: 0, early: 0 };
   shift.dates.forEach((d) => {
     const r = recMap[d.iso];
     const sh = staff.shifts[d.iso];
@@ -231,7 +231,7 @@ function calcStaff(shift, staff, recMap, setting, confirmed, back) {
     if (r.kind === '出勤') {
       const p = planMin(sh && (sh.state === 'work' || sh.state === 'training') ? sh.time : '', kubun);
       t.plan += p;
-      if (r.mode === 'edit') t.diff += (+r.min || 0) - p;
+      if (r.mode === 'edit') { t.diff += (+r.min || 0) - p; t.chg++; }
       t.work += r.mode === 'edit' ? (+r.min || 0) : p;
       if (r.kyu === 'yes') t.kyu++;
       if (r.chu === 'yes') t.chu++;
@@ -370,17 +370,27 @@ function renderForm(el, ctx) {
     if (!st.kind) return '区分を選んでください';
     const a = [st.kind];
     if (st.kind === '出勤') {
+      a.push('勤務 ' + (st.mode === 'plan' ? fmtJP(p) + '（予定どおり）' : st.h + '時間' + st.m + '分'));
       if (ctx.kubun === '正規') {
         if (st.ex['時間有休']) a.push('時間有休 ' + st.yh + '時間');
         ['残業', '遅刻', '早退'].forEach((k) => { const o = st[{ '残業': 'ot', '遅刻': 'late', '早退': 'early' }[k]]; if (st.ex[k]) a.push(k + ' ' + o.h + '時間' + o.m + '分'); });
         if (ctx.parking) a.push('駐車場 ' + (st.chu === 'yes' ? '利用' : st.chu === 'no' ? '利用なし' : '未選択'));
       } else {
-        a.push('勤務 ' + (st.mode === 'plan' ? fmtJP(p) + '（予定どおり）' : st.h + '時間' + st.m + '分'));
         a.push('給食 ' + (st.kyu === 'yes' ? '食べた' : st.kyu === 'no' ? '食べない' : '未選択'));
         a.push('駐車場 ' + (st.chu === 'yes' ? '利用' : st.chu === 'no' ? '利用なし' : '未選択'));
       }
     }
     return a.join(' ／ ');
+  }
+  // 勤務実績（予定どおり／時間を変更）。パート・正規 共通
+  // 正規は2026-11-13追加：当日に遅番などへ変わったときに、働いた時間を入れられるように
+  function kinmuHTML() {
+    let h = '<div><div class="lbl">勤務実績</div><div class="chips">' +
+      '<button type="button" class="chip' + (st.mode === 'plan' ? ' on' : '') + '" data-act="mode" data-v="plan"' + (p ? dis : ' disabled') + '>予定どおり' + (p ? '（' + fmtJP(p) + '）' : '') + '</button>' +
+      '<button type="button" class="chip' + (st.mode === 'edit' ? ' on' : '') + '" data-act="mode" data-v="edit"' + dis + '>時間を変更</button></div>' +
+      (p ? '' : '<div class="muted" style="margin-top:6px">この日はシフトに勤務時間がないので、働いた時間を入れてください。</div>') + '</div>';
+    if (st.mode === 'edit') h += '<div class="timebox"><span class="tl">働いた時間<br><span style="font-size:11px;font-weight:400;color:#4a4a46">休憩を除いた時間</span></span><select data-f="h" aria-label="時間"' + dis + '>' + hourOpts(0, 12, st.h) + '</select><span>時間</span><select data-f="m" aria-label="分"' + dis + '>' + minOpts(st.m) + '</select><span>分</span></div>';
+    return h;
   }
   function html() {
     let h = '<div class="box"><div class="row"><h3>' + esc(ctx.date.md) + '（' + esc(ctx.date.dow) + '）の申告</h3>' +
@@ -388,6 +398,7 @@ function renderForm(el, ctx) {
     h += '<div class="muted">シフト：' + esc(shiftText(ctx.sh)) + (p ? '（実働 ' + fmtJP(p) + '）' : '') + (ctx.date.event ? '<br>行事：' + esc(ctx.date.event) : '') + '</div>';
     h += '<div class="chips">' + kinds.map((k) => '<button type="button" class="chip' + (st.kind === k ? ' on' : '') + '" data-act="kind" data-v="' + k + '" aria-pressed="' + (st.kind === k) + '"' + dis + '>' + k + '</button>').join('') + '</div>';
     if (st.kind === '出勤') {
+      h += kinmuHTML();
       if (ctx.kubun === '正規') {
         h += '<div><div class="lbl">あてはまるものがあれば選ぶ（複数可）</div><div class="chips">' +
           JK.SEI_EXTRAS.map((k) => '<button type="button" class="chip' + (st.ex[k] ? ' on' : '') + '" data-act="ex" data-v="' + k + '" aria-pressed="' + !!st.ex[k] + '"' + dis + '>' + k + '</button>').join('') + '</div></div>';
@@ -397,11 +408,6 @@ function renderForm(el, ctx) {
         if (st.ex['早退']) h += timeRow('早退', 'early', '時間有休を使った分は含めません');
         if (ctx.parking) h += '<div style="height:1px;background:#d6dcef"></div>' + pill('駐車場', 'chu', '利用なし', '利用');
       } else {
-        h += '<div><div class="lbl">勤務実績</div><div class="chips">' +
-          '<button type="button" class="chip' + (st.mode === 'plan' ? ' on' : '') + '" data-act="mode" data-v="plan"' + (p ? dis : ' disabled') + '>予定どおり' + (p ? '（' + fmtJP(p) + '）' : '') + '</button>' +
-          '<button type="button" class="chip' + (st.mode === 'edit' ? ' on' : '') + '" data-act="mode" data-v="edit"' + dis + '>時間を変更</button></div>' +
-          (p ? '' : '<div class="muted" style="margin-top:6px">この日はシフトに勤務時間がないので、働いた時間を入れてください。</div>') + '</div>';
-        if (st.mode === 'edit') h += '<div class="timebox"><span class="tl">働いた時間<br><span style="font-size:11px;font-weight:400;color:#4a4a46">休憩を除いた時間</span></span><select data-f="h" aria-label="時間"' + dis + '>' + hourOpts(0, 12, st.h) + '</select><span>時間</span><select data-f="m" aria-label="分"' + dis + '>' + minOpts(st.m) + '</select><span>分</span></div>';
         h += '<div style="height:1px;background:#d6dcef"></div>' + pill('給食', 'kyu', '食べない', '食べた') + pill('駐車場', 'chu', '利用なし', '利用');
       }
     } else if (st.kind) {
@@ -416,6 +422,8 @@ function renderForm(el, ctx) {
   function build() {
     const rec = { date: ctx.date.iso, kind: st.kind, mode: '', min: 0, kyu: 'no', chu: 'no', yh: 0, ot: 0, late: 0, early: 0 };
     if (st.kind === '出勤') {
+      rec.mode = st.mode;
+      rec.min = st.mode === 'edit' ? (+st.h * 60 + +st.m) : p;
       if (ctx.kubun === '正規') {
         rec.yh = st.ex['時間有休'] ? +st.yh : 0;
         rec.ot = st.ex['残業'] ? (+st.ot.h * 60 + +st.ot.m) : 0;
@@ -424,8 +432,6 @@ function renderForm(el, ctx) {
         rec.kyu = '';
         rec.chu = ctx.parking ? st.chu : '';
       } else {
-        rec.mode = st.mode;
-        rec.min = st.mode === 'edit' ? (+st.h * 60 + +st.m) : p;
         rec.kyu = st.kyu; rec.chu = st.chu;
       }
     } else if (ctx.kubun === '正規') { rec.kyu = ''; rec.chu = ctx.parking ? 'no' : ''; }
@@ -434,11 +440,11 @@ function renderForm(el, ctx) {
   function validate() {
     if (!st.kind) return '区分を選んでください';
     if (st.kind !== '出勤') return '';
+    if (st.mode === 'edit' && +st.h === 0 && +st.m === 0) return '働いた時間を入れてください';
     if (ctx.kubun === '正規') {
       for (const [k, f] of [['残業', 'ot'], ['遅刻', 'late'], ['早退', 'early']]) if (st.ex[k] && +st[f].h === 0 && +st[f].m === 0) return k + 'の時間を入れてください';
       if (ctx.parking && !st.chu) return '駐車場の「利用なし／利用」を選んでください';
     } else {
-      if (st.mode === 'edit' && +st.h === 0 && +st.m === 0) return '働いた時間を入れてください';
       if (!st.kyu || !st.chu) return '給食と駐車場の両方を選んでください';
     }
     return '';
@@ -483,7 +489,7 @@ function monthTableHTML(shift, staff, recMap, kubun, parking, backDays) {
   const today = todayIso();
   const bd = backDays || [];
   let h = '<div class="tblwrap"><table class="mt"><thead><tr><th>日付</th><th>シフト</th><th>区分</th>';
-  h += kubun === '正規' ? '<th>時有</th><th>残業</th><th>遅刻</th><th>早退</th>' + (parking ? '<th>駐車</th>' : '') : '<th>勤務</th><th>給食</th><th>駐車</th>';
+  h += kubun === '正規' ? '<th>勤務変更</th><th>時有</th><th>残業</th><th>遅刻</th><th>早退</th>' + (parking ? '<th>駐車</th>' : '') : '<th>勤務</th><th>給食</th><th>駐車</th>';
   h += '</tr></thead><tbody>';
   shift.dates.forEach((d) => {
     const r = recMap[d.iso], sh = staff.shifts[d.iso];
@@ -491,14 +497,15 @@ function monthTableHTML(shift, staff, recMap, kubun, parking, backDays) {
     const cls = (isBack ? 'back ' : '') + (d.iso === today ? 'today ' : '') + (!r && d.iso <= today ? 'miss ' : '') + 'click';
     h += '<tr class="' + cls + '" data-date="' + d.iso + '"><td><b class="' + dowClass(d.dow) + '">' + esc(d.md) + ' ' + esc(d.dow) + '</b>' + (isBack ? ' <span class="bk">要修正</span>' : '') + '</td><td style="font-size:12px;color:#4a4a46">' + esc(shiftText(sh)) + '</td>';
     if (!r) {
-      const cols = kubun === '正規' ? (parking ? 5 : 4) : 3;
+      const cols = kubun === '正規' ? (parking ? 6 : 5) : 3;
       h += '<td colspan="' + (cols + 1) + '" style="color:' + (d.iso <= today ? '#b3261e' : '#8a8a85') + ';font-weight:700">' + (d.iso <= today ? '未申告（押して入力）' : '—') + '</td></tr>';
       return;
     }
     h += '<td><b>' + esc(r.kind) + '</b></td>';
     const w = r.kind === '出勤';
     if (kubun === '正規') {
-      h += '<td class="num">' + (w && +r.yh ? r.yh + 'h' : '') + '</td><td class="num">' + (w && +r.ot ? fmtHM(r.ot) : '') + '</td><td class="num">' + (w && +r.late ? fmtHM(r.late) : '') + '</td><td class="num">' + (w && +r.early ? fmtHM(r.early) : '') + '</td>' + (parking ? '<td>' + (r.chu === 'yes' ? '○' : '') + '</td>' : '');
+      h += '<td class="num">' + (w && r.mode === 'edit' ? fmtHM(r.min) + '<span style="font-size:11px;color:#2a49a8"> 変更</span>' : '') + '</td>' +
+        '<td class="num">' + (w && +r.yh ? r.yh + 'h' : '') + '</td><td class="num">' + (w && +r.ot ? fmtHM(r.ot) : '') + '</td><td class="num">' + (w && +r.late ? fmtHM(r.late) : '') + '</td><td class="num">' + (w && +r.early ? fmtHM(r.early) : '') + '</td>' + (parking ? '<td>' + (r.chu === 'yes' ? '○' : '') + '</td>' : '');
     } else {
       h += '<td class="num">' + (w ? fmtHM(r.min) + (r.mode === 'edit' ? '<span style="font-size:11px;color:#2a49a8"> 変更</span>' : '') : '') + '</td><td>' + (r.kyu === 'yes' ? '○' : '') + '</td><td>' + (r.chu === 'yes' ? '○' : '') + '</td>';
     }
