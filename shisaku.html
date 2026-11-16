@@ -17036,7 +17036,7 @@ const MENU=[
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-lav",go:()=>goManual()},
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
  {t:"メンタルヘルスサポート",d:"ストレスチェックやカウンセリング等の手続き",ic:"doctor",tint:"i-gold",go:()=>goMental()},
- {t:"アイデア・提案受付BOX",d:"保育・労務など",ic:"idea",log:"ご意見箱",tint:"i-mid",go:()=>goOmeyasu()},  /* 試作版（2026-11-16）：ご意見箱の表示名を「アイデア・提案受付BOX」に変更（旧案「しおどめの葉」は取りやめ）。利用状況の記録名は「ご意見箱」のまま */
+ {t:"アイデア・提案<br>受付BOX",d:"保育・労務など",ic:"idea",log:"ご意見箱",tint:"i-mid",go:()=>goOmeyasu()},  /* 試作版（2026-11-16）：ご意見箱の表示名を「アイデア・提案受付BOX」に変更（旧案「しおどめの葉」は取りやめ）。利用状況の記録名は「ご意見箱」のまま */
  {t:"となりの保育室",d:"ほかの園の保育を見てみよう",ic:"tonari",tint:"i-pink",go:()=>goTonari()},
 ];
 /* ホームの「コドモン」ボタン：（職員用）コドモンポケット2 アプリを開く。
@@ -17093,7 +17093,7 @@ function renderHome(){
     '<button class="tile tile-compact" onclick="sdLog(\'ご意見箱\');goOmeyasu()">'+
     '<span class="tileclip">'+
       '<span class="ictop"><span class="ic i-mid'+icClass('box')+'">'+icInner('box')+'</span></span>'+
-      '<span class="tbody"><span class="tt round">アイデア・提案受付BOX</span></span>'+
+      '<span class="tbody"><span class="tt round">アイデア・提案<br>受付BOX</span></span>'+
     '</span></button>':'';
 
   const dnow=new Date();
