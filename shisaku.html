@@ -318,6 +318,10 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-omeyasu .osafe .obody{font-size:13px;line-height:1.8;color:var(--ink);font-weight:700;}
 #screen-omeyasu .osafe .obody b{font-weight:700;}
 #screen-omeyasu .otabs{display:flex;gap:8px;margin-bottom:14px;}
+/* 2026-11-16 試作版：アイデアのテーマをタップで選ぶボタン */
+#screen-omeyasu .ochips{display:flex;flex-wrap:wrap;gap:8px;}
+#screen-omeyasu .ochip{padding:9px 14px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:999px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+#screen-omeyasu .ochip.on{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue);}
 #screen-omeyasu .otabs button{flex:1;padding:12px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
 #screen-omeyasu .otabs button.on{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue);}
 #screen-omeyasu label{display:block;font-size:13px;font-weight:700;margin:0 0 6px;}
@@ -967,17 +971,24 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
         </div>
         <div id="omPanePost">
           <div class="ocard" id="omFormCard">
+            <!-- 2026-11-16 試作版：アイデア・提案受付BOX向けに入力カードを組み直し
+                 ①テーマ（タップで選ぶ）→②くわしく→③送り方（記名/匿名）→送信。テーマは送信時に category として今までどおりGASへ渡す -->
             <div class="ofield">
-              <label for="omCategory">何についてのご意見ですか</label>
-              <select id="omCategory">
-                <option value="">選択してください</option>
-                <option value="設備について">設備について</option>
-                <option value="法人内制度について">法人内制度について</option>
-                <option value="ハラスメントについて">ハラスメントについて</option>
-                <option value="人事について">人事について</option>
-                <option value="業務効率化について">業務効率化について</option>
-                <option value="その他">その他</option>
-              </select>
+              <label>どんなことのアイデアですか</label>
+              <input type="hidden" id="omCategory" value="">
+              <div class="ochips" id="omThemeChips">
+                <button type="button" class="ochip" data-v="あそび・活動" onclick="omPickTheme(this)">あそび・活動</button>
+                <button type="button" class="ochip" data-v="行事" onclick="omPickTheme(this)">行事</button>
+                <button type="button" class="ochip" data-v="環境・保育室" onclick="omPickTheme(this)">環境・保育室</button>
+                <button type="button" class="ochip" data-v="食育" onclick="omPickTheme(this)">食育</button>
+                <button type="button" class="ochip" data-v="保護者とのかかわり" onclick="omPickTheme(this)">保護者とのかかわり</button>
+                <button type="button" class="ochip" data-v="働き方・労務" onclick="omPickTheme(this)">働き方・労務</button>
+                <button type="button" class="ochip" data-v="その他" onclick="omPickTheme(this)">その他</button>
+              </div>
+            </div>
+            <div class="ofield">
+              <label for="omBody">くわしく教えてください</label>
+              <textarea id="omBody" placeholder=""></textarea>
             </div>
             <div class="ofield">
               <label>送り方を選んでください</label>
@@ -997,11 +1008,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
                 <input type="text" id="omName" placeholder="例：しおどめ 花子">
               </div>
             </div>
-            <div class="ofield">
-              <label for="omBody">内容（自由記入）</label>
-              <textarea id="omBody" placeholder="こうしたらもっと良くなる、というアイデアやご提案をお書きください。"></textarea>
-            </div>
-            <button class="obtn" id="omSendBtn" onclick="omeyasuSubmit()">送信する</button>
+            <button class="obtn" id="omSendBtn" onclick="omeyasuSubmit()">アイデアを送る</button>
             <div class="omsg" id="omPostMsg"></div>
           </div>
           <div class="ocard ocode-box ohidden" id="omDoneCard">
@@ -15912,13 +15919,17 @@ function omeyasuSetIdentityMode(mode){
     var id=getOmeyasuIdentity();
     if(!document.getElementById('omGarden').value)document.getElementById('omGarden').value=id.garden||'';
     if(!document.getElementById('omName').value)document.getElementById('omName').value=id.name||'';
-    note.textContent='園名・お名前を伝えて送ります。担当より個別にお話を伺うことがあります。';
+    note.textContent='園名・お名前を伝えて送ります。アイデアが採用されたら、本部からお声がけすることがあります。';
   }else{
     note.textContent='他の職員や園長に、あなたが書いたことは伝わりません。気兼ねなく、思ったままをお書きください。';
   }
-  document.getElementById('omBody').placeholder=named
-    ? 'こうしたらもっと良くなる、というアイデアやご提案をお書きください。'
-    : '困っていること、言いにくいことなど、遠慮なく率直にお書きください。';
+  document.getElementById('omBody').placeholder='例）今こうなっている →こうしてみたい →こどもや職員にこんな良いことがありそう';
+}
+function omPickTheme(btn){
+  var cur=document.getElementById('omCategory').value;
+  var v=(cur===btn.getAttribute('data-v'))?'':btn.getAttribute('data-v');  /* もう一度押すと選択解除 */
+  document.getElementById('omCategory').value=v;
+  Array.prototype.forEach.call(document.querySelectorAll('#omThemeChips .ochip'),function(b){b.className='ochip'+(b.getAttribute('data-v')===v?' on':'');});
 }
 function goOmeyasu(){
   document.getElementById('brandtxt').textContent='アイデア・提案受付BOX';
@@ -15927,6 +15938,7 @@ function goOmeyasu(){
   var pm=document.getElementById('omPostMsg');pm.textContent='';pm.className='omsg';
   document.getElementById('omBody').value='';
   document.getElementById('omCategory').value='';
+  Array.prototype.forEach.call(document.querySelectorAll('#omThemeChips .ochip'),function(b){b.className='ochip';});
   document.getElementById('omGarden').value='';
   document.getElementById('omName').value='';
   omeyasuSetIdentityMode('named');
