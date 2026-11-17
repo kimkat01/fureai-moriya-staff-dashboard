@@ -24,6 +24,9 @@ const JK = {
   // 雇用区分「正規」→正規、「非正規・派遣」→パート、対象外（育休など）がTRUE→対象外
   // 正規職員のうち、駐車場が日割り対象の人（固定。事務の設定がなくても駐車場ボタンを出す）
   PARKING_FIXED: ['井波美由紀', '登坂恵美子'],
+  // 2026-11-17：ふれあいしおどめ保育園の給食・駐車場の単価（固定）
+  KYUSHOKU_YEN: 250,                  // 給食 1食
+  PARKING_YEN: 150,                   // 駐車場 1日
   MASTER_FALLBACK: {
     '青木真登香': 'パート', '阿部佳奈子': 'パート', '伊﨑千亜紀': 'パート', '稲浪菫花': 'パート', '井波美由紀': '正規',
     '岩﨑愛': '正規', '植村郁子': 'パート', '内山典子': 'パート', '遠藤咲': '正規', '大川原昌子': 'パート',
@@ -45,7 +48,9 @@ function effSetting(name, G, staff, shift) {
   const kubunSrc = man.kubun ? '事務' : (mk ? '職員マスタ' : '初期値');
   const avg = staff && shift ? avgWorkMin(shift, staff, kubun) : 0;
   const yukyuMin = +man.yukyuMin > 0 ? +man.yukyuMin : avg;
-  return { kubun, kubunSrc, masterKubun: mk, parking: !!man.parking || JK.PARKING_FIXED.indexOf(nkey(name)) >= 0, parkingFixed: JK.PARKING_FIXED.indexOf(nkey(name)) >= 0, yukyuMin, yukyuSrc: +man.yukyuMin > 0 ? '事務' : '自動', avgMin: avg };
+  // 2026-11-17：時給・交通費単価（1日・往復）は事務が「職員の設定」で入れる（パートのみ）
+  const wage = +man.wage > 0 ? +man.wage : 0, fare = +man.fare > 0 ? +man.fare : 0;
+  return { kubun, kubunSrc, masterKubun: mk, wage, fare, parking: !!man.parking || JK.PARKING_FIXED.indexOf(nkey(name)) >= 0, parkingFixed: JK.PARKING_FIXED.indexOf(nkey(name)) >= 0, yukyuMin, yukyuSrc: +man.yukyuMin > 0 ? '事務' : '自動', avgMin: avg };
 }
 // その期間の勤務日の実働の平均（有休・特休1日分の時間に使う）
 function avgWorkMin(shift, staff, kubun) {
@@ -513,6 +518,69 @@ function monthTableHTML(shift, staff, recMap, kubun, parking, backDays) {
   });
   return h + '</tbody></table></div>';
 }
+/* ---------- わたしの単価・給与の目安（パートのみ、2026-11-17追加） ----------
+   給与＝（⑥＋⑦）×時給、交通費＝（出勤＋有休）×交通費単価（締め用Excelと同じ）、給食＝回数×250円、駐車場＝日数×150円
+   ・きょうまで … 月度の初日からきょうまでに申告した分
+   ・月度末まで（見込み）… きょうまでの申告＋まだ申告していない日はシフトどおりとして計算
+       （給食・駐車場は、ここまでの勤務日と同じ割合で使うとして計算） */
+function payCalc(shift, staff, recMap, setting) {
+  const today = todayIso();
+  const upto = {};
+  Object.keys(recMap || {}).forEach((iso) => { if (iso <= today) upto[iso] = recMap[iso]; });
+  const a = calcStaff(shift, staff, upto, setting, false, null);
+  // 見込み：申告していない日をシフトから補う
+  const full = Object.assign({}, recMap || {});
+  const t0 = calcStaff(shift, staff, recMap || {}, setting, false, null);
+  const rateK = t0.c['出勤'] ? t0.kyu / t0.c['出勤'] : 0, rateC = t0.c['出勤'] ? t0.chu / t0.c['出勤'] : 0;
+  let addWork = 0;
+  shift.dates.forEach((d) => {
+    if (full[d.iso] && full[d.iso].kind) return;
+    const k = defaultKind(staff.shifts[d.iso], setting.kubun);
+    if (!k) return;
+    full[d.iso] = { kind: k, mode: '', min: 0, kyu: '', chu: '' };
+    if (k === '出勤') addWork++;
+  });
+  const b = calcStaff(shift, staff, full, setting, false, null);
+  const pick = (t, extraK, extraC) => ({
+    min: t.plan + t.diff, days: t.c['出勤'] + t.c['有休'],
+    kyu: t.kyu + (extraK || 0), chu: t.chu + (extraC || 0)
+  });
+  return {
+    ended: shift.dates[shift.dates.length - 1].iso < today,
+    started: shift.dates[0].iso <= today,
+    today: pick(a), end: pick(b, Math.round(addWork * rateK), Math.round(addWork * rateC)),
+    todayMissing: shift.dates.some((d) => d.iso === today) && !(recMap && recMap[today] && recMap[today].kind)
+  };
+}
+function yen(n) { return Math.round(n || 0).toLocaleString('ja-JP') + '円'; }
+function payHTML(shift, staff, recMap, setting) {
+  const p = payCalc(shift, staff, recMap, setting);
+  const W = setting.wage, F = setting.fare, K = JK.KYUSHOKU_YEN, C = JK.PARKING_YEN;
+  const unit = (v, suf) => v ? '<b>' + v.toLocaleString('ja-JP') + '</b> 円' + suf : '<span class="pu-none">事務が設定します</span>';
+  let h = '<div class="paybox"><div class="pt">わたしの単価</div><table class="pu">' +
+    '<tr><th>時給</th><td>' + unit(W, '') + '</td></tr>' +
+    '<tr><th>交通費単価</th><td>' + unit(F, '／1日（往復）') + '</td></tr>' +
+    '<tr><th>給食</th><td><b>' + K + '</b> 円／1食 <span class="pu-fix">固定</span></td></tr>' +
+    '<tr><th>駐車場</th><td><b>' + C + '</b> 円／1日 <span class="pu-fix">固定</span></td></tr></table>';
+  const one = !p.started || p.ended;   // 月度が終わった（またはまだ始まっていない）ときは1列
+  const cell = (q, k) => {
+    if (k === 'w') return '<td>' + fmtJP(q.min) + '<br><b>' + (W ? yen(q.min / 60 * W) : '—') + '</b></td>';
+    if (k === 'f') return '<td>' + q.days + '日<br><b>' + (F ? yen(q.days * F) : '—') + '</b></td>';
+    if (k === 'k') return '<td>' + q.kyu + '食<br><b>' + yen(q.kyu * K) + '</b></td>';
+    return '<td>' + q.chu + '日<br><b>' + yen(q.chu * C) + '</b></td>';
+  };
+  const last = shift.dates[shift.dates.length - 1].md;
+  h += '<table class="pm"><thead><tr><th></th>' + (one ? '<th>' + (p.ended ? 'この月度' : '見込み') + '<br><span>（〜' + esc(last) + '）</span></th>'
+    : '<th>きょうまで<br><span>（' + esc(shift.dates[0].md) + '〜' + esc(todayMd()) + '）</span></th><th>月度末まで（見込み）<br><span>（〜' + esc(last) + '）</span></th>') + '</tr></thead><tbody>';
+  [['給与', 'w'], ['交通費', 'f'], ['給食', 'k'], ['駐車場', 'c']].forEach((x) => {
+    h += '<tr><th>' + x[0] + '</th>' + (one ? cell(p.ended ? p.today : p.end, x[1]) : cell(p.today, x[1]) + cell(p.end, x[1])) + '</tr>';
+  });
+  h += '</tbody></table>';
+  if (!one && p.todayMissing) h += '<div class="pu-note">※きょうの申告がまだです（申告すると「きょうまで」に入ります）</div>';
+  h += '<div class="pu-note">目安です。給与＝（予定の時間＋変えた時間）×時給、交通費＝（出勤＋有休の日数）×単価。見込みは、まだ申告していない日をシフトどおりとして計算しています。</div></div>';
+  return h;
+}
+function todayMd() { const d = new Date(); return (d.getMonth() + 1) + '/' + d.getDate(); }
 function statsHTML(t) {
   const cells = t.kubun === '正規'
     ? [[fmtHM(t.ot), '残業合計'], [t.c['有休'] + '日 ' + t.yh + 'h', '有休・時間有休'], [fmtHM(t.late + t.early), '遅刻・早退']]

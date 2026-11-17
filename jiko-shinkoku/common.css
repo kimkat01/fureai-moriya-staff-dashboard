@@ -96,3 +96,20 @@ table.sumtbl thead tr:first-child th.grp{box-shadow:inset 1.5px 0 0 var(--gl);te
 table.sumtbl thead tr:first-child th.grp:last-child{box-shadow:inset 1.5px 0 0 var(--gl),inset -1.5px 0 0 var(--gl)}
 table.sumtbl thead tr:nth-child(2) th:nth-child(1),table.sumtbl thead tr:nth-child(2) th:nth-child(8),table.sumtbl thead tr:nth-child(2) th:nth-child(12){box-shadow:inset 1.5px 0 0 var(--gl)}
 table.sumtbl thead tr:nth-child(2) th:last-child{box-shadow:inset -1.5px 0 0 var(--gl)}
+
+/* わたしの単価（パートのみ、2026-11-17） */
+.paybox{background:#fff;border:2px solid var(--blue);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.paybox .pt{font-size:15px;font-weight:800;color:var(--blue-d)}
+.paybox table{width:100%;border-collapse:collapse;font-size:14px}
+.paybox .pu th{text-align:left;width:7em;color:var(--ink2);font-weight:700;padding:3px 0}
+.paybox .pu td{padding:3px 0}
+.paybox .pu-none{color:#8a8a85;font-size:13px}
+.paybox .pu-fix{display:inline-block;font-size:11px;color:#57564f;background:#ecebe6;border-radius:6px;padding:1px 6px;margin-left:4px}
+.paybox .pm{border-top:1px solid var(--line)}
+.paybox .pm th,.paybox .pm td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+.paybox .pm thead th{text-align:center;font-size:12px;color:var(--ink2)}
+.paybox .pm thead th span{font-weight:400}
+.paybox .pm tbody th{text-align:left;color:var(--ink2)}
+.paybox .pm td{font-size:12px;color:var(--ink2)}
+.paybox .pm td b{font-size:16px;color:var(--ink)}
+.paybox .pu-note{font-size:11px;color:var(--ink2);line-height:1.6}

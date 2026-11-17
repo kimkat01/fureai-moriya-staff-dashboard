@@ -55,6 +55,7 @@ body.embed .wrap{padding:4px 0 24px}
 
     <div id="viewList" class="hidden" style="display:flex;flex-direction:column;gap:12px">
       <div style="text-align:center"><b id="perTitle" style="font-size:17px"></b><div class="muted" id="perSub"></div><div id="perNav"></div></div>
+      <div id="pay"></div>
       <div id="stats"></div>
       <div id="table"></div>
       <div class="muted">行を押すと、その日の申告を開きます（確定するまでは直せます）。○＝食べた・利用</div>
@@ -195,6 +196,8 @@ function drawList() {
   $('perTitle').textContent = SH.label;
   $('perSub').textContent = SH.start + '〜' + SH.end + '（' + t.n + '日）';
   drawMonthNav('perNav', SH);
+  // 2026-11-17：パートだけ「わたしの単価」と給与の目安を出す
+  $('pay').innerHTML = kubun() === 'パート' ? payHTML(SH, STAFF, RECS, SET) : '';
   $('stats').innerHTML = statsHTML(t);
   $('table').innerHTML = monthTableHTML(SH, STAFF, RECS, kubun(), parking(), backDays());
   let h = '';

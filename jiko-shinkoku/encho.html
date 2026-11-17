@@ -269,8 +269,9 @@ function openDay(name, iso) {
 $('btnSet').onclick = () => {
   let h = '<div class="row"><b style="font-size:17px">職員の設定</b><button type="button" class="btn2" id="sClose">閉じる</button></div>' +
     '<div class="muted">ふだんは何も入れなくて大丈夫です。区分は職員マスタの雇用区分から、有休・特休1日分の時間はその月の勤務日の平均から自動で決まります。<br>' +
-    '違うときだけ、ここで変えてください（変えるとすぐ保存され、自動より優先されます）。正規の駐車場（日割り対象）は、井波さん・登坂さんを固定で対象にしています。ほかに対象の人が増えたときだけチェックしてください。</div>' +
-    '<div class="tblwrap setgrid"><table class="mt"><thead><tr><th>職員名</th><th>区分</th><th>駐車場 日割り（正規）</th><th>有休・特休1日分の時間</th><th></th></tr></thead><tbody>';
+    '違うときだけ、ここで変えてください（変えるとすぐ保存され、自動より優先されます）。正規の駐車場（日割り対象）は、井波さん・登坂さんを固定で対象にしています。ほかに対象の人が増えたときだけチェックしてください。<br>' +
+    '<b>時給・交通費単価（1日・往復）はパートの人だけ入れてください。</b>本人の「1か月の一覧」に表示され、締め用Excelの時給・通勤単価（L・M列）にも入ります。</div>' +
+    '<div class="tblwrap setgrid"><table class="mt"><thead><tr><th>職員名</th><th>区分</th><th>時給（円）</th><th>交通費単価（円／1日）</th><th>駐車場 日割り（正規）</th><th>有休・特休1日分の時間</th><th></th></tr></thead><tbody>';
   SH.staff.forEach((s) => {
     const st = setOf(s.name), man = G.set[s.name] || {};
     const hm = splitMin(+man.yukyuMin > 0 ? man.yukyuMin : 0);
@@ -278,6 +279,10 @@ $('btnSet').onclick = () => {
     h += '<tr data-name="' + esc(s.name) + '"><td><b>' + esc(s.name) + '</b></td>' +
       '<td><select data-k="kubun"><option value=""' + (!man.kubun ? ' selected' : '') + '>' + esc(autoK) + '</option>' +
       ['パート', '正規', '対象外'].map((k) => '<option value="' + k + '"' + (man.kubun === k ? ' selected' : '') + '>' + k + '（手入力）</option>').join('') + '</select></td>' +
+      (st.kubun === 'パート'
+        ? '<td><input type="number" inputmode="numeric" min="0" step="1" data-k="wage" value="' + (st.wage || '') + '" style="width:90px"></td>' +
+          '<td><input type="number" inputmode="numeric" min="0" step="1" data-k="fare" value="' + (st.fare || '') + '" style="width:90px"></td>'
+        : '<td style="color:#8a8a85">—</td><td style="color:#8a8a85">—</td>') +
       '<td><label><input type="checkbox" data-k="parking"' + (st.parking ? ' checked' : '') + (st.parkingFixed ? ' disabled' : '') + ' style="height:20px;width:20px;vertical-align:middle"> 対象' + (st.parkingFixed ? '（固定）' : '') + '</label></td>' +
       '<td><select data-k="yh">' + hourOpts(0, 10, hm.h) + '</select> 時間 <select data-k="ym">' + minOpts(hm.m) + '</select> 分' +
       '<div class="yauto" style="font-size:11px;color:#4a4a46">' + (+man.yukyuMin > 0 ? '手入力' : '0:00＝自動（平均 ' + fmtJP(st.avgMin) + '）') + '</div></td>' +
@@ -292,7 +297,10 @@ $('btnSet').onclick = () => {
     const setting = {
       kubun: tr.querySelector('[data-k=kubun]').value,
       parking: tr.querySelector('[data-k=parking]').checked,
-      yukyuMin: (+tr.querySelector('[data-k=yh]').value) * 60 + (+tr.querySelector('[data-k=ym]').value)
+      yukyuMin: (+tr.querySelector('[data-k=yh]').value) * 60 + (+tr.querySelector('[data-k=ym]').value),
+      // 時給・交通費単価：入力欄がない行（正規など）は、保存済みの値をそのまま残す
+      wage: tr.querySelector('[data-k=wage]') ? Math.max(0, Math.round(+tr.querySelector('[data-k=wage]').value || 0)) : (+(G.set[name] || {}).wage || 0),
+      fare: tr.querySelector('[data-k=fare]') ? Math.max(0, Math.round(+tr.querySelector('[data-k=fare]').value || 0)) : (+(G.set[name] || {}).fare || 0)
     };
     const ok = tr.querySelector('.ok'); ok.style.color = '#1e7a45'; ok.textContent = '保存中…';
     try {
@@ -338,7 +346,8 @@ async function makeXlsx() {
   ROWS.filter((x) => x.set.kubun === 'パート').forEach((x) => {
     const t = x.t, c = t.c;
     const row = ws.getRow(r);
-    row.values = [x.s.name, c['出勤'], c['有休'], c['特休'], c['公休'], c['希望休'], c['欠勤'], toHours(t.plan), toHours(t.diff), t.kyu, t.chu, null, null];
+    // 2026-11-17：時給・通勤単価（L・M列）は「職員の設定」で入れた値（未設定は空欄）
+    row.values = [x.s.name, c['出勤'], c['有休'], c['特休'], c['公休'], c['希望休'], c['欠勤'], toHours(t.plan), toHours(t.diff), t.kyu, t.chu, x.set.wage || null, x.set.fare || null];
     row.getCell(14).value = { formula: 'IF(SUM(B' + r + ':G' + r + ')=' + n + ',"OK","NG（"&SUM(B' + r + ':G' + r + ')&"日）")' };
     row.getCell(15).value = { formula: 'IF(L' + r + '="","",ROUND((H' + r + '+I' + r + ')*L' + r + ',0))' };
     row.getCell(16).value = { formula: 'IF(M' + r + '="","",(B' + r + '+C' + r + ')*M' + r + ')' };
@@ -364,7 +373,7 @@ async function makeXlsx() {
     ['注', '②有休は通勤手当支給'],
     ['注', '③特休は通勤手当対象外'],
     ['注', '休憩は正規は全員60分。パートは実働6時間未満なし・6時間以上8時間未満45分・8時間以上60分として計算'],
-    ['注', '時給・通勤単価（L・M列）は事務が入力してください']
+    ['注', '時給・通勤単価（L・M列）はシフト集計の「職員の設定」で入れた値。空欄の人は事務が入力してください']
   ];
   r = last + 2;
   notes.forEach((nt) => { const row = ws.getRow(r++); row.getCell(1).value = nt[0]; row.getCell(2).value = nt[1]; row.getCell(1).font = BOLD; row.getCell(2).font = FONT; });
