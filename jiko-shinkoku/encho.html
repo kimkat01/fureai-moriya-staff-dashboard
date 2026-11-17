@@ -18,6 +18,21 @@
 table.mt td.nm{font-weight:700;color:var(--blue-d);text-decoration:underline}
 table.mt th.grp{text-align:center;background:#dfe6fb}
 .setgrid select,.setgrid input{height:38px;font-size:14px;border:1px solid #b9b8b1;border-radius:8px;padding:0 6px;background:#fff}
+/* 2026-11-17：月度の表示（左上）— ＜ 月度ボックス ＞ */
+.mnav{display:flex;align-items:center;gap:14px}
+.mnav .arw{width:44px;height:44px;flex:0 0 44px;border:1.5px solid var(--blue-d);border-radius:8px;background:#fff;color:#222;font-size:24px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.mnav .arw:hover:not(:disabled){background:var(--blue-bg)}
+.mnav .arw:disabled{opacity:.3;cursor:default}
+.mnav .mbox{border:3px solid var(--blue-d);border-radius:14px;background:#fff;padding:4px 36px}
+.mnav .mbox .in{background:#f3f4f6;padding:6px 28px;text-align:center}
+.mnav .mbox h2{margin:0;font-size:24px;font-weight:800;color:#222;letter-spacing:.02em}
+.mnav .mbox .ms{font-size:15px;color:#4a4a46;margin-top:2px}
+/* 2026-11-17：読み込み中の「何％」表示 */
+.ldbox{max-width:360px;margin:0 auto}
+.ldpct{font-size:28px;font-weight:800;color:var(--blue-d);margin-bottom:8px}
+.ldbar{height:12px;background:#e6e8ef;border-radius:999px;overflow:hidden}
+.ldbar i{display:block;height:100%;width:0;background:var(--blue);border-radius:999px;transition:width .3s ease}
+.ldmsg{margin-top:10px;font-size:14px;color:var(--ink2)}
 @media (max-width:640px){.stats4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
@@ -27,12 +42,20 @@ table.mt th.grp{text-align:center;background:#dfe6fb}
 </div>
 <div class="wrap wide">
   <div class="demo hidden" id="demo">お試しモード：この端末のブラウザに保存された申告だけが表示されます（同じ端末の職員用ページで入力した内容）。</div>
-  <div id="loading" class="loading">読み込んでいます…</div>
+  <div id="loading" class="loading"><div class="ldbox">
+    <div class="ldpct" id="ldPct">0%</div>
+    <div class="ldbar"><i id="ldBar"></i></div>
+    <div class="ldmsg" id="ldMsg">読み込んでいます…</div>
+  </div></div>
   <div id="fatal" class="err hidden"></div>
 
   <div id="main" class="hidden" style="display:flex;flex-direction:column;gap:14px">
     <div class="top">
-      <div><h2 id="perTitle"></h2><div class="muted" id="perSub"></div><div id="perNav"></div></div>
+      <div class="mnav">
+        <button type="button" class="arw" id="mPrev" aria-label="前の月度">&#x2039;</button>
+        <div class="mbox"><div class="in"><h2 id="perTitle"></h2><div class="ms" id="perSub"></div></div></div>
+        <button type="button" class="arw" id="mNext" aria-label="次の月度">&#x203A;</button>
+      </div>
       <div class="acts">
         <button type="button" class="btn2" id="btnReload">最新にする</button>
         <button type="button" class="btn2" id="btnSet">職員の設定</button>
@@ -64,16 +87,51 @@ function $(id) { return document.getElementById(id); }
 function show(id, on) { $(id).classList.toggle('hidden', !on); }
 function setOf(name) { return effSetting(name, G, SH.staff.find((x) => x.name === name), SH); }
 
+/* 読み込みの進み具合（目安）。
+   ①シフトを読む＝0〜40%、②申告データを読む＝40〜95%、表を作り終えたら100%。
+   それぞれの段階の中では、時間がたつにつれて少しずつ上限に近づけていく（止まって見えないように） */
+const LD = { pct: 0, lo: 0, hi: 0, t0: 0, timer: null };
+function ldSet(p) { LD.pct = Math.max(LD.pct, Math.min(100, p)); $('ldPct').textContent = Math.floor(LD.pct) + '%'; $('ldBar').style.width = LD.pct + '%'; }
+function ldStage(lo, hi, msg) {
+  LD.lo = lo; LD.hi = hi; LD.t0 = Date.now(); ldSet(lo); $('ldMsg').textContent = msg;
+  if (!LD.timer) LD.timer = setInterval(() => {
+    const sec = (Date.now() - LD.t0) / 1000;
+    ldSet(LD.lo + (LD.hi - LD.lo) * (1 - Math.exp(-sec / 3))); // 約3秒で上限の6割強まで進む
+  }, 150);
+}
+function ldDone() { clearInterval(LD.timer); LD.timer = null; ldSet(100); $('ldMsg').textContent = '表示しています…'; }
+function ldStop() { clearInterval(LD.timer); LD.timer = null; }
+
 async function init() {
   if (isDemo()) show('demo', true);
-  try { SH = await loadShift(); await reload(); }
-  catch (e) { show('loading', false); show('fatal', true); $('fatal').textContent = e.message; return; }
+  try {
+    ldStage(0, 40, 'シフトを読み込んでいます…（1/2）');
+    SH = await loadShift();
+    ldStage(40, 95, '職員の申告を読み込んでいます…（2/2）');
+    await reload();
+    ldDone();
+  }
+  catch (e) { ldStop(); show('loading', false); show('fatal', true); $('fatal').textContent = e.message; return; }
+  await new Promise((r) => setTimeout(r, 200)); // 100%を一瞬見せてから画面を出す
   show('loading', false); show('main', true);
   $('fac').textContent = SH.facility;
   $('perTitle').textContent = SH.label;
   $('perSub').textContent = SH.start + '〜' + SH.end + '（' + SH.dates.length + '日）';
-  drawMonthNav('perNav', SH);
+  drawMonthArrows();
   draw();
+}
+// 月度の切り替え（左右の矢印）。前／次の月度がないときは押せない
+function drawMonthArrows() {
+  const list = (typeof SHIFT_MONTHS !== 'undefined' ? SHIFT_MONTHS : []).slice().sort((a, b) => (a.pid < b.pid ? -1 : a.pid > b.pid ? 1 : 0));
+  const i = list.findIndex((m) => m.pid === SH.pid);
+  const prev = i > 0 ? list[i - 1] : null, next = i >= 0 && i < list.length - 1 ? list[i + 1] : null;
+  const go = (m) => { const u = new URL(location.href); u.searchParams.set('m', m.pid); location.href = u.toString(); };
+  const bp = $('mPrev'), bn = $('mNext');
+  bp.disabled = !prev; bn.disabled = !next;
+  bp.title = prev ? '前の月度（' + prev.label + '）を開く' : '前の月度はありません';
+  bn.title = next ? '次の月度（' + next.label + '）を開く' : '次の月度はありません';
+  bp.onclick = () => { if (prev) go(prev); };
+  bn.onclick = () => { if (next) go(next); };
 }
 async function reload() { G = groupLoad(await api('load', { pid: SH.pid })); }
 
@@ -359,7 +417,7 @@ async function makeXlsx() {
   const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = '自己申告_' + SH.facility + '_' + SH.label + '.xlsx';
+  a.download = 'シフト集計_' + SH.facility + '_' + SH.label + '.xlsx';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
