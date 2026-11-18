@@ -559,13 +559,14 @@ function payHTML(shift, staff, recMap, setting) {
   const unit = (v, suf) => v ? '<b>' + v.toLocaleString('ja-JP') + '</b> 円' + suf : '<span class="pu-none">事務が設定します</span>';
   let h = '<div class="paybox"><div class="pt">わたしの単価</div><table class="pu">' +
     '<tr><th>時給</th><td>' + unit(W, '') + '</td></tr>' +
-    '<tr><th>交通費単価</th><td>' + unit(F, '／1日（往復）') + '</td></tr>' +
+    // 時給が入っていて交通費単価が0の人は「支給なし」（未設定と区別する）
+    '<tr><th>交通費単価</th><td>' + (!F && W ? '<b>0</b> 円（支給なし）' : unit(F, '／1日（往復）')) + '</td></tr>' +
     '<tr><th>給食</th><td><b>' + K + '</b> 円／1食 <span class="pu-fix">固定</span></td></tr>' +
     '<tr><th>駐車場</th><td><b>' + C + '</b> 円／1日 <span class="pu-fix">固定</span></td></tr></table>';
   const one = !p.started || p.ended;   // 月度が終わった（またはまだ始まっていない）ときは1列
   const cell = (q, k) => {
     if (k === 'w') return '<td>' + fmtJP(q.min) + '<br><b>' + (W ? yen(q.min / 60 * W) : '—') + '</b></td>';
-    if (k === 'f') return '<td>' + q.days + '日<br><b>' + (F ? yen(q.days * F) : '—') + '</b></td>';
+    if (k === 'f') return '<td>' + q.days + '日<br><b>' + (F || W ? yen(q.days * F) : '—') + '</b></td>';
     if (k === 'k') return '<td>' + q.kyu + '食<br><b>' + yen(q.kyu * K) + '</b></td>';
     return '<td>' + q.chu + '日<br><b>' + yen(q.chu * C) + '</b></td>';
   };
