@@ -52,11 +52,17 @@ function effSetting(name, G, staff, shift) {
   const wage = +man.wage > 0 ? +man.wage : 0, fare = +man.fare > 0 ? +man.fare : 0;
   return { kubun, kubunSrc, masterKubun: mk, wage, fare, parking: !!man.parking || JK.PARKING_FIXED.indexOf(nkey(name)) >= 0, parkingFixed: JK.PARKING_FIXED.indexOf(nkey(name)) >= 0, yukyuMin, yukyuSrc: +man.yukyuMin > 0 ? '事務' : '自動', avgMin: avg };
 }
-// その期間の勤務日の実働の平均（有休・特休1日分の時間に使う）
+// 2026-11-18：その人の「ふだんの勤務時間」（有休・特休1日分の時間に使う）
+//   その月度のシフトの出勤日（勤務・研修）の実働のうち、いちばん多い時間を使う（以前は平均だった）
+//   例：7時間00分が16日・8時間00分が2日 → 7時間00分
+//   同じ日数の時間が2つ以上あるときは、短いほうの時間にする
+//   （関数名・avgMin の名前は、ほかの画面との互換のためそのまま）
 function avgWorkMin(shift, staff, kubun) {
-  let sum = 0, n = 0;
-  shift.dates.forEach((d) => { const sh = staff.shifts[d.iso]; if (sh && (sh.state === 'work' || sh.state === 'training')) { const p = planMin(sh.time, kubun); if (p > 0) { sum += p; n++; } } });
-  return n ? Math.round(sum / n) : 0;
+  const cnt = {};
+  shift.dates.forEach((d) => { const sh = staff.shifts[d.iso]; if (sh && (sh.state === 'work' || sh.state === 'training')) { const p = planMin(sh.time, kubun); if (p > 0) cnt[p] = (cnt[p] || 0) + 1; } });
+  let best = 0, bestN = 0;
+  Object.keys(cnt).forEach((k) => { const m = +k, n = cnt[k]; if (n > bestN || (n === bestN && m < best)) { best = m; bestN = n; } });
+  return best;
 }
 
 /* ---------- 時間の計算 ---------- */
@@ -212,7 +218,7 @@ function defaultKind(sh, kubun) {
   if (code === '育休') return '';
   return '公休';
 }
-// 有休・特休の日に支給する時間（シフトに時間があればそれ、なければ職員設定の値）
+// 有休・特休の日に支給する時間（シフトに時間があればそれ、なければ職員設定の値＝手入力 か ふだんの勤務時間）
 function leavePlanMin(sh, setting) {
   const p = planMin(sh && sh.time, setting && setting.kubun);
   if (p > 0) return p;

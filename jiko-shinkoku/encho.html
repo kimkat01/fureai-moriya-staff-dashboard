@@ -268,7 +268,7 @@ function openDay(name, iso) {
 /* ---------- 職員の設定 ---------- */
 $('btnSet').onclick = () => {
   let h = '<div class="row"><b style="font-size:17px">職員の設定</b><button type="button" class="btn2" id="sClose">閉じる</button></div>' +
-    '<div class="muted">ふだんは何も入れなくて大丈夫です。区分は職員マスタの雇用区分から、有休・特休1日分の時間はその月の勤務日の平均から自動で決まります。<br>' +
+    '<div class="muted">ふだんは何も入れなくて大丈夫です。区分は職員マスタの雇用区分から、有休・特休1日分の時間は、その日のシフトに時間がなければ、その人のふだんの勤務時間（その月度のシフトでいちばん多い勤務時間）で自動で決まります。<br>' +
     '違うときだけ、ここで変えてください（変えるとすぐ保存され、自動より優先されます）。正規の駐車場（日割り対象）は、井波さん・登坂さんを固定で対象にしています。ほかに対象の人が増えたときだけチェックしてください。<br>' +
     '<b>時給・交通費単価（1日・往復）はパートの人だけ入れてください。</b>本人の「1か月の一覧」に表示され、締め用Excelの時給・通勤単価（L・M列）にも入ります。</div>' +
     '<div class="tblwrap setgrid"><table class="mt"><thead><tr><th>職員名</th><th>区分</th><th>時給（円）</th><th>交通費単価（円／1日）</th><th>駐車場 日割り（正規）</th><th>有休・特休1日分の時間</th><th></th></tr></thead><tbody>';
@@ -285,7 +285,7 @@ $('btnSet').onclick = () => {
         : '<td style="color:#8a8a85">—</td><td style="color:#8a8a85">—</td>') +
       '<td><label><input type="checkbox" data-k="parking"' + (st.parking ? ' checked' : '') + (st.parkingFixed ? ' disabled' : '') + ' style="height:20px;width:20px;vertical-align:middle"> 対象' + (st.parkingFixed ? '（固定）' : '') + '</label></td>' +
       '<td><select data-k="yh">' + hourOpts(0, 10, hm.h) + '</select> 時間 <select data-k="ym">' + minOpts(hm.m) + '</select> 分' +
-      '<div class="yauto" style="font-size:11px;color:#4a4a46">' + (+man.yukyuMin > 0 ? '手入力' : '0:00＝自動（平均 ' + fmtJP(st.avgMin) + '）') + '</div></td>' +
+      '<div class="yauto" style="font-size:11px;color:#4a4a46">' + (+man.yukyuMin > 0 ? '手入力' : '0:00＝自動（ふだんの勤務時間 ' + fmtJP(st.avgMin) + '）') + '</div></td>' +
       '<td class="ok" style="font-size:12px;color:#1e7a45"></td></tr>';
   });
   h += '</tbody></table></div>';
@@ -307,7 +307,7 @@ $('btnSet').onclick = () => {
       await api('setting', { name, setting });
       G.set[name] = Object.assign({ name }, setting);
       ok.textContent = '保存しました';
-      tr.querySelector('.yauto').textContent = setting.yukyuMin > 0 ? '手入力' : '0:00＝自動（平均 ' + fmtJP(setOf(name).avgMin) + '）';
+      tr.querySelector('.yauto').textContent = setting.yukyuMin > 0 ? '手入力' : '0:00＝自動（ふだんの勤務時間 ' + fmtJP(setOf(name).avgMin) + '）';
     } catch (er) { ok.style.color = '#b3261e'; ok.textContent = er.message; }
   };
 };
