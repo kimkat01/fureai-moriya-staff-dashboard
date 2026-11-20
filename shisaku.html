@@ -144,6 +144,12 @@ main{padding:16px}
 .tile-wide .tbody{padding:0;flex:1;gap:3px;}
 .tile-wide .tt{font-size:16px;}
 .tile-wide .ds{font-size:11.5px;margin-top:0;}
+/* 試作版（2026-11-20）：「本部に知ってほしい・聞いてほしい」（横長カード）。アイコンは淡い水色の丸の中に */
+.tile-voice .ictop{background:transparent;}
+.tile-voice .ic{width:62px;height:62px;border-radius:16px;}
+.tile-voice .ic img{width:50px;height:50px;}
+.tile-voice .tt{font-size:16.5px;}
+.tile-voice .tbody{padding-right:34px;}
 .tile-wide .wide-status{flex:0 0 auto;display:flex;align-items:center;gap:8px;}
 .tile-wide .wide-chip{font-size:11px;font-weight:800;padding:4px 11px;border-radius:999px;white-space:nowrap;}
 .tile-wide .wide-chip.on{background:var(--red-bg);color:var(--red-ink);}
@@ -753,7 +759,7 @@ html.law-y #screen-mental .aimc-chips button{background:#eef8ef;border-color:#bf
 <style>.sd-trial-ribbon{position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#fff3cd;color:#7a5a00;font:700 12px/1.6 sans-serif;text-align:center;padding:2px 8px;border-top:1px solid #f0d58a;pointer-events:none}</style>
 </head>
 <body>
-<div class="sd-trial-ribbon">試作版（本部確認用）：アイデア・提案受付BOX・AIメンタルカウンセリング</div>
+<div class="sd-trial-ribbon">試作版（本部確認用）：本部に知ってほしい・聞いてほしい・アイデア・提案受付BOX・AIメンタルカウンセリング</div>
 
 <!-- ============================================================
      ログインID＋パスワードゲート（staff-dashboard 共通ログイン）
@@ -17059,6 +17065,14 @@ function openNehori(){
 }
 let HOME_MENU=[];
 
+/* 試作版（2026-11-20）：「本部に知ってほしい・聞いてほしい」カードのアイコン（吹き出し2つのイラスト） */
+IMG.honbuvoice="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">'+
+  '<path d="M14 18h44a8 8 0 0 1 8 8v22a8 8 0 0 1-8 8H32l-12 10v-10h-6a8 8 0 0 1-8-8V26a8 8 0 0 1 8-8z" fill="#7fb3f5"/>'+
+  '<circle cx="25" cy="37" r="3.6" fill="#fff"/><circle cx="36" cy="37" r="3.6" fill="#fff"/><circle cx="47" cy="37" r="3.6" fill="#fff"/>'+
+  '<path d="M82 40H50a8 8 0 0 0-8 8v18a8 8 0 0 0 8 8h18l11 9v-9h3a8 8 0 0 0 8-8V48a8 8 0 0 0-8-8z" fill="#ffd27a"/>'+
+  '<path d="M66 64c-6-4.2-9-7-9-10.2a4.4 4.4 0 0 1 9-1.6 4.4 4.4 0 0 1 9 1.6c0 3.2-3 6-9 10.2z" fill="#f08a9b"/>'+
+  '</svg>');
+IC.honbuvoice='<svg viewBox="0 0 24 24"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h8A2.5 2.5 0 0 1 16 5.5v4a2.5 2.5 0 0 1-2.5 2.5H9l-3.5 3v-3A2.5 2.5 0 0 1 3 9.5z"/></svg>';
 const MENU=[
  {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShiftLogin();}}},
  {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(uqUrl(),"有給チェッカー","uq","i-early")},
@@ -17066,6 +17080,8 @@ const MENU=[
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-lav",go:()=>goManual()},
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
  {t:"メンタルヘルスサポート",d:"ストレスチェックやカウンセリング等の手続き",ic:"doctor",tint:"i-gold",go:()=>goMental()},
+ /* 試作版（2026-11-20）：ご意見箱の位置に「本部に知ってほしい・聞いてほしい」カードを新設。中身はこれから（押すと準備中の画面）。アイデア・提案受付BOXはこの次に並べたまま。本番（index.html）にはまだ入れない */
+ {t:"本部に知ってほしい・<br>聞いてほしい",d:"困りごと・相談・気づいたこと",ic:"honbuvoice",log:"本部に知ってほしい・聞いてほしい",tint:"i-sky",cls:"tile-wide tile-voice",flag:"試作",go:()=>goStub("本部に知ってほしい・聞いてほしい","honbuvoice","i-sky")},
  {t:"アイデア・提案<br>受付BOX",d:"保育・労務など",ic:"idea",log:"ご意見箱",tint:"i-mid",go:()=>goOmeyasu()},  /* 試作版（2026-11-16）：ご意見箱の表示名を「アイデア・提案受付BOX」に変更（旧案「しおどめの葉」は取りやめ）。利用状況の記録名は「ご意見箱」のまま */
  {t:"となりの保育室",d:"ほかの園の保育を見てみよう",ic:"tonari",tint:"i-pink",go:()=>goTonari()},
 ];
