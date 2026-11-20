@@ -759,7 +759,7 @@ html.law-y #screen-mental .aimc-chips button{background:#eef8ef;border-color:#bf
 <style>.sd-trial-ribbon{position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#fff3cd;color:#7a5a00;font:700 12px/1.6 sans-serif;text-align:center;padding:2px 8px;border-top:1px solid #f0d58a;pointer-events:none}</style>
 </head>
 <body>
-<div class="sd-trial-ribbon">試作版（本部確認用）：本部に知ってほしい・聞いてほしい・アイデア・提案受付BOX・AIメンタルカウンセリング</div>
+<div class="sd-trial-ribbon">試作版（本部確認用）：本部に知ってほしい・聞いてほしい・AIメンタルカウンセリング</div>
 
 <!-- ============================================================
      ログインID＋パスワードゲート（staff-dashboard 共通ログイン）
@@ -17080,9 +17080,8 @@ const MENU=[
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-lav",go:()=>goManual()},
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
  {t:"メンタルヘルスサポート",d:"ストレスチェックやカウンセリング等の手続き",ic:"doctor",tint:"i-gold",go:()=>goMental()},
- /* 試作版（2026-11-20）：ご意見箱の位置に「本部に知ってほしい・聞いてほしい」カードを新設。中身はこれから（押すと準備中の画面）。アイデア・提案受付BOXはこの次に並べたまま。本番（index.html）にはまだ入れない */
- {t:"本部に知ってほしい・<br>聞いてほしい",d:"困りごと・相談・気づいたこと",ic:"honbuvoice",log:"本部に知ってほしい・聞いてほしい",tint:"i-sky",cls:"tile-wide tile-voice",flag:"試作",go:()=>goStub("本部に知ってほしい・聞いてほしい","honbuvoice","i-sky")},
- {t:"アイデア・提案<br>受付BOX",d:"保育・労務など",ic:"idea",log:"ご意見箱",tint:"i-mid",go:()=>goOmeyasu()},  /* 試作版（2026-11-16）：ご意見箱の表示名を「アイデア・提案受付BOX」に変更（旧案「しおどめの葉」は取りやめ）。利用状況の記録名は「ご意見箱」のまま */
+ /* 試作版（2026-11-20）：ご意見箱の位置に「本部に知ってほしい・聞いてほしい」カードを新設。中身はこれから（押すと準備中の画面）。アイデア・提案受付BOXの代わり（BOXのカードは外した）。本番（index.html）にはまだ入れない */
+ {t:"本部に知ってほしい・<br>聞いてほしい",d:"困りごと・相談・気づいたこと",ic:"honbuvoice",log:"本部に知ってほしい・聞いてほしい",tint:"i-sky",go:()=>goStub("本部に知ってほしい・聞いてほしい","honbuvoice","i-sky")},
  {t:"となりの保育室",d:"ほかの園の保育を見てみよう",ic:"tonari",tint:"i-pink",go:()=>goTonari()},
 ];
 /* ホームの「コドモン」ボタン：（職員用）コドモンポケット2 アプリを開く。
