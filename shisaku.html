@@ -757,8 +757,96 @@ html.law-y #screen-mental .aimc-chips button{background:#eef8ef;border-color:#bf
 })();
 </script>
 <style>.sd-trial-ribbon{position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#fff3cd;color:#7a5a00;font:700 12px/1.6 sans-serif;text-align:center;padding:2px 8px;border-top:1px solid #f0d58a;pointer-events:none}</style>
+<style>
+/* 2026-11-23 試作版：画面下の社名（株式会社潮止学事教育社）。スミ100%・小さく */
+.gk-foot{text-align:center;font-size:11px;color:#000;letter-spacing:.08em;margin:28px 16px 0;padding:16px 0 6px;border-top:1px solid var(--line);}
+#pinGate .gk-foot{border-top:0;margin-top:32px;padding-bottom:24px;}
+</style>
 </head>
 <body>
+<!-- ============================================================
+     オープニング（2026-11-23 試作版）：株式会社潮止学事教育社
+     ①ごあいさつ文を1行ずつ表示 → ②ロゴ（Gakuji）のアニメーション → 消える（全体で約11秒）
+     ・タップでいつでもスキップ
+     ・表示はタブを開いたときの1回だけ（sessionStorage の gk_opening_seen）。Homeに戻るたびには出ない
+     ・法人名は、雄雅会の園（施設コードY＝<html>に law-y クラス）なら「社会福祉法人雄雅会」、それ以外は「学校法人柴学園」
+     ・ロゴ画像は icons/gakuji/op-word / op-line / op-stars / op-jp.png
+     ============================================================ -->
+<script>try{ if(sessionStorage.getItem('gk_opening_seen')==='1') document.documentElement.classList.add('gk-seen'); }catch(e){}</script>
+<style>
+#gkOpening{position:fixed;inset:0;z-index:2147483000;background:#fff;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:opacity .6s ease, visibility .6s;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",YuGothic,Meiryo,"Noto Sans JP",sans-serif;}
+html.gk-seen #gkOpening{display:none;}
+#gkOpening.gk-out{opacity:0;visibility:hidden;}
+#gkOpening .gk-logo{position:relative;width:min(56vw,240px);aspect-ratio:599/233;}
+#gkOpening .gk-logo img{position:absolute;inset:0;width:100%;height:100%;opacity:0;}
+#gkOpening.gk-play .gk-word {animation:gkWord .8s cubic-bezier(.2,.7,.2,1) .25s forwards;}
+#gkOpening.gk-play .gk-line {animation:gkLine .7s cubic-bezier(.6,0,.2,1) .75s forwards;}
+#gkOpening.gk-play .gk-stars{animation:gkStars .6s cubic-bezier(.3,1.6,.5,1) 1.2s forwards, gkTwinkle 1.2s ease-in-out 1.8s 1;}
+#gkOpening.gk-play .gk-jp   {animation:gkJp .8s ease-out 1.35s forwards;}
+@keyframes gkWord{from{opacity:0;transform:translateY(14px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes gkLine{from{opacity:1;clip-path:inset(0 50% 0 50%)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes gkStars{from{opacity:0;transform:scale(.2) rotate(-40deg)}to{opacity:1;transform:none}}
+@keyframes gkTwinkle{0%,100%{filter:none}50%{filter:brightness(1.6) drop-shadow(0 0 4px rgba(0,96,176,.6))}}
+@keyframes gkJp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#gkOpening .gk-stars{transform-origin:65% 7%;}
+#gkOpening .gk-skip{position:absolute;bottom:max(24px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;
+  font-size:12px;color:#b0b6bf;letter-spacing:.1em;opacity:0;animation:gkJp .6s ease .8s forwards;}
+#gkOpening .gk-msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  font-size:15px;line-height:1.9;color:#000;text-align:center;white-space:nowrap;transition:opacity .5s ease;}
+#gkOpening .gk-msg p{margin:0;opacity:0;transform:translateY(10px);filter:blur(3px);transition:opacity .8s ease,transform .8s ease,filter .8s ease}
+#gkOpening .gk-msg p.first{font-weight:700}
+#gkOpening .gk-msg p.gap{margin-top:1.1em}
+#gkOpening .gk-msg p.show{opacity:1;transform:none;filter:none}
+#gkOpening .gk-msg.off{opacity:0}
+@media (prefers-reduced-motion: reduce){#gkOpening .gk-logo img{animation:none!important;opacity:1}#gkOpening .gk-msg,#gkOpening .gk-msg p{transition:none}}
+</style>
+<div id="gkOpening" aria-label="株式会社潮止学事教育社">
+  <div class="gk-msg" id="gkMsg">
+    <p class="first">いつもご利用ありがとうございます。</p>
+    <p class="gap">このシステムは</p>
+    <p>株式会社潮止学事教育社が開発・運営し、</p>
+    <p><span id="gkHojin">学校法人柴学園</span>の皆さまに</p>
+    <p>先行してお使いいただきながら、</p>
+    <p>改良を重ねています。</p>
+    <p class="gap">お気づきの点や</p>
+    <p>「ここを改良してほしい」というご要望が</p>
+    <p>ありましたら、ぜひお聞かせください。</p>
+  </div>
+  <div class="gk-logo">
+    <img class="gk-word"  src="icons/gakuji/op-word.png"  alt="">
+    <img class="gk-line"  src="icons/gakuji/op-line.png"  alt="">
+    <img class="gk-stars" src="icons/gakuji/op-stars.png" alt="">
+    <img class="gk-jp"    src="icons/gakuji/op-jp.png"    alt="">
+  </div>
+  <div class="gk-skip">タップでスキップ</div>
+</div>
+<script>
+(function(){
+  function gkStart(){
+    var el=document.getElementById('gkOpening');
+    if(!el) return;
+    if(document.documentElement.classList.contains('gk-seen')){ el.remove(); return; }
+    var hojin=document.getElementById('gkHojin');
+    if(hojin) hojin.textContent = document.documentElement.classList.contains('law-y') ? '社会福祉法人雄雅会' : (window.GK_HOJIN_NAME || '学校法人柴学園');
+    var msg=document.getElementById('gkMsg'), lines=msg.querySelectorAll('p'), timers=[], done=false;
+    var T=function(f,ms){ timers.push(setTimeout(f,ms)); };
+    var close=function(){
+      if(done) return; done=true; timers.forEach(clearTimeout);
+      try{ sessionStorage.setItem('gk_opening_seen','1'); }catch(e){}
+      el.classList.add('gk-out'); setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 700);
+    };
+    el.addEventListener('click', close);
+    lines.forEach(function(p,i){ T(function(){ p.classList.add('show'); }, 200 + i*550); });   // 1行ずつ 0.55秒おき
+    var lastIn = 200 + (lines.length-1)*550;
+    T(function(){ msg.classList.add('off'); }, lastIn + 3300);        // 最後の行が出てから約3.3秒読める
+    T(function(){ el.classList.add('gk-play'); }, lastIn + 3800);     // ロゴのアニメーション
+    T(close, lastIn + 6900);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', gkStart); else gkStart();
+})();
+</script>
+<!-- オープニング ここまで -->
 <div class="sd-trial-ribbon">試作版（本部確認用）：本部に知ってほしい・聞いてほしい・AIメンタルカウンセリング</div>
 
 <!-- ============================================================
@@ -809,6 +897,8 @@ html.law-y #screen-mental .aimc-chips button{background:#eef8ef;border-color:#bf
       <div class="pin-err" id="pgErr2"></div>
       <button class="pin-btn" id="pgChangeBtn" onclick="pgSubmitChange()">このパスワードに設定する</button>
     </div>
+    <!-- 2026-11-23 試作版：ログイン画面の下の社名 -->
+    <div class="gk-foot">株式会社潮止学事教育社</div>
   </div>
 </div>
 
@@ -1504,6 +1594,8 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
       </div>
     </section>
   </main>
+  <!-- 2026-11-23 試作版：画面下の社名 -->
+  <div class="gk-foot">株式会社潮止学事教育社</div>
 </div>
 
 <script src="https://kimkat01.github.io/staff-dashboard/docs/manuals.js"></script>
