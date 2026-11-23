@@ -775,11 +775,14 @@ body{padding-bottom:calc(23px + env(safe-area-inset-bottom,0px));}
      オープニング（2026-11-23 試作版）：株式会社潮止学事教育社
      ①ごあいさつ文を1行ずつ表示 → ②ロゴ（Gakuji）のアニメーション → 消える（全体で約11秒）
      ・タップでいつでもスキップ
-     ・表示はタブを開いたときの1回だけ（sessionStorage の gk_opening_seen）。Homeに戻るたびには出ない
+     ・一度見たら30分間は出さない（sessionStorage の gk_opening_anshin）。ツールから戻ったときに毎回出ないように。?opening=1 で必ず表示
      ・法人名は、雄雅会の園（施設コードY＝<html>に law-y クラス）なら「社会福祉法人雄雅会」、それ以外は「学校法人柴学園」
      ・ロゴ画像は icons/gakuji/op-word / op-line / op-stars / op-jp.png
      ============================================================ -->
-<script>try{ if(sessionStorage.getItem('gk_opening_seen')==='1') document.documentElement.classList.add('gk-seen'); }catch(e){}</script>
+<script>/* 2026-11-23：ANSHIN KUNとポータルは同じサイト（kimkat01.github.io）なので、記録の名前をアプリごとに分ける。
+   見てから30分以内（ツールから戻ってきたときなど）は出さない。URLに ?opening=1 を付けると必ず出す（確認用） */
+try{ var _gq=new URLSearchParams(location.search).get('opening')==='1'; var _gt=Number(sessionStorage.getItem('gk_opening_anshin')||0);
+  if(!_gq && _gt && Date.now()-_gt < 30*60*1000) document.documentElement.classList.add('gk-seen'); }catch(e){}</script>
 <style>
 #gkOpening{position:fixed;inset:0;z-index:2147483000;background:#fff;display:flex;align-items:center;justify-content:center;
   cursor:pointer;transition:opacity .6s ease, visibility .6s;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",YuGothic,Meiryo,"Noto Sans JP",sans-serif;}
@@ -840,7 +843,7 @@ html.gk-seen #gkOpening{display:none;}
     var T=function(f,ms){ timers.push(setTimeout(f,ms)); };
     var close=function(){
       if(done) return; done=true; timers.forEach(clearTimeout);
-      try{ sessionStorage.setItem('gk_opening_seen','1'); }catch(e){}
+      try{ sessionStorage.setItem('gk_opening_anshin', String(Date.now())); }catch(e){}
       el.classList.add('gk-out'); setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 700);
     };
     el.addEventListener('click', close);
