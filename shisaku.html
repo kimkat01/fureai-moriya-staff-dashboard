@@ -1369,8 +1369,10 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
       function aicNow(){ return new Date().toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}); }
       function aicLog(q,a,alert){
         if(!AIC_LOG_URL) return;
-        if(window.SD_HONBU_VIEW) return;  /* 2026-11-12：本部閲覧モード（本部ダッシュボードから開いた画面）は、ログインしていないので記録しない */
         var v=aicViewer();
+        /* 2026-11-23修正：試作版は本部ダッシュボード（本部閲覧モード）から開いて確認するので、そこでの会話も記録する。
+           ログインしていないため、氏名は「（本部・試作確認）」として残す（職員の記録と区別できるように） */
+        if(window.SD_HONBU_VIEW){ v.name='（本部・試作確認）'; v.loginId=''; }
         try{
           fetch(AIC_LOG_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
             body:JSON.stringify({datetime:aicNow(),garden:v.garden,name:v.name,loginId:v.loginId,convId:aicConvId,question:q,answer:a,alert:alert?'要注意':''})}).catch(function(){});
