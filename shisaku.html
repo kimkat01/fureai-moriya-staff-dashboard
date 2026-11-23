@@ -756,7 +756,6 @@ html.law-y #screen-mental .aimc-chips button{background:#eef8ef;border-color:#bf
   }catch(e){ location.replace('./'); }
 })();
 </script>
-<style>.sd-trial-ribbon{position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#fff3cd;color:#7a5a00;font:700 12px/1.6 sans-serif;text-align:center;padding:2px 8px;border-top:1px solid #f0d58a;pointer-events:none}</style>
 <style>
 /* 2026-11-23 試作版：画面下に固定するフッター（社名ロゴ「株式会社 潮止学事教育社」のみ、スミ100%）
    高さは上の帯（約68px）の1/3＝約23px。ログイン画面にも出る */
@@ -764,8 +763,6 @@ html.law-y #screen-mental .aimc-chips button{background:#eef8ef;border-color:#bf
   display:flex;align-items:center;justify-content:center;pointer-events:none;padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:content-box;}
 .gk-footbar img{height:14px;width:auto;display:block;}
 body{padding-bottom:calc(23px + env(safe-area-inset-bottom,0px));}
-/* 試作版の帯（黄色）はフッターの上に */
-.sd-trial-ribbon{bottom:calc(24px + env(safe-area-inset-bottom,0px))!important;}
 /* 2026-11-23修正：画面いっぱいの画面（AIメンタルカウンセリングのチャット）と下から出るシートが、
    下のフッター（社名ロゴ 約24px）＋試作版の黄色い帯（約25px）＝約49px に隠れて入力できなかったので、その分だけ上に逃がす */
 #screen-mental #mh-ai .aic{bottom:var(--gk-bottom,calc(49px + env(safe-area-inset-bottom,0px)))!important;height:auto!important;}
@@ -857,7 +854,6 @@ html.gk-seen #gkOpening{display:none;}
 })();
 </script>
 <!-- オープニング ここまで -->
-<div class="sd-trial-ribbon">試作版（本部確認用）：本部に知ってほしい・聞いてほしい・AIメンタルカウンセリング</div>
 
 <!-- ============================================================
      ログインID＋パスワードゲート（staff-dashboard 共通ログイン）
