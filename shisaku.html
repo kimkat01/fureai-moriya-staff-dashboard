@@ -758,9 +758,14 @@ html.law-y #screen-mental .aimc-chips button{background:#eef8ef;border-color:#bf
 </script>
 <style>.sd-trial-ribbon{position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#fff3cd;color:#7a5a00;font:700 12px/1.6 sans-serif;text-align:center;padding:2px 8px;border-top:1px solid #f0d58a;pointer-events:none}</style>
 <style>
-/* 2026-11-23 試作版：画面下の社名（株式会社潮止学事教育社）。スミ100%・小さく */
-.gk-foot{text-align:center;font-size:11px;color:#000;letter-spacing:.08em;margin:28px 16px 0;padding:16px 0 6px;border-top:1px solid var(--line);}
-#pinGate .gk-foot{border-top:0;margin-top:32px;padding-bottom:24px;}
+/* 2026-11-23 試作版：画面下に固定するフッター（社名ロゴ「株式会社 潮止学事教育社」のみ、スミ100%）
+   高さは上の帯（約68px）の1/3＝約23px。ログイン画面にも出る */
+.gk-footbar{position:fixed;left:0;right:0;bottom:0;height:23px;z-index:100000;background:#fff;border-top:1px solid #e6e1d8;
+  display:flex;align-items:center;justify-content:center;pointer-events:none;padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:content-box;}
+.gk-footbar img{height:14px;width:auto;display:block;}
+body{padding-bottom:calc(23px + env(safe-area-inset-bottom,0px));}
+/* 試作版の帯（黄色）はフッターの上に */
+.sd-trial-ribbon{bottom:calc(24px + env(safe-area-inset-bottom,0px))!important;}
 </style>
 </head>
 <body>
@@ -897,8 +902,6 @@ html.gk-seen #gkOpening{display:none;}
       <div class="pin-err" id="pgErr2"></div>
       <button class="pin-btn" id="pgChangeBtn" onclick="pgSubmitChange()">このパスワードに設定する</button>
     </div>
-    <!-- 2026-11-23 試作版：ログイン画面の下の社名 -->
-    <div class="gk-foot">株式会社潮止学事教育社</div>
   </div>
 </div>
 
@@ -1594,8 +1597,6 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
       </div>
     </section>
   </main>
-  <!-- 2026-11-23 試作版：画面下の社名 -->
-  <div class="gk-foot">株式会社潮止学事教育社</div>
 </div>
 
 <script src="https://kimkat01.github.io/staff-dashboard/docs/manuals.js"></script>
@@ -17680,5 +17681,7 @@ renderHome();goHome();sdLog('ホーム');
   });
 })();
 </script>
+<!-- 2026-11-23 試作版：画面下に固定のフッター（社名ロゴ） -->
+<div class="gk-footbar"><img src="icons/gakuji/shamei.png" alt="株式会社潮止学事教育社"></div>
 </body>
 </html>
