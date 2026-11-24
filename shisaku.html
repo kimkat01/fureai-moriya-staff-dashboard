@@ -1268,13 +1268,13 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
 
       <!-- ========== AIメンタルカウンセリング：チャット（ドメボットと同じ見た目） ========== -->
       <div id="mh-ai" class="hidden">
-        <button class="mhback" onclick="mhShow('top')">‹ メンタルヘルスサポートに戻る</button>
+        <button class="mhback" onclick="mhShow('top')">‹ AIメンタルカウンセリングに戻る</button>
         <div class="aic">
           <div class="aic-hdr">
-            <button class="aic-back" type="button" onclick="mhShow('top')" aria-label="メンタルヘルスサポートに戻る">‹</button>
+            <button class="aic-back" type="button" onclick="mhShow('top')" aria-label="AIメンタルカウンセリングに戻る">‹</button>
             <div class="aic-av-l"><img src="icons/aimc-doctor.png" alt="AIカウンセラー"></div>
             <div>
-              <div class="aic-ttl">しおどめグループ メンタルヘルスサポート</div>
+              <div class="aic-ttl">しおどめグループ AIメンタルカウンセリング</div>
               <div class="aic-name">AIメンタルカウンセリング</div>
             </div>
           </div>
@@ -1447,7 +1447,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
 
       <!-- ========== ストレスチェック ========== -->
       <div id="mh-sc" class="hidden">
-        <button class="mhback" onclick="mhShow('top')">‹ メンタルヘルスサポートに戻る</button>
+        <button class="mhback" onclick="mhShow('top')">‹ AIメンタルカウンセリングに戻る</button>
         <div class="mhcard">
           <div class="mhhead">📝 ストレスチェックについて</div>
           <div class="mhbody">年1回、全職員を対象に行う57問のアンケートです。ご自身のストレス状態に気づき、早めのセルフケアにつなげることが目的です。<br>回答は<span class="svc"></span>のサイトで行います。<b>個人の結果は、ご本人の同意なく法人に提供されることはありません。</b></div>
@@ -1467,7 +1467,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
 
       <!-- ========== カウンセリング予約 ========== -->
       <div id="mh-cs" class="hidden">
-        <button class="mhback" onclick="mhShow('top')">‹ メンタルヘルスサポートに戻る</button>
+        <button class="mhback" onclick="mhShow('top')">‹ AIメンタルカウンセリングに戻る</button>
         <div class="mhcard">
           <div class="mhhead">💬 カウンセリング予約</div>
           <div class="mhbody">仕事・人間関係・子育て・家族のことなど、どんなことでも相談できます（<b>年5回まで無料</b>・1回50分）。<br>予約の方法を選んでください。</div>
@@ -1531,7 +1531,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
 
       <!-- ========== 医師面接指導 ========== -->
       <div id="mh-md" class="hidden">
-        <button class="mhback" onclick="mhShow('top')">‹ メンタルヘルスサポートに戻る</button>
+        <button class="mhback" onclick="mhShow('top')">‹ AIメンタルカウンセリングに戻る</button>
         <div class="mhcard">
           <div class="mhhead">🩺 医師による面接指導の申出</div>
           <div class="mhbody">ストレスチェックで「高ストレス」と判定され、医師との面接を希望する方はこちらから申し出てください（法律に基づく制度・費用は法人負担）。<br><b>申し出たことを理由に不利益な扱いを受けることはありません。</b>医師の意見をもとに、必要に応じて勤務の配慮を本部と一緒に考えます。</div>
@@ -1562,7 +1562,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
 
       <!-- ========== わたしの申込み状況 ========== -->
       <div id="mh-mine" class="hidden">
-        <button class="mhback" onclick="mhShow('top')">‹ メンタルヘルスサポートに戻る</button>
+        <button class="mhback" onclick="mhShow('top')">‹ AIメンタルカウンセリングに戻る</button>
         <div class="mhcard" style="text-align:center">
           <div style="font-size:26px">📭</div>
           <div style="font-size:14px;font-weight:700;margin-top:4px">現在、申込みはありません</div>
@@ -1576,7 +1576,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
           <h3 id="doneTitle">申込みを受け付けました</h3>
           <p id="doneBody">本部で日程を調整し、確定したらこの画面とご連絡先にお知らせします（通常2〜3営業日）。</p>
           <button class="btn" onclick="mhShow('mine')">申込み状況を見る</button>
-          <button class="btn sub" onclick="mhShow('top')">メンタルヘルスサポートに戻る</button>
+          <button class="btn sub" onclick="mhShow('top')">AIメンタルカウンセリングに戻る</button>
         </div>
       </div>
 
@@ -16919,7 +16919,7 @@ var MH_SERVICE_NAME="リモート産業保健";
 var MH_SUBMIT_URL="";
 var MH_VIEWS=['top','ai','sc','cs','md','mine','done'];
 function goMental(){
-  document.getElementById('brandtxt').textContent='メンタルヘルスサポート';
+  document.getElementById('brandtxt').textContent='AIメンタルカウンセリング';
   document.querySelectorAll('#screen-mental .svc').forEach(function(el){el.textContent=MH_SERVICE_NAME;});
   var id=getOmeyasuIdentity();
   var who=id.name?(id.name+(id.garden?'（'+id.garden+'）':'')):'（未ログイン）';
@@ -17172,7 +17172,7 @@ const MENU=[
  {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-sky",go:()=>goNews()},
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-lav",go:()=>goManual()},
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
- {t:"メンタルヘルスサポート",d:"ストレスチェックやカウンセリング等の手続き",ic:"doctor",tint:"i-gold",go:()=>goMental()},
+ {t:"AIメンタルカウンセリング",d:"ストレスチェックやカウンセリング等の手続き",ic:"doctor",tint:"i-gold",go:()=>goMental()},
  /* 試作版（2026-11-20）：ご意見箱の位置に「本部に知ってほしい・聞いてほしい」カードを新設。中身はこれから（押すと準備中の画面）。アイデア・提案受付BOXの代わり（BOXのカードは外した）。本番（index.html）にはまだ入れない */
  {t:"本部に<br>知ってほしい<br>聞いてほしい",d:"困りごと・相談・気づいたこと",ic:"honbuvoice",log:"本部に知ってほしい・聞いてほしい",tint:"i-sky",go:()=>goStub("本部に知ってほしい・聞いてほしい","honbuvoice","i-sky")},
  {t:"となりの保育室",d:"ほかの園の保育を見てみよう",ic:"tonari",tint:"i-pink",go:()=>goTonari()},
