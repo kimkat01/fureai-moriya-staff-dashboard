@@ -757,17 +757,9 @@ html.law-y #screen-mental .aimc-chips button{background:#eef8ef;border-color:#bf
 })();
 </script>
 <style>
-/* 2026-11-23 試作版：画面下に固定するフッター（社名ロゴ「株式会社 潮止学事教育社」のみ、スミ100%）
-   高さは上の帯（約68px）の1/3＝約23px。ログイン画面にも出る */
-.gk-footbar{position:fixed;left:0;right:0;bottom:0;height:23px;z-index:100000;background:#fff;border-top:1px solid #e6e1d8;
-  display:flex;align-items:center;justify-content:center;pointer-events:none;padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:content-box;}
-.gk-footbar img{height:14px;width:auto;display:block;}
-body{padding-bottom:calc(23px + env(safe-area-inset-bottom,0px));}
-/* 2026-11-23修正：画面いっぱいの画面（AIメンタルカウンセリングのチャット）と下から出るシートが、
-   下のフッター（社名ロゴ 約24px）＋試作版の黄色い帯（約25px）＝約49px に隠れて入力できなかったので、その分だけ上に逃がす */
-#screen-mental #mh-ai .aic{bottom:var(--gk-bottom,calc(49px + env(safe-area-inset-bottom,0px)))!important;height:auto!important;}
-#screen-mental #mh-ai .aic .aimc-inp{padding-bottom:12px!important;}
-.sheet{padding-bottom:calc(24px + var(--gk-bottom,calc(49px + env(safe-area-inset-bottom,0px))));}
+/* 2026-11-24 試作版：ヘッダー帯の右側に潮止学事教育社のロゴ（白）。画面下のフッターはやめた */
+.tb-gakuji{flex:0 0 auto;height:30px;width:auto;display:block;margin-left:2px;}
+@media (max-width:360px){ .tb-gakuji{height:26px;} }
 </style>
 </head>
 <body>
@@ -1056,6 +1048,8 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
       </svg>
       Home
     </button>
+    <!-- 2026-11-24 試作版：潮止学事教育社のロゴ（ヘッダー右側） -->
+    <img class="tb-gakuji" src="icons/gakuji/header-logo.png" alt="株式会社潮止学事教育社">
   </header>
   <main>
     <section id="screen-home"></section>
@@ -17687,8 +17681,6 @@ renderHome();goHome();sdLog('ホーム');
   });
 })();
 </script>
-<!-- 2026-11-23 試作版：画面下に固定のフッター（社名ロゴ） -->
-<div class="gk-footbar"><img src="icons/gakuji/shamei.png" alt="株式会社潮止学事教育社"></div>
 <script>
 /* 2026-11-23：フッター（社名ロゴ）＋試作版の帯の高さを測って --gk-bottom に入れる。
    帯は画面幅によって2行になるので、決め打ちではなく実際の高さで、チャットの入力欄などをその上に逃がす */
