@@ -637,8 +637,78 @@ tbody tr.me .namecol{color:var(--brand)}
 </style>
 <!-- 利用状況（アクセスログ・2026-10-20追加）：共通版と同じ送信スクリプトを読み込む（起動時の記録に間に合うよう head で読む） -->
 <script src="https://kimkat01.github.io/staff-dashboard/access-log.js"></script>
+<style>
+/* 2026-11-25 本番：ヘッダー帯の右側に潮止学事教育社のロゴ（白） */
+.tb-gakuji{flex:0 0 auto;height:30px;width:auto;display:block;margin-left:2px;}
+@media (max-width:360px){ .tb-gakuji{height:26px;} }
+/* 2026-11-25 本番：ロゴと並ぶので、Homeボタンは「Home」の文字を消して丸い家アイコンだけにする（押すとホームに戻るのは同じ） */
+.tb-home{width:34px;height:34px;padding:0;gap:0;justify-content:center;font-size:0;border-radius:50%;}
+.tb-home svg{width:18px;height:18px;}
+</style>
 </head>
 <body>
+<!-- ============================================================
+     オープニング（2026-11-25 本番）：株式会社潮止学事教育社
+     ロゴ（Gakuji）のアニメーション → 消える（約3秒）。ごあいさつ文は本番では出さない
+     ・タップでいつでもスキップ
+     ・一度見たら30分間は出さない（sessionStorage の gk_opening_anshin）。ツールから戻ったときに毎回出ないように。?opening=1 で必ず表示
+     ・ロゴ画像は icons/gakuji/op-word / op-line / op-stars / op-jp.png
+     ============================================================ -->
+<script>/* 2026-11-23：ANSHIN KUNとポータルは同じサイト（kimkat01.github.io）なので、記録の名前をアプリごとに分ける。
+   見てから30分以内（ツールから戻ってきたときなど）は出さない。URLに ?opening=1 を付けると必ず出す（確認用） */
+try{ var _gq=new URLSearchParams(location.search).get('opening')==='1'; var _gt=Number(sessionStorage.getItem('gk_opening_anshin')||0);
+  if(!_gq && _gt && Date.now()-_gt < 30*60*1000) document.documentElement.classList.add('gk-seen'); }catch(e){}</script>
+<style>
+#gkOpening{position:fixed;inset:0;z-index:2147483000;background:#fff;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:opacity .6s ease, visibility .6s;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",YuGothic,Meiryo,"Noto Sans JP",sans-serif;}
+html.gk-seen #gkOpening{display:none;}
+#gkOpening.gk-out{opacity:0;visibility:hidden;}
+#gkOpening .gk-logo{position:relative;width:min(56vw,240px);aspect-ratio:599/233;}
+#gkOpening .gk-logo img{position:absolute;inset:0;width:100%;height:100%;opacity:0;}
+#gkOpening.gk-play .gk-word {animation:gkWord .8s cubic-bezier(.2,.7,.2,1) .25s forwards;}
+#gkOpening.gk-play .gk-line {animation:gkLine .7s cubic-bezier(.6,0,.2,1) .75s forwards;}
+#gkOpening.gk-play .gk-stars{animation:gkStars .6s cubic-bezier(.3,1.6,.5,1) 1.2s forwards, gkTwinkle 1.2s ease-in-out 1.8s 1;}
+#gkOpening.gk-play .gk-jp   {animation:gkJp .8s ease-out 1.35s forwards;}
+@keyframes gkWord{from{opacity:0;transform:translateY(14px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes gkLine{from{opacity:1;clip-path:inset(0 50% 0 50%)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes gkStars{from{opacity:0;transform:scale(.2) rotate(-40deg)}to{opacity:1;transform:none}}
+@keyframes gkTwinkle{0%,100%{filter:none}50%{filter:brightness(1.6) drop-shadow(0 0 4px rgba(0,96,176,.6))}}
+@keyframes gkJp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#gkOpening .gk-stars{transform-origin:65% 7%;}
+#gkOpening .gk-skip{position:absolute;bottom:max(24px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;
+  font-size:12px;color:#b0b6bf;letter-spacing:.1em;opacity:0;animation:gkJp .6s ease .6s forwards;}
+@media (prefers-reduced-motion: reduce){#gkOpening .gk-logo img{animation:none!important;opacity:1}}
+</style>
+<div id="gkOpening" aria-label="株式会社潮止学事教育社">
+  <div class="gk-logo">
+    <img class="gk-word"  src="icons/gakuji/op-word.png"  alt="">
+    <img class="gk-line"  src="icons/gakuji/op-line.png"  alt="">
+    <img class="gk-stars" src="icons/gakuji/op-stars.png" alt="">
+    <img class="gk-jp"    src="icons/gakuji/op-jp.png"    alt="">
+  </div>
+  <div class="gk-skip">タップでスキップ</div>
+</div>
+<script>
+(function(){
+  function gkStart(){
+    var el=document.getElementById('gkOpening');
+    if(!el) return;
+    if(document.documentElement.classList.contains('gk-seen')){ el.remove(); return; }
+    var timers=[], done=false;
+    var T=function(f,ms){ timers.push(setTimeout(f,ms)); };
+    var close=function(){
+      if(done) return; done=true; timers.forEach(clearTimeout);
+      try{ sessionStorage.setItem('gk_opening_anshin', String(Date.now())); }catch(e){}
+      el.classList.add('gk-out'); setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 700);
+    };
+    el.addEventListener('click', close);
+    T(function(){ el.classList.add('gk-play'); }, 150);   // ロゴのアニメーション
+    T(close, 3300);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', gkStart); else gkStart();
+})();
+</script>
+<!-- オープニング ここまで -->
 <!-- ============================================================
      ログインID＋パスワードゲート（staff-dashboard 共通ログイン）
      挿入位置：<body> の直後、<div class="wrap"> の手前
@@ -837,6 +907,8 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
       </svg>
       Home
     </button>
+    <!-- 2026-11-25：潮止学事教育社のロゴ（ヘッダー右側） -->
+    <img class="tb-gakuji" src="icons/gakuji/header-logo.png" alt="株式会社潮止学事教育社">
   </header>
   <main>
     <section id="screen-home"></section>
