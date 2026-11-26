@@ -1062,6 +1062,7 @@ window.SD_SHIFT_CACHE_PREFIX = 'sd_shift_cache__';
     <section id="screen-omeyasu" hidden>
       <div class="owrap">
         <div id="omReplyList"></div>
+        <div id="omPublicList"></div>
         <div class="ocard osafe">
           <div class="olead">💡 保育に関するアイデアや提案をお寄せください</div>
           <div class="obody">
@@ -17697,6 +17698,67 @@ renderHome();goHome();sdLog('ホーム');
     document.documentElement.style.setProperty('--gk-bottom',Math.max(0,Math.ceil(window.innerHeight-top))+'px');
   }
   fit(); window.addEventListener('resize',fit); window.addEventListener('load',fit); setTimeout(fit,500);
+})();
+</script>
+<!-- ===== ご意見箱：本部からの回答（全園・園あて）2026-11-26 =====
+     本部ダッシュボードの「ご意見箱 返信」画面で、範囲を「この園」「全園」にした返信をここに表示する。
+     ・データは GAS「本部ダッシュボード 件数API」（cryk0289）の action=goikenPublic（その園あて＋全園あてだけ返る）
+     ・載るのは「公開用の質問文」と返信だけ（投稿者名・元の本文は出ない）
+     ・最新3件を表示し、残りは「もっと見る」で開く。初めて見る回答には NEW を付ける（この端末に記録） -->
+<style>
+#omPublicList .opub-h{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:var(--brand-blue,#4169e1);margin:0 0 10px}
+#omPublicList .opub-h small{font-size:12px;font-weight:700;color:var(--ink-soft,#666)}
+#omPublicList .opub{background:var(--card,#fff);border:1px solid var(--line,#e2e5ea);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+#omPublicList .opub-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--ink-soft,#666);font-weight:700;margin-bottom:8px}
+#omPublicList .opub-tag{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:800;background:#e1e8fb;color:#2f52c4}
+#omPublicList .opub-tag.g{background:#e6f5ec;color:#1e824c}
+#omPublicList .opub-new{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:800;background:#e0457b;color:#fff}
+#omPublicList .opub-q{font-size:13.5px;line-height:1.8;font-weight:700;color:var(--ink,#111);white-space:pre-wrap;margin-bottom:8px}
+#omPublicList .opub-a{font-size:14px;line-height:1.8;font-weight:700;color:var(--ink,#111);white-space:pre-wrap;border-left:3px solid var(--brand-blue,#4169e1);padding-left:10px}
+#omPublicList .opub-lbl{font-size:12px;font-weight:800;color:var(--ink-soft,#666);margin-bottom:2px}
+#omPublicList .opub-more{width:100%;padding:10px;border:1px solid var(--line,#e2e5ea);border-radius:10px;background:var(--card,#fff);color:var(--brand-blue,#4169e1);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:14px}
+</style>
+<script>
+(function(){
+  var OM_PUBLIC_URL='https://script.google.com/macros/s/AKfycbzJHhK-jajUwamz69kCWfZu6H2-L9Z4_Hos7O5VrQFd_CHVrMH1HT5AvhgzPIBU-Kx4/exec';
+  var SEEN_KEY='om_public_seen_v1';
+  var SHOW_FIRST=3;
+  var expanded=false, lastItems=[];
+  function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function seen(){try{return JSON.parse(localStorage.getItem(SEEN_KEY)||'[]');}catch(e){return [];}}
+  function markSeen(ids){try{var s=seen();ids.forEach(function(i){if(s.indexOf(i)<0)s.push(i);});localStorage.setItem(SEEN_KEY,JSON.stringify(s.slice(-300)));}catch(e){}}
+  function render(){
+    var host=document.getElementById('omPublicList');
+    if(!host)return;
+    var items=lastItems;
+    if(!items.length){host.innerHTML='';return;}
+    var s=seen();
+    var list=expanded?items:items.slice(0,SHOW_FIRST);
+    host.innerHTML='<div class="opub-h">📢 本部からの回答<small>みなさんから寄せられたご意見への回答です</small></div>'+
+      list.map(function(x){
+        var tag=x.scope==='全園'?'<span class="opub-tag">全園向け</span>':'<span class="opub-tag g">'+esc(x.garden)+'向け</span>';
+        var isNew=s.indexOf(x.id+'|'+x.date)<0?'<span class="opub-new">NEW</span>':'';
+        return '<div class="opub"><div class="opub-meta">'+isNew+tag+(x.category?'<span>'+esc(x.category)+'</span>':'')+'<span>'+esc(String(x.date||'').slice(0,10))+'</span></div>'+
+          (x.question?'<div class="opub-lbl">Q. いただいたご意見</div><div class="opub-q">'+esc(x.question)+'</div>':'')+
+          '<div class="opub-lbl">A. 本部より</div><div class="opub-a">'+esc(x.reply)+'</div></div>';
+      }).join('')+
+      (items.length>SHOW_FIRST?'<button class="opub-more" type="button" onclick="omPublicToggle()">'+(expanded?'閉じる':'ほかの回答も見る（全'+items.length+'件）')+'</button>':'');
+    markSeen(list.map(function(x){return x.id+'|'+x.date;}));
+  }
+  window.omPublicToggle=function(){expanded=!expanded;render();};
+  window.omLoadPublic=function(){
+    var g=(typeof gardenName==='function')?gardenName():'';
+    expanded=false;
+    fetch(OM_PUBLIC_URL+'?action=goikenPublic&garden='+encodeURIComponent(g)+'&t='+Date.now())
+      .then(function(r){return r.json();})
+      .then(function(res){lastItems=(res&&res.ok&&res.items)?res.items:[];render();})
+      .catch(function(){});
+  };
+  /* ご意見箱を開くたびに読み込む（goOmeyasu の後に続けて呼ぶ） */
+  if(typeof goOmeyasu==='function'){
+    var _goOm=goOmeyasu;
+    goOmeyasu=function(){var r=_goOm.apply(this,arguments);try{omLoadPublic();}catch(e){}return r;};
+  }
 })();
 </script>
 </body>
