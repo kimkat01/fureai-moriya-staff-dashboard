@@ -108,6 +108,7 @@ main{padding:16px}
   width:calc(50% - 6px);}
 .tile:active{transform:scale(.975)}
 /* カード右上の点滅バッジ。2026-11-16：お知らせ（NEW）・ドメボット（Update）のバッジを外した。
+   2026-11-27：お知らせの「NEW」は自動表示に変更（記事の日付から4日間。nsHasNew() を参照）。
    また付けるときは、MENU の該当カードに badge:"NEW" や badge:"Update" を足す（例：ic:"news",badge:"NEW",） */
 .tile .flag.flag-blink{color:#fff;background:#e53935;font-size:10px;letter-spacing:.03em;animation:tbBlink 1.2s ease-in-out infinite;}
 @keyframes tbBlink{0%,100%{opacity:1}50%{opacity:.25}}
@@ -16359,12 +16360,29 @@ function nsFetch(){
     if(!nsErr){
       NEWS=d.news;
       try{localStorage.setItem(NS_CACHE_KEY,JSON.stringify(NEWS));}catch(e){}
+      nsUpdateNewFlag();
     }
     var sc=document.getElementById('screen-news');
     if(sc&&!sc.hidden&&document.getElementById('nsListView').className!=='nshidden')nsRender();
   }).catch(function(){nsLoading=false;nsLoaded=true;nsErr=true;var sc=document.getElementById('screen-news');if(sc&&!sc.hidden&&document.getElementById('nsListView').className!=='nshidden')nsRender();});
 }
 nsFetch();
+/* ホームの「お知らせ」カードの点滅「NEW」（2026-11-27）
+   公開中の記事のうち、記事の「日付」の日を1日目として4日間（例：11/27の記事 → 11/30まで）の記事が
+   1件でもあれば、カード右上に点滅する「NEW」を出す。期限が過ぎると自動で消える。
+   日付は記事作成画面（news-admin.html）の「日付」。日数を変えるときは NS_NEW_DAYS と
+   news-admin.html の NA_NEW_DAYS を同じ数字にする。 */
+var NS_NEW_DAYS=4;
+function nsIsNew(n){
+  var m=((n&&n.date)||'').match(/(\d{4})-(\d{2})-(\d{2})/);if(!m)return false;
+  var d=new Date(+m[1],+m[2]-1,+m[3]);var t=new Date();t=new Date(t.getFullYear(),t.getMonth(),t.getDate());
+  var diff=Math.round((t-d)/86400000);
+  return diff>=0&&diff<NS_NEW_DAYS;
+}
+function nsHasNew(){return NEWS.some(nsIsNew);}
+function nsUpdateNewFlag(){var el=document.getElementById('nsNewFlag');if(el)el.style.display=nsHasNew()?'':'none';}
+/* 日付が変わったとき（開きっぱなしの端末）にも消えるよう、画面に戻ったら再判定 */
+document.addEventListener('visibilitychange',function(){if(!document.hidden)nsUpdateNewFlag();});
 function nsRetry(){nsErr=false;nsLoaded=false;nsRender();nsFetch();}
 var NS_READ_KEY='shiodome_news_read';
 var nsCurFilter='all';
@@ -16803,7 +16821,7 @@ let HOME_MENU=[];
 const MENU=[
  {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShiftLogin();}}},
  {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(uqUrl(),"有給チェッカー","uq","i-early")},
- {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-sky",go:()=>goNews()},
+ {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-sky",newFlag:1,go:()=>goNews()},
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-lav",go:()=>goManual()},
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
  {t:"メンタルヘルスサポート",d:"ストレスチェックやカウンセリング等の手続き",ic:"doctor",tint:"i-gold",go:()=>goMental()},
@@ -16832,7 +16850,7 @@ function renderHome(){
   const HB=sdShowHiroba();
   HOME_MENU=HB?MENU.map(function(m){return m.t==="ご意見箱"?HIROBA_MENU:m;}):MENU.slice();
   const tiles=HOME_MENU.map(function(m,i){
-     var flag=m.badge?'<span class="flag flag-blink">'+m.badge+'</span>':m.flag?'<span class="flag">'+m.flag+'</span>':(m.flagId?'<span class="flag flag-pulse" id="'+m.flagId+'" style="display:none">受領</span>':'');
+     var flag=m.newFlag?'<span class="flag flag-blink" id="nsNewFlag"'+(nsHasNew()?'':' style="display:none"')+'>NEW</span>':m.badge?'<span class="flag flag-blink">'+m.badge+'</span>':m.flag?'<span class="flag">'+m.flag+'</span>':(m.flagId?'<span class="flag flag-pulse" id="'+m.flagId+'" style="display:none">受領</span>':'');
      var lg=m.ic==='bot'?' ic-lg':'';
      return '<button class="tile'+(m.cls?' '+m.cls:'')+'" onclick="sdLog(HOME_MENU['+i+'].t);HOME_MENU['+i+'].go()">'+flag+
        '<span class="tileclip">'+
